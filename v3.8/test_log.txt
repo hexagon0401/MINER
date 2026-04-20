@@ -1,0 +1,2 @@
+/Users/yuhamin/Desktop/MINER/v3.8/test_panel.py:30: ObjCPointerWarning: PyObjCPointer created: at 0xc6312a450 of type ^{CGColor=}@:
+  view.layer().setBackgroundColor_(NSColor.redColor().CGColor())

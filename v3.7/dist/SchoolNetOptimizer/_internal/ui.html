@@ -157,6 +157,24 @@
             transform: rotate(45deg);
         }
 
+        /* Quit Icon Bottom Left */
+        #quit-btn {
+            position: absolute;
+            bottom: 16px;
+            left: 16px;
+            cursor: pointer;
+            font-size: 1.3rem;
+            opacity: 0.5;
+            transition: opacity 0.2s, transform 0.2s;
+            padding: 8px;
+            color: #EF4444;
+        }
+
+        #quit-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
     </style>
 </head>
 <body>
@@ -185,7 +203,10 @@
 
     <!-- Settings Button -->
     <div id="settings-btn" onclick="openSettings()">⚙️</div>
-
+    
+    <!-- Quit Button -->
+    <div id="quit-btn" onclick="quitApp()">⏻</div>
+    
 </div>
 
 <!-- State Machine Logic -->
@@ -277,6 +298,10 @@
 
     function openSettings() {
         postToPython('settings', {});
+    }
+
+    function quitApp() {
+        postToPython('quit', {});
     }
 
     function postToPython(action, payload) {

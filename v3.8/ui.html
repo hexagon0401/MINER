@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SchoolNet Optimizer UI</title>
+    <!-- Use standard fonts so we don't rely on internet connection just for the font. Inter is nice if local or fallback to system UI -->
+    <style>
+        :root {
+            --bg-color: rgba(20, 20, 25, 0.6);
+            --button-size: 160px;
+            --stroke-width: 4px;
+            --main-text: #F9FAFB;
+            --sub-text: #9CA3AF;
+            --indicator-color: #EF4444; /* red by default, green on success */
+            --success-color: #10B981;
+            --hover-bg: rgba(255, 255, 255, 0.1);
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            width: 320px;
+            height: 380px;
+            /* popovers in macOS automatically do glassmorphism, 
+               so a completely transparent body here lets native popover shine through */
+            background: transparent;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            color: var(--main-text);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            user-select: none;
+            -webkit-user-select: none;
+            /* hide scrollbars */
+            overflow: hidden;
+        }
+
+        /* 
+         * Layout wrapper for absolutely positioning the bottom-right settings 
+         */
+        #app-wrapper {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* 
+         * Central Interactive Button area 
+         */
+        #button-container {
+            position: relative;
+            width: var(--button-size);
+            height: var(--button-size);
+            cursor: pointer;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        #button-container:active {
+            transform: scale(0.95);
+        }
+
+        /* The frosted inner circle of the button */
+        #inner-circle {
+            position: absolute;
+            width: calc(var(--button-size) - 20px);
+            height: calc(var(--button-size) - 20px);
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.05); /* very faint */
+            box-shadow: inset 0 0 20px rgba(0,0,0,0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 2rem;
+            transition: all 0.5s ease;
+        }
+
+        #inner-circle.success-glow {
+            box-shadow: 0 0 30px rgba(16, 185, 129, 0.6), inset 0 0 20px rgba(16, 185, 129, 0.2);
+            background: rgba(16, 185, 129, 0.1);
+        }
+
+        /* The SVG surrounding stroke */
+        svg.progress-ring {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%;
+            height: 100%;
+            transform: rotate(-90deg); /* Start at 12 o'clock */
+            pointer-events: none;
+        }
+
+        .progress-ring__circle {
+            fill: transparent;
+            stroke: var(--indicator-color);
+            stroke-width: var(--stroke-width);
+            /* Circumference of r=76 is ~ 477.52 */
+            stroke-dasharray: 477.52 477.52;
+            stroke-dashoffset: 477.52; /* fully hidden */
+            stroke-linecap: round;
+            transition: stroke-dashoffset 0.6s cubic-bezier(0.4, 0, 0.2, 1), stroke 0.6s ease;
+        }
+
+        /* 
+         * Background faint ring so the user sees the track.
+         */
+        .progress-ring__bg {
+            fill: transparent;
+            stroke: rgba(255, 255, 255, 0.1);
+            stroke-width: 1px;
+            stroke-dasharray: 4 6;
+        }
+
+        /* Text area under the button */
+        #status-text-box {
+            margin-top: 24px;
+            text-align: center;
+            pointer-events: none;
+        }
+
+        #status-title {
+            font-weight: 600;
+            font-size: 1.1rem;
+            margin: 0 0 6px 0;
+            letter-spacing: 0.02em;
+        }
+
+        #status-desc {
+            font-size: 0.85rem;
+            color: var(--sub-text);
+            margin: 0;
+        }
+
+        /* Settings Icon Bottom Right */
+        #settings-btn {
+            position: absolute;
+            bottom: 16px;
+            right: 16px;
+            cursor: pointer;
+            font-size: 1.2rem;
+            opacity: 0.6;
+            transition: opacity 0.2s, transform 0.2s;
+            padding: 8px;
+        }
+
+        #settings-btn:hover {
+            opacity: 1;
+            transform: rotate(45deg);
+        }
+
+        /* Quit Icon Bottom Left */
+        #quit-btn {
+            position: absolute;
+            bottom: 16px;
+            left: 16px;
+            cursor: pointer;
+            font-size: 1.3rem;
+            opacity: 0.5;
+            transition: opacity 0.2s, transform 0.2s;
+            padding: 8px;
+            color: #EF4444;
+        }
+
+        #quit-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+    </style>
+</head>
+<body>
+
+<div id="app-wrapper">
+
+    <!-- Center Interactive Button -->
+    <div id="button-container">
+        <!-- SVG Ring -->
+        <svg class="progress-ring" viewBox="0 0 160 160">
+            <circle class="progress-ring__bg" stroke-width="2" r="76" cx="80" cy="80"></circle>
+            <circle class="progress-ring__circle" r="76" cx="80" cy="80"></circle>
+        </svg>
+
+        <!-- Inner Glass Node -->
+        <div id="inner-circle">
+            <span id="center-icon">🛡️</span>
+        </div>
+    </div>
+
+    <!-- Status Text -->
+    <div id="status-text-box">
+        <p id="status-title">SchoolNet Optimizer</p>
+        <p id="status-desc">Ready to connect</p>
+    </div>
+
+    <!-- Settings Button -->
+    <div id="settings-btn" onclick="openSettings()">⚙️</div>
+    
+    <!-- Quit Button -->
+    <div id="quit-btn" onclick="quitApp()">⏻</div>
+    
+</div>
+
+<!-- State Machine Logic -->
+<script>
+    // State Variables
+    let currentState = "idle"; // idle, connecting, connected, failed
+    
+    // DOM Elements
+    const circle = document.querySelector('.progress-ring__circle');
+    const radius = circle.r.baseVal.value;
+    const circumference = radius * 2 * Math.PI;
+    const innerCircle = document.getElementById('inner-circle');
+    const centerIcon = document.getElementById('center-icon');
+    const statusTitle = document.getElementById('status-title');
+    const statusDesc = document.getElementById('status-desc');
+    const btnContainer = document.getElementById('button-container');
+
+    // Init dash properties
+    circle.style.strokeDasharray = `${circumference} ${circumference}`;
+    circle.style.strokeDashoffset = circumference; // completely hidden
+
+    function setProgress(percent) {
+        const offset = circumference - percent / 100 * circumference;
+        circle.style.strokeDashoffset = offset;
+    }
+
+    function setIndicatorColor(color) {
+        document.documentElement.style.setProperty('--indicator-color', color);
+    }
+
+    // JS Bridge: Commands sent FROM Python to JS
+    window.sendCommand = function(cmd, payload) {
+        if (cmd === 'state') {
+            updateState(payload);
+        } else if (cmd === 'progress') {
+            setProgress(payload.percent);
+        } else if (cmd === 'update_desc') {
+            statusDesc.innerText = payload.text;
+        }
+    };
+
+    function updateState(newState) {
+        currentState = newState;
+        
+        innerCircle.classList.remove('success-glow');
+        
+        switch(newState) {
+            case 'idle':
+                setIndicatorColor('#9CA3AF'); // gray
+                setProgress(0);
+                centerIcon.innerText = '🛡️';
+                statusTitle.innerText = 'Ready';
+                statusDesc.innerText = 'Click to shield network';
+                break;
+            case 'connecting':
+                setIndicatorColor('#EF4444'); // red
+                // Python will update progress, start at 10%
+                setProgress(10);
+                centerIcon.innerText = '⏳';
+                statusTitle.innerText = 'Optimizing';
+                statusDesc.innerText = 'Analyzing environment...';
+                break;
+            case 'connected':
+                setIndicatorColor('#10B981'); // green
+                setProgress(100);
+                innerCircle.classList.add('success-glow');
+                centerIcon.innerText = '🚀';
+                statusTitle.innerText = 'Secured';
+                statusDesc.innerText = 'DPI bypassed successfully';
+                break;
+            case 'failed':
+                setIndicatorColor('#EF4444'); // red
+                setProgress(100);
+                centerIcon.innerText = '❌';
+                statusTitle.innerText = 'Failed';
+                statusDesc.innerText = 'Could not establish tunnel';
+                break;
+        }
+    }
+
+    // Events sent FROM JS to Python
+    btnContainer.addEventListener('click', () => {
+        if (currentState === 'idle' || currentState === 'failed') {
+            postToPython('connect', {});
+        } else if (currentState === 'connected' || currentState === 'connecting') {
+            postToPython('disconnect', {});
+        }
+    });
+
+    function openSettings() {
+        postToPython('settings', {});
+    }
+
+    function quitApp() {
+        postToPython('quit', {});
+    }
+
+    function postToPython(action, payload) {
+        if (window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers.python) {
+            window.webkit.messageHandlers.python.postMessage({action: action, data: payload});
+        }
+    }
+
+    // Init UI
+    updateState('idle');
+</script>
+
+</body>
+</html>

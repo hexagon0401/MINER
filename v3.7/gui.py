@@ -14,7 +14,7 @@ from Foundation import NSObject, NSURL, NSURLRequest
 from AppKit import (
     NSApplication, NSApp, NSStatusBar, NSVariableStatusItemLength,
     NSPopover, NSViewController, NSEvent,
-    NSApplicationActivationPolicyProhibited
+    NSApplicationActivationPolicyAccessory
 )
 from WebKit import WKWebView, WKWebViewConfiguration, WKUserContentController
 
@@ -110,6 +110,8 @@ class SchoolNetAppDelegate(NSObject):
             self.trigger_optimization()
         elif action == 'disconnect':
             self.trigger_restore()
+        elif action == 'quit':
+            NSApplication.sharedApplication().terminate_(None)
         elif action == 'settings':
             # Opens settings.json natively
             import subprocess
@@ -210,9 +212,12 @@ class SchoolNetAppDelegate(NSObject):
         self.button.setTitle_("🛡")
         self.is_busy = False
 
+_delegate = None
+
 def run_gui():
+    global _delegate
     app = NSApplication.sharedApplication()
-    app.setActivationPolicy_(NSApplicationActivationPolicyProhibited)
-    delegate = SchoolNetAppDelegate.alloc().init()
-    app.setDelegate_(delegate)
+    app.setActivationPolicy_(NSApplicationActivationPolicyAccessory)
+    _delegate = SchoolNetAppDelegate.alloc().init()
+    app.setDelegate_(_delegate)
     NSApp().run()

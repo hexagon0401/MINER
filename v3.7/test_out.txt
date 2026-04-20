@@ -1,0 +1,2 @@
+/Users/yuhamin/Desktop/MINER/v3.7/test_popover.py:19: ObjCPointerWarning: PyObjCPointer created: at 0xc0f2f1ff0 of type ^{CGColor=}@:
+  view.layer().setBackgroundColor_(NSColor.redColor().CGColor())

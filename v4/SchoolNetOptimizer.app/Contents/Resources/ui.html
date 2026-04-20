@@ -1,0 +1,680 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SchoolNet Optimizer</title>
+    <style>
+        /* ═══════════════════════════════════════════════════════
+           Dark Onyx Design System — SchoolNet Optimizer v4
+           ═══════════════════════════════════════════════════════ */
+
+        :root {
+            /* Base Colors */
+            --bg-primary: rgba(12, 12, 18, 0.94);
+            --bg-secondary: rgba(22, 22, 32, 0.85);
+            --bg-card: rgba(30, 30, 44, 0.7);
+            --bg-card-hover: rgba(40, 40, 56, 0.8);
+
+            /* Borders */
+            --border-subtle: rgba(255, 255, 255, 0.06);
+            --border-active: rgba(255, 255, 255, 0.12);
+
+            /* Text */
+            --text-primary: #F1F5F9;
+            --text-secondary: #94A3B8;
+            --text-muted: #64748B;
+
+            /* Accent Gradient */
+            --accent-start: #06B6D4;   /* Cyan */
+            --accent-end: #10B981;     /* Emerald */
+            --accent-glow: rgba(6, 182, 212, 0.3);
+
+            /* Status Colors */
+            --status-idle: #64748B;
+            --status-connecting: #F59E0B;
+            --status-connected: #10B981;
+            --status-failed: #EF4444;
+
+            /* Sizes */
+            --panel-w: 340px;
+            --panel-h: 460px;
+            --ring-size: 140px;
+            --radius-lg: 16px;
+            --radius-md: 12px;
+            --radius-sm: 8px;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            width: var(--panel-w);
+            height: var(--panel-h);
+            background: var(--bg-primary);
+            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, sans-serif;
+            color: var(--text-primary);
+            overflow: hidden;
+            user-select: none;
+            -webkit-user-select: none;
+            position: relative;
+        }
+
+        /* Subtle inner gradient overlay */
+        body::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: radial-gradient(
+                ellipse at 50% 0%,
+                rgba(6, 182, 212, 0.04) 0%,
+                transparent 60%
+            );
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        /* Panel border glow */
+        body::after {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            border-radius: var(--radius-lg);
+            border: 1px solid var(--border-subtle);
+            pointer-events: none;
+            z-index: 10;
+        }
+
+        /* ── Layout ── */
+        #app {
+            position: relative;
+            z-index: 1;
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            padding: 0;
+        }
+
+        /* ── Title Bar ── */
+        #title-bar {
+            display: flex;
+            align-items: center;
+            padding: 14px 18px 10px;
+            gap: 10px;
+        }
+
+        #title-bar .icon {
+            font-size: 1.15rem;
+            line-height: 1;
+        }
+
+        #title-bar .title {
+            font-size: 0.82rem;
+            font-weight: 600;
+            letter-spacing: 0.04em;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+        }
+
+        #title-bar .version {
+            margin-left: auto;
+            font-size: 0.65rem;
+            color: var(--text-muted);
+            background: var(--bg-card);
+            padding: 2px 8px;
+            border-radius: 20px;
+            letter-spacing: 0.03em;
+        }
+
+        /* ── Network Info Card ── */
+        #net-info {
+            margin: 0 16px;
+            padding: 10px 14px;
+            background: var(--bg-card);
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-sm);
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 6px 16px;
+            transition: all 0.4s ease;
+        }
+
+        .info-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .info-item .label {
+            font-size: 0.68rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .info-item .value {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+
+        .info-dot {
+            width: 5px;
+            height: 5px;
+            border-radius: 50%;
+            background: var(--status-idle);
+            flex-shrink: 0;
+            transition: background 0.4s ease;
+        }
+
+        .info-dot.active { background: var(--status-connected); }
+        .info-dot.warn   { background: var(--status-connecting); }
+
+        /* ── Central Button Area ── */
+        #center-area {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 20px;
+            padding: 8px 0;
+        }
+
+        #button-container {
+            position: relative;
+            width: var(--ring-size);
+            height: var(--ring-size);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        #button-container:hover {
+            transform: scale(1.04);
+        }
+
+        #button-container:active {
+            transform: scale(0.96);
+        }
+
+        /* Inner circle — frosted glass effect */
+        #inner-circle {
+            position: absolute;
+            width: calc(var(--ring-size) - 22px);
+            height: calc(var(--ring-size) - 22px);
+            border-radius: 50%;
+            background: linear-gradient(
+                145deg,
+                rgba(255, 255, 255, 0.06) 0%,
+                rgba(255, 255, 255, 0.02) 100%
+            );
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow:
+                inset 0 1px 1px rgba(255, 255, 255, 0.06),
+                0 4px 20px rgba(0, 0, 0, 0.4);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2.2rem;
+            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+            z-index: 2;
+        }
+
+        #inner-circle.glow-success {
+            background: linear-gradient(
+                145deg,
+                rgba(16, 185, 129, 0.15) 0%,
+                rgba(6, 182, 212, 0.08) 100%
+            );
+            border-color: rgba(16, 185, 129, 0.25);
+            box-shadow:
+                0 0 30px rgba(16, 185, 129, 0.2),
+                0 0 60px rgba(16, 185, 129, 0.08),
+                inset 0 0 20px rgba(16, 185, 129, 0.1);
+        }
+
+        #inner-circle.glow-fail {
+            background: linear-gradient(
+                145deg,
+                rgba(239, 68, 68, 0.12) 0%,
+                rgba(239, 68, 68, 0.05) 100%
+            );
+            border-color: rgba(239, 68, 68, 0.2);
+            box-shadow: 0 0 25px rgba(239, 68, 68, 0.15);
+        }
+
+        #inner-circle.glow-connecting {
+            animation: pulse-connect 1.8s ease-in-out infinite;
+        }
+
+        @keyframes pulse-connect {
+            0%, 100% {
+                box-shadow:
+                    0 0 20px rgba(245, 158, 11, 0.1),
+                    inset 0 0 15px rgba(245, 158, 11, 0.05);
+            }
+            50% {
+                box-shadow:
+                    0 0 35px rgba(245, 158, 11, 0.2),
+                    inset 0 0 25px rgba(245, 158, 11, 0.1);
+            }
+        }
+
+        /* SVG Progress Ring */
+        svg.progress-ring {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            transform: rotate(-90deg);
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        .ring-bg {
+            fill: transparent;
+            stroke: rgba(255, 255, 255, 0.05);
+            stroke-width: 2px;
+        }
+
+        .ring-progress {
+            fill: transparent;
+            stroke: url(#ring-gradient);
+            stroke-width: 3px;
+            stroke-dasharray: 408.41 408.41;
+            stroke-dashoffset: 408.41;
+            stroke-linecap: round;
+            transition: stroke-dashoffset 0.7s cubic-bezier(0.4, 0, 0.2, 1);
+            filter: drop-shadow(0 0 4px var(--accent-glow));
+        }
+
+        .ring-progress.no-transition {
+            transition: none;
+        }
+
+        /* ── Status Text ── */
+        #status-box {
+            text-align: center;
+            pointer-events: none;
+        }
+
+        #status-title {
+            font-size: 1.05rem;
+            font-weight: 600;
+            letter-spacing: 0.02em;
+            margin-bottom: 5px;
+            background: linear-gradient(135deg, var(--text-primary), var(--text-secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            transition: all 0.4s ease;
+        }
+
+        #status-title.gradient-accent {
+            background: linear-gradient(135deg, var(--accent-start), var(--accent-end));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        #status-desc {
+            font-size: 0.78rem;
+            color: var(--text-muted);
+            line-height: 1.4;
+            max-width: 260px;
+            margin: 0 auto;
+        }
+
+        /* ── Bottom Action Bar ── */
+        #action-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 16px 14px;
+            border-top: 1px solid var(--border-subtle);
+        }
+
+        .action-btn {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 12px;
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            background: transparent;
+            border: none;
+            transition: all 0.2s ease;
+            outline: none;
+        }
+
+        .action-btn:hover {
+            background: var(--bg-card);
+            color: var(--text-secondary);
+        }
+
+        .action-btn .icon {
+            font-size: 1rem;
+            transition: transform 0.3s ease;
+        }
+
+        .action-btn.settings:hover .icon {
+            transform: rotate(60deg);
+        }
+
+        .action-btn.quit {
+            color: var(--status-failed);
+            opacity: 0.6;
+        }
+
+        .action-btn.quit:hover {
+            opacity: 1;
+            background: rgba(239, 68, 68, 0.1);
+        }
+
+        /* ── Status indicator strip ── */
+        #status-strip {
+            height: 2px;
+            background: var(--bg-secondary);
+            overflow: hidden;
+        }
+
+        #status-strip-inner {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, var(--accent-start), var(--accent-end));
+            transition: width 0.7s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 0 8px var(--accent-glow);
+        }
+
+        /* ── Connected sweep animation ── */
+        @keyframes sweep-glow {
+            0% { opacity: 0; transform: translateX(-100%); }
+            50% { opacity: 1; }
+            100% { opacity: 0; transform: translateX(100%); }
+        }
+
+        #sweep-overlay {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: linear-gradient(
+                90deg,
+                transparent 0%,
+                rgba(16, 185, 129, 0.06) 40%,
+                rgba(6, 182, 212, 0.08) 60%,
+                transparent 100%
+            );
+            opacity: 0;
+            pointer-events: none;
+            z-index: 5;
+            border-radius: var(--radius-lg);
+        }
+
+        #sweep-overlay.animate {
+            animation: sweep-glow 1.2s ease-out forwards;
+        }
+    </style>
+</head>
+<body>
+
+<div id="app">
+    <!-- Title Bar -->
+    <div id="title-bar">
+        <span class="icon">🛡</span>
+        <span class="title">SchoolNet Optimizer</span>
+        <span class="version">v4.0</span>
+    </div>
+
+    <!-- Status Strip -->
+    <div id="status-strip">
+        <div id="status-strip-inner"></div>
+    </div>
+
+    <!-- Network Info Card -->
+    <div id="net-info">
+        <div class="info-item">
+            <div class="info-dot" id="dot-ssid"></div>
+            <div>
+                <div class="label">SSID</div>
+                <div class="value" id="info-ssid">—</div>
+            </div>
+        </div>
+        <div class="info-item">
+            <div class="info-dot" id="dot-mode"></div>
+            <div>
+                <div class="label">Mode</div>
+                <div class="value" id="info-mode">—</div>
+            </div>
+        </div>
+        <div class="info-item">
+            <div class="info-dot" id="dot-provider"></div>
+            <div>
+                <div class="label">Provider</div>
+                <div class="value" id="info-provider">—</div>
+            </div>
+        </div>
+        <div class="info-item">
+            <div class="info-dot" id="dot-latency"></div>
+            <div>
+                <div class="label">Latency</div>
+                <div class="value" id="info-latency">—</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Center Interactive Area -->
+    <div id="center-area">
+        <div id="button-container" role="button" tabindex="0" aria-label="Connect/Disconnect">
+            <svg class="progress-ring" viewBox="0 0 140 140">
+                <defs>
+                    <linearGradient id="ring-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" stop-color="var(--accent-start)" />
+                        <stop offset="100%" stop-color="var(--accent-end)" />
+                    </linearGradient>
+                </defs>
+                <circle class="ring-bg" r="65" cx="70" cy="70"></circle>
+                <circle class="ring-progress" r="65" cx="70" cy="70"></circle>
+            </svg>
+            <div id="inner-circle">
+                <span id="center-icon">🛡️</span>
+            </div>
+        </div>
+
+        <div id="status-box">
+            <div id="status-title">Ready</div>
+            <div id="status-desc">Click to shield your network</div>
+        </div>
+    </div>
+
+    <!-- Bottom Action Bar -->
+    <div id="action-bar">
+        <button class="action-btn quit" id="quit-btn" onclick="quitApp()">
+            <span class="icon">⏻</span>
+            <span>Quit</span>
+        </button>
+        <button class="action-btn settings" id="settings-btn" onclick="openSettings()">
+            <span>Settings</span>
+            <span class="icon">⚙</span>
+        </button>
+    </div>
+</div>
+
+<!-- Sweep overlay for connected state -->
+<div id="sweep-overlay"></div>
+
+<!-- ═══ State Machine Logic ═══ -->
+<script>
+    // === DOM Elements ===
+    const ringProgress = document.querySelector('.ring-progress');
+    const radius = ringProgress.r.baseVal.value;
+    const circumference = radius * 2 * Math.PI;
+    const innerCircle = document.getElementById('inner-circle');
+    const centerIcon = document.getElementById('center-icon');
+    const statusTitle = document.getElementById('status-title');
+    const statusDesc = document.getElementById('status-desc');
+    const btnContainer = document.getElementById('button-container');
+    const stripInner = document.getElementById('status-strip-inner');
+    const sweepOverlay = document.getElementById('sweep-overlay');
+
+    // Info elements
+    const infoSSID = document.getElementById('info-ssid');
+    const infoMode = document.getElementById('info-mode');
+    const infoProvider = document.getElementById('info-provider');
+    const infoLatency = document.getElementById('info-latency');
+    const dotSSID = document.getElementById('dot-ssid');
+    const dotMode = document.getElementById('dot-mode');
+    const dotProvider = document.getElementById('dot-provider');
+    const dotLatency = document.getElementById('dot-latency');
+
+    // State
+    let currentState = 'idle';
+
+    // Init ring
+    ringProgress.style.strokeDasharray = `${circumference} ${circumference}`;
+    ringProgress.style.strokeDashoffset = circumference;
+
+    // === Helpers ===
+    function setProgress(percent) {
+        const offset = circumference - (percent / 100) * circumference;
+        ringProgress.style.strokeDashoffset = offset;
+        stripInner.style.width = `${percent}%`;
+    }
+
+    function resetRing() {
+        ringProgress.classList.add('no-transition');
+        ringProgress.style.strokeDashoffset = circumference;
+        stripInner.style.width = '0%';
+        requestAnimationFrame(() => {
+            requestAnimationFrame(() => {
+                ringProgress.classList.remove('no-transition');
+            });
+        });
+    }
+
+    function setAllDots(className) {
+        [dotSSID, dotMode, dotProvider, dotLatency].forEach(d => {
+            d.className = 'info-dot';
+            if (className) d.classList.add(className);
+        });
+    }
+
+    // === JS Bridge: Commands FROM Python ===
+    window.sendCommand = function(cmd, payload) {
+        switch(cmd) {
+            case 'state':
+                updateState(payload);
+                break;
+            case 'progress':
+                setProgress(payload.percent);
+                break;
+            case 'update_desc':
+                statusDesc.innerText = payload.text;
+                break;
+            case 'recon_info':
+                updateNetInfo(payload);
+                break;
+        }
+    };
+
+    function updateNetInfo(info) {
+        infoSSID.innerText = info.ssid || '—';
+        infoMode.innerText = (info.mode || '—').charAt(0).toUpperCase() + (info.mode || '').slice(1);
+        infoProvider.innerText = info.provider || '—';
+        infoLatency.innerText = info.latency ? `${info.latency}ms` : '—';
+
+        dotSSID.className = 'info-dot' + (info.ssid ? ' active' : '');
+        dotMode.className = 'info-dot' + (info.hijacked ? ' warn' : ' active');
+        dotProvider.className = 'info-dot' + (info.provider ? ' active' : '');
+        dotLatency.className = 'info-dot' + (info.latency > 0 ? ' active' : '');
+    }
+
+    function updateState(newState) {
+        currentState = newState;
+
+        // Clear all glow classes
+        innerCircle.className = '';
+
+        switch(newState) {
+            case 'idle':
+                resetRing();
+                centerIcon.innerText = '🛡️';
+                statusTitle.innerText = 'Ready';
+                statusTitle.className = '';
+                statusDesc.innerText = 'Click to shield your network';
+                setAllDots('');
+                break;
+
+            case 'connecting':
+                centerIcon.innerText = '⏳';
+                innerCircle.classList.add('glow-connecting');
+                statusTitle.innerText = 'Optimizing';
+                statusTitle.className = '';
+                statusDesc.innerText = 'Analyzing environment...';
+                setProgress(10);
+                break;
+
+            case 'connected':
+                setProgress(100);
+                innerCircle.classList.add('glow-success');
+                centerIcon.innerText = '🚀';
+                statusTitle.innerText = 'Secured';
+                statusTitle.className = 'gradient-accent';
+                statusDesc.innerText = 'DPI bypassed — network protected';
+                setAllDots('active');
+                // Trigger sweep animation
+                sweepOverlay.classList.remove('animate');
+                void sweepOverlay.offsetWidth; // force reflow
+                sweepOverlay.classList.add('animate');
+                break;
+
+            case 'disconnecting':
+                centerIcon.innerText = '⏳';
+                innerCircle.classList.add('glow-connecting');
+                statusTitle.innerText = 'Disconnecting';
+                statusTitle.className = '';
+                statusDesc.innerText = 'Restoring original settings...';
+                break;
+
+            case 'failed':
+                setProgress(100);
+                innerCircle.classList.add('glow-fail');
+                centerIcon.innerText = '✕';
+                statusTitle.innerText = 'Failed';
+                statusTitle.className = '';
+                // statusDesc is set separately via update_desc
+                break;
+        }
+    }
+
+    // === Events: JS → Python ===
+    btnContainer.addEventListener('click', () => {
+        if (currentState === 'idle' || currentState === 'failed') {
+            postToPython('connect', {});
+        } else if (currentState === 'connected') {
+            postToPython('disconnect', {});
+        }
+        // Ignore clicks during connecting/disconnecting
+    });
+
+    function openSettings() {
+        postToPython('settings', {});
+    }
+
+    function quitApp() {
+        postToPython('quit', {});
+    }
+
+    function postToPython(action, payload) {
+        if (window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers.python) {
+            window.webkit.messageHandlers.python.postMessage({ action: action, data: payload });
+        }
+    }
+
+    // Init
+    updateState('idle');
+</script>
+
+</body>
+</html>

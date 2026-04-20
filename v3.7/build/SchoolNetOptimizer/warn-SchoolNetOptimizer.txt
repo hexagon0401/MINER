@@ -66,7 +66,7 @@ missing module named AppKit.NSTextField - imported by AppKit (top-level), rumps.
 missing module named AppKit.NSAlert - imported by AppKit (top-level), rumps.rumps (top-level)
 missing module named AppKit.NSMenuItem - imported by AppKit (top-level), rumps.rumps (top-level)
 missing module named AppKit.NSMenu - imported by AppKit (top-level), rumps.rumps (top-level)
-missing module named AppKit.NSApplicationActivationPolicyProhibited - imported by AppKit (top-level), gui (top-level)
+missing module named AppKit.NSApplicationActivationPolicyAccessory - imported by AppKit (top-level), gui (top-level)
 missing module named AppKit.NSEvent - imported by AppKit (top-level), gui (top-level)
 missing module named AppKit.NSViewController - imported by AppKit (top-level), gui (top-level)
 missing module named AppKit.NSPopover - imported by AppKit (top-level), gui (top-level)
