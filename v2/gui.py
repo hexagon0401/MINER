@@ -17,6 +17,7 @@ import threading
 import asyncio
 import logging
 import time
+from typing import Optional
 from dataclasses import asdict
 
 from recon import run_recon, format_recon_report, PROVIDERS
@@ -42,9 +43,9 @@ class SchoolNetApp(rumps.App):
         set_language(self.config.language)
 
         self.recon_result  = None
-        self.proxy:        DoHProxy | None = None
-        self.proxy_thread: threading.Thread | None = None
-        self.proxy_loop:   asyncio.AbstractEventLoop | None = None
+        self.proxy:        Optional[DoHProxy] = None
+        self.proxy_thread: Optional[threading.Thread] = None
+        self.proxy_loop:   Optional[asyncio.AbstractEventLoop] = None
 
         # 동시 작업 방지 플래그
         self._busy = False

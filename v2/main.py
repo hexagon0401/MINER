@@ -33,7 +33,9 @@ def write_pid():
         f.write(str(os.getpid()))
 
 
-def read_pid() -> int | None:
+from typing import Optional
+
+def read_pid() -> Optional[int]:
     import os
     path = _pid_path()
     if os.path.exists(path):

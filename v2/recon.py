@@ -97,7 +97,9 @@ def get_original_dns(interface: str) -> list[str]:
         return []
 
 
-def _resolve_raw(ip: str, query: bytes, timeout: float = 2.0) -> bytes | None:
+from typing import Optional
+
+def _resolve_raw(ip: str, query: bytes, timeout: float = 2.0) -> Optional[bytes]:
     sock = None
     try:
         sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)

@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SchoolNet Optimizer Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #0B0E14;
+            --glass-bg: rgba(255, 255, 255, 0.03);
+            --glass-border: rgba(255, 255, 255, 0.08);
+            --primary: #7C3AED;
+            --primary-hover: #8B5CF6;
+            --success: #10B981;
+            --warning: #F59E0B;
+            --danger: #EF4444;
+            --text-main: #F9FAFB;
+            --text-muted: #9CA3AF;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-color);
+            background-image: 
+                radial-gradient(at 0% 0%, rgba(124, 58, 237, 0.15) 0px, transparent 50%),
+                radial-gradient(at 100% 100%, rgba(16, 185, 129, 0.1) 0px, transparent 50%);
+            background-attachment: fixed;
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .container {
+            width: 90%;
+            max-width: 900px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+            padding: 40px 0;
+        }
+
+        .card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid var(--glass-border);
+            border-radius: 24px;
+            padding: 32px;
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 40px rgba(0, 0, 0, 0.2);
+            border-color: rgba(255, 255, 255, 0.15);
+        }
+
+        /* Span full width for specific cards */
+        .full-width {
+            grid-column: 1 / -1;
+        }
+
+        h1, h2, h3 {
+            margin-top: 0;
+            font-weight: 600;
+        }
+
+        h1 {
+            font-size: 2rem;
+            margin-bottom: 8px;
+            background: linear-gradient(to right, #fff, #9CA3AF);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .badge.active { background: rgba(16, 185, 129, 0.15); color: var(--success); border: 1px solid rgba(16, 185, 129, 0.3); }
+        .badge.inactive { background: rgba(239, 68, 68, 0.15); color: var(--danger); border: 1px solid rgba(239, 68, 68, 0.3); }
+        .badge.warning { background: rgba(245, 158, 11, 0.15); color: var(--warning); border: 1px solid rgba(245, 158, 11, 0.3); }
+
+        .metric-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 0;
+            border-bottom: 1px solid var(--glass-border);
+        }
+        
+        .metric-row:last-child {
+            border-bottom: none;
+        }
+
+        .metric-label {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+
+        .metric-value {
+            font-size: 1.1rem;
+            font-weight: 600;
+        }
+
+        /* Dashboard controls */
+        .form-group {
+            margin-bottom: 24px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+
+        select, input[type="text"] {
+            width: 100%;
+            background: rgba(0, 0, 0, 0.2);
+            border: 1px solid var(--glass-border);
+            color: white;
+            padding: 12px 16px;
+            border-radius: 12px;
+            font-family: inherit;
+            font-size: 1rem;
+            outline: none;
+            transition: border-color 0.2s;
+            box-sizing: border-box;
+        }
+
+        select:focus, input[type="text"]:focus {
+            border-color: var(--primary);
+        }
+
+        /* Toggle Switch */
+        .switch-container {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 16px;
+        }
+
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 50px;
+            height: 28px;
+        }
+
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-color: rgba(255, 255, 255, 0.1);
+            transition: .4s;
+            border-radius: 34px;
+            border: 1px solid var(--glass-border);
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 20px;
+            width: 20px;
+            left: 4px;
+            bottom: 3px;
+            background-color: #9CA3AF;
+            transition: .4s;
+            border-radius: 50%;
+        }
+
+        input:checked + .slider {
+            background-color: var(--primary);
+            border-color: var(--primary);
+        }
+
+        input:checked + .slider:before {
+            transform: translateX(20px);
+            background-color: white;
+        }
+
+        /* Buttons */
+        .btn {
+            width: 100%;
+            padding: 14px;
+            border: none;
+            border-radius: 12px;
+            font-family: inherit;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            background: var(--primary);
+            color: white;
+            box-shadow: 0 4px 15px rgba(124, 58, 237, 0.4);
+        }
+
+        .btn:hover {
+            background: var(--primary-hover);
+            transform: translateY(-1px);
+        }
+
+        .btn:active {
+            transform: translateY(1px);
+        }
+
+        .btn-outline {
+            background: transparent;
+            border: 1px solid var(--glass-border);
+            color: var(--text-main);
+            box-shadow: none;
+            margin-top: 12px;
+        }
+        .btn-outline:hover {
+            background: rgba(255,255,255,0.05);
+        }
+
+        /* Terminal Console */
+        .console {
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid var(--glass-border);
+            border-radius: 12px;
+            padding: 16px;
+            font-family: 'Menlo', 'Monaco', monospace;
+            font-size: 0.85rem;
+            color: #A7F3D0;
+            height: 200px;
+            overflow-y: auto;
+            line-height: 1.5;
+        }
+        
+        .console p {
+            margin: 4px 0;
+        }
+        .console .err { color: #FCA5A5; }
+        .console .warn { color: #FCD34D; }
+
+        @media (max-width: 768px) {
+            .container {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <!-- Header / Status Card -->
+        <div class="card full-width" style="display: flex; justify-content: space-between; align-items: center;">
+            <div>
+                <h1>SchoolNet Optimizer</h1>
+                <p style="color: var(--text-muted); margin: 0;">Advanced DPI Bypass & DNS-over-HTTPS</p>
+            </div>
+            <div style="text-align: right;">
+                <div class="badge" id="app-status">Connecting...</div>
+                <div style="margin-top: 8px; font-size: 0.9rem; color: var(--text-muted);">
+                    Latency: <span id="ping-val" style="color: #fff; font-weight: 600;">-- ms</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Metrics Card -->
+        <div class="card">
+            <h2>Network Status</h2>
+            <div class="metric-row">
+                <span class="metric-label">SSID</span>
+                <span class="metric-value" id="val-ssid">Scanning...</span>
+            </div>
+            <div class="metric-row">
+                <span class="metric-label">Interface</span>
+                <span class="metric-value" id="val-iface">--</span>
+            </div>
+            <div class="metric-row">
+                <span class="metric-label">DNS Hijacking</span>
+                <span class="metric-value" id="val-hijack">--</span>
+            </div>
+            <div class="metric-row">
+                <span class="metric-label">Recommended Mode</span>
+                <span class="metric-value" id="val-mode" style="color: var(--primary);">--</span>
+            </div>
+            <div class="metric-row">
+                <span class="metric-label">Bypass Verification</span>
+                <span class="metric-value" id="val-verify">--</span>
+            </div>
+        </div>
+
+        <!-- Controls Card -->
+        <div class="card">
+            <h2>Settings</h2>
+            
+            <div class="form-group">
+                <label>Primary DNS Provider</label>
+                <select id="config-provider">
+                    <option value="quad9">Quad9 (Recommended)</option>
+                    <option value="cloudflare">Cloudflare (Fastest)</option>
+                    <option value="adguard">AdGuard (Ad Blocking)</option>
+                </select>
+            </div>
+
+            <div class="switch-container">
+                <div>
+                    <span style="font-weight: 600; display: block;">Obfuscation Mode</span>
+                    <span style="font-size: 0.8rem; color: var(--text-muted);">Bypass deep-packet inspection</span>
+                </div>
+                <label class="switch">
+                    <input type="checkbox" id="config-obf">
+                    <span class="slider"></span>
+                </label>
+            </div>
+
+            <div class="switch-container">
+                <div>
+                    <span style="font-weight: 600; display: block;">Auto-Start at Login</span>
+                </div>
+                <label class="switch">
+                    <input type="checkbox" id="config-auto">
+                    <span class="slider"></span>
+                </label>
+            </div>
+
+            <button class="btn" id="btn-save">Save & Apply Changes</button>
+            <button class="btn btn-outline" id="btn-turn-off">Restore Original Network</button>
+        </div>
+
+        <!-- Live Terminal logs -->
+        <div class="card full-width">
+            <h2>System Logs</h2>
+            <div class="console" id="term-console">
+                <p>Initializing dashboard...</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const apiBase = "http://127.0.0.1:5354/api";
+        
+        function log(msg, type='info') {
+            const term = document.getElementById('term-console');
+            const p = document.createElement('p');
+            const time = new Date().toLocaleTimeString([], {hour12: false});
+            p.innerHTML = `<span style="color:#6B7280">[${time}]</span> ${msg}`;
+            if(type === 'err') p.className = 'err';
+            if(type === 'warn') p.className = 'warn';
+            term.appendChild(p);
+            term.scrollTop = term.scrollHeight;
+        }
+
+        function updateBadge(statusData) {
+            const b = document.getElementById('app-status');
+            if(statusData.running) {
+                b.textContent = 'Active & Protected';
+                b.className = 'badge active';
+            } else if (statusData.optimizing) {
+                b.textContent = 'Optimizing...';
+                b.className = 'badge warning';
+            } else {
+                b.textContent = 'Inactive';
+                b.className = 'badge inactive';
+            }
+        }
+
+        async function fetchStatus() {
+            try {
+                const res = await fetch(`${apiBase}/status`);
+                if(!res.ok) throw new Error("API unreachable");
+                const data = await res.json();
+                
+                updateBadge(data);
+                
+                document.getElementById('ping-val').textContent = data.latency > 0 ? `${Math.round(data.latency)} ms` : '-- ms';
+                
+                // Recon data
+                if(data.recon) {
+                    document.getElementById('val-ssid').textContent = data.recon.ssid || 'Unknown';
+                    document.getElementById('val-iface').textContent = data.recon.interface || '--';
+                    document.getElementById('val-hijack').textContent = data.recon.dns_hijacked ? 'Detected ⚠️' : 'None';
+                    if(data.recon.dns_hijacked) document.getElementById('val-hijack').style.color = 'var(--danger)';
+                    else document.getElementById('val-hijack').style.color = 'var(--success)';
+                    
+                    document.getElementById('val-mode').textContent = (data.recon.recommended_mode || 'Unknown').toUpperCase();
+                }
+
+                // Verify
+                const v = document.getElementById('val-verify');
+                if(data.bypass_verified === true) {
+                    v.textContent = 'Success 🔓';
+                    v.style.color = 'var(--success)';
+                } else if(data.bypass_verified === false) {
+                    v.textContent = 'Blocked 🔒';
+                    v.style.color = 'var(--danger)';
+                } else {
+                    v.textContent = 'Pending...';
+                    v.style.color = 'var(--text-muted)';
+                }
+
+                // Update controls if not touched by user recently
+                if(!window.configDirty) {
+                    document.getElementById('config-provider').value = data.settings.primary_provider || 'quad9';
+                    document.getElementById('config-obf').checked = data.settings.obfuscation_enabled || false;
+                    document.getElementById('config-auto').checked = data.settings.auto_start || false;
+                }
+
+            } catch(e) {
+                updateBadge({running: false, optimizing: false});
+            }
+        }
+
+        async function fetchLogs() {
+            try {
+                const res = await fetch(`${apiBase}/logs`);
+                const data = await res.json();
+                if(data.logs && data.logs.length > 0) {
+                    data.logs.forEach(l => log(l));
+                }
+            } catch(e) {}
+        }
+
+        // Setup Event Listeners
+        const controls = ['config-provider', 'config-obf', 'config-auto'];
+        controls.forEach(id => {
+            document.getElementById(id).addEventListener('change', () => { window.configDirty = true; });
+        });
+
+        document.getElementById('btn-save').addEventListener('click', async () => {
+            const provider = document.getElementById('config-provider').value;
+            const obf = document.getElementById('config-obf').checked;
+            const auto = document.getElementById('config-auto').checked;
+            
+            const btn = document.getElementById('btn-save');
+            btn.textContent = 'Applying...';
+            btn.style.opacity = '0.7';
+
+            try {
+                const res = await fetch(`${apiBase}/settings`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ primary_provider: provider, obfuscation_enabled: obf, auto_start: auto })
+                });
+                const data = await res.json();
+                if(res.ok) log(`Settings applied. Optimization triggered.`);
+                else log(`Failed to apply: ${data.error}`, 'err');
+                window.configDirty = false;
+            } catch(e) {
+                log(`Error saving: ${e.message}`, 'err');
+            }
+            
+            btn.textContent = 'Save & Apply Changes';
+            btn.style.opacity = '1';
+        });
+
+        document.getElementById('btn-turn-off').addEventListener('click', async () => {
+            try {
+                log("Restoring original network settings...");
+                await fetch(`${apiBase}/restore`, {method: 'POST'});
+                log("Network restored.");
+                fetchStatus();
+            } catch(e) {
+                log(`Error restoring: ${e.message}`, 'err');
+            }
+        });
+
+        // Polling loops
+        setInterval(fetchStatus, 2000);
+        setInterval(fetchLogs, 1000);
+
+        // Initial fetch
+        fetchStatus();
+    </script>
+</body>
+</html>

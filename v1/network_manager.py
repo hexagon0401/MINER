@@ -6,6 +6,7 @@ import subprocess
 import time
 import httpx
 from dataclasses import dataclass
+from typing import Optional
 
 from recon import ReconResult
 from settings import Settings
@@ -16,7 +17,7 @@ class OptimizationResult:
     mode: str
     pfctl_active: bool
     dns_set: bool
-    error: str | None
+    error: Optional[str]
 
 def _run_osascript(commands: list[str]) -> tuple[bool, str]:
     script = " && ".join(commands)

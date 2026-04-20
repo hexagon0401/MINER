@@ -22,6 +22,7 @@ import httpx
 import logging
 from collections import OrderedDict
 
+from typing import Tuple, Optional, Union
 from recon import ReconResult, PROVIDERS
 from settings import Settings
 
@@ -50,7 +51,7 @@ class LRUCache:
 # DNS 파싱 유틸
 # ──────────────────────────────────────────────
 
-def parse_dns_query(data: bytes) -> tuple[bytes | None, str | None, int | None]:
+def parse_dns_query(data: bytes) -> Tuple[Optional[bytes], Optional[str], Optional[int]]:
     if len(data) < 12:
         return None, None, None
 
@@ -184,7 +185,7 @@ class DoHProxy:
         self._stop_event = asyncio.Event()
         self._tasks:  set[asyncio.Task] = set()
         self.transport = None
-        self._client:  httpx.AsyncClient | None = None
+        self._client:  Optional[httpx.AsyncClient] = None
 
         # gui.py에서 sleep(1) 대신 사용하는 준비 완료 신호
         self.ready = threading.Event()
@@ -295,7 +296,7 @@ class DoHProxy:
             h["Cache-Control"]   = "no-cache"
         return h
 
-    async def _fetch(self, name: str, data: bytes) -> bytes | None:
+    async def _fetch(self, name: str, data: bytes) -> Optional[bytes]:
         now = time.time()
         # cooldown 중이면 건너뜀
         if now - self.provider_fails.get(name, float("-inf")) < COOLDOWN:
@@ -311,7 +312,7 @@ class DoHProxy:
             self.provider_fails[name] = now
             return None
 
-    async def _resolve(self, raw: bytes, qname: str, qtype: int) -> bytes | None:
+    async def _resolve(self, raw: bytes, qname: str, qtype: int) -> Optional[bytes]:
         if self.mode == "obfuscated":
             await asyncio.sleep(random.uniform(0, 0.100))
 

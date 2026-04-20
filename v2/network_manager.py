@@ -18,6 +18,7 @@ import logging
 import httpx
 from dataclasses import dataclass
 from concurrent.futures import ThreadPoolExecutor
+from typing import Optional
 
 from recon import ReconResult, PROVIDERS
 from settings import Settings
@@ -30,7 +31,7 @@ class OptimizationResult:
     mode:         str
     pfctl_active: bool
     dns_set:      bool
-    error:        str | None
+    error:        Optional[str]
 
 
 def _shell_escape(s: str) -> str:
