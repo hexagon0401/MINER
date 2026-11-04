@@ -40,7 +40,11 @@ jobs:
         working-directory: v5
         run: |
           export SCHOOLNET_TEST_ENGINE="$PWD/local/bin/sing-box"
-          python -m unittest discover -s tests -v
+          set +e
+          python -m unittest discover -s tests -v > "$RUNNER_TEMP/miner-tests-${{ matrix.arch }}.log" 2>&1
+          result=$?
+          cat "$RUNNER_TEMP/miner-tests-${{ matrix.arch }}.log"
+          exit "$result"
       - name: Import Developer ID if configured
         id: signing
         working-directory: v5
@@ -59,11 +63,24 @@ jobs:
           APPLE_NOTARY_KEY_ID: ${{ secrets.APPLE_NOTARY_KEY_ID }}
           APPLE_NOTARY_ISSUER_ID: ${{ secrets.APPLE_NOTARY_ISSUER_ID }}
         run: |
+          set +e
           if [ "$SIGNING_ENABLED" = true ]; then
-            python macos/build.py --arch '${{ matrix.arch }}' --signing developer-id
+            python macos/build.py --arch '${{ matrix.arch }}' --signing developer-id > "$RUNNER_TEMP/miner-build-${{ matrix.arch }}.log" 2>&1
           else
-            python macos/build.py --arch '${{ matrix.arch }}' --signing adhoc
+            python macos/build.py --arch '${{ matrix.arch }}' --signing adhoc > "$RUNNER_TEMP/miner-build-${{ matrix.arch }}.log" 2>&1
           fi
+          result=$?
+          cat "$RUNNER_TEMP/miner-build-${{ matrix.arch }}.log"
+          exit "$result"
+      - name: Retain native test/build diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: miner-diagnostics-${{ matrix.arch }}
+          path: |
+            ${{ runner.temp }}/miner-tests-${{ matrix.arch }}.log
+            ${{ runner.temp }}/miner-build-${{ matrix.arch }}.log
+          if-no-files-found: warn
       - name: Remove temporary signing keychain
         if: always() && steps.signing.outputs.keychain != ''
         working-directory: v5
@@ -109,6 +126,12 @@ jobs:
       actions: read
     steps:
       - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        continue-on-error: true
+        with:
+          pattern: miner-diagnostics-*
+          path: ${{ runner.temp }}/miner-build-report
+          merge-multiple: true
       - name: Collect native build and release evidence
         env:
           GH_TOKEN: ${{ github.token }}
