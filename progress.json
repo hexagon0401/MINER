@@ -1,0 +1,21 @@
+{
+  "tag": "v5.0.0-beta.1",
+  "source_sha": "8cc4f8f880b2d438b297941af038f743aca18af4",
+  "queue_timed_out": true,
+  "run_url": "https://github.com/hexagon0401/MINER/actions/runs/41873976741",
+  "release": {
+    "assets": [],
+    "isPrerelease": true,
+    "name": "MINER BETA",
+    "url": "https://github.com/hexagon0401/MINER/releases/tag/v5.0.0-beta.1"
+  },
+  "jobs": [
+    {
+      "name": "build (macos-26, arm64)",
+      "status": "queued",
+      "conclusion": null,
+      "runner_name": null,
+      "steps": []
+    }
+  ]
+}
