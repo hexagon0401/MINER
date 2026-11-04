@@ -10,6 +10,10 @@ on:
 permissions:
   contents: read
 
+concurrency:
+  group: schoolnet-v5-alpha-macos
+  cancel-in-progress: true
+
 jobs:
   build:
     strategy:
