@@ -50,11 +50,11 @@ def main(argv=None):
     args = parser.parse_args(argv)
     try:
         if args.command == "community-diagnose":
-            from community.diagnostics import diagnose
+            from community.diagnostics import diagnose, CHECKS
             try:
                 result = diagnose(args.directory, args.engine)
             except (OSError, ValueError, TypeError, subprocess.CalledProcessError, subprocess.TimeoutExpired):
-                result = {"schemaVersion":1,"passed":False,"checks":{},"failureCode":"diagnostic_failed"}
+                result = {"schemaVersion":1,"passed":False,"checks":dict.fromkeys(CHECKS,False),"failureCode":"diagnostic_failed"}
             print(json.dumps(result))
             return 0
         elif args.command == "init":

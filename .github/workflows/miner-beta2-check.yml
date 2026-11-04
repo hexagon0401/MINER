@@ -1,0 +1,99 @@
+name: MINER beta 2 local and native validation
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths: ['v5/macos/*.swift', 'v5/macos/build.py', 'v5/community/**', 'v5/tests/**', 'v5/main.py', '.github/workflows/miner-beta2-check.yml']
+permissions:
+  contents: read
+concurrency:
+  group: miner-beta2-validation
+  cancel-in-progress: false
+jobs:
+  portable:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Existing and community regression tests
+        working-directory: v5
+        run: |
+          python install_engine.py
+          SCHOOLNET_TEST_ENGINE="$PWD/local/bin/sing-box" python -m unittest discover -s tests -v
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+          cache-dependency-path: v5/community/server/package-lock.json
+      - name: Local Workers and D1 only; never deploy
+        working-directory: v5/community/server
+        env:
+          WRANGLER_SEND_METRICS: 'false'
+        run: |
+          npm ci --ignore-scripts --no-audit --no-fund
+          npm run typecheck
+          npm test
+  native:
+    needs: portable
+    runs-on: macos-26
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install packager
+        run: python -m pip install 'pyinstaller==6.22.3' 'certifi==2026.10.23' 'dmgbuild==1.6.7'
+      - name: Native UI, CryptoKit protocol and SQLite tests without live WARP
+        working-directory: v5
+        run: |
+          set +e
+          python macos/build.py --arch arm64 --validation-only > "$RUNNER_TEMP/miner-build-arm64.log" 2>&1
+          result=$?
+          cat "$RUNNER_TEMP/miner-build-arm64.log"
+          exit "$result"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: beta2-native-evidence
+          path: |
+            ${{ runner.temp }}/miner-build-arm64.log
+            ${{ runner.temp }}/miner-ui-arm64*.png
+            ${{ runner.temp }}/miner-ui-arm64.json
+            ${{ runner.temp }}/miner-school-native-report.json
+  report:
+    if: always()
+    needs: [portable,native]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        continue-on-error: true
+        with:
+          name: beta2-native-evidence
+          path: ${{ runner.temp }}/beta2-report
+      - name: Record test evidence independently of release publication
+        env:
+          PORTABLE_RESULT: ${{ needs.portable.result }}
+          NATIVE_RESULT: ${{ needs.native.result }}
+        run: |
+          python3 - <<'PY'
+          import os,json
+          from pathlib import Path
+          catalog=json.loads(Path('v5/community/data/schools.json').read_text())
+          target=Path(os.environ['RUNNER_TEMP'])/'beta2-report'
+          target.mkdir(parents=True,exist_ok=True)
+          (target/'status.json').write_text(json.dumps({'source_sha':os.environ['GITHUB_SHA'],'portable':os.environ['PORTABLE_RESULT'],'native':os.environ['NATIVE_RESULT'],'catalog_complete':catalog['complete'],'run_url':f"https://github.com/{os.environ['GITHUB_REPOSITORY']}/actions/runs/{os.environ['GITHUB_RUN_ID']}"},indent=2))
+          PY
+          ref="miner-beta2-validation/${GITHUB_SHA}-${GITHUB_RUN_ID}"
+          git switch --orphan "$ref"
+          cp "$RUNNER_TEMP/beta2-report"/* .
+          git config user.name 'MINER Build Reports'
+          git config user.email 'github-actions[bot]@users.noreply.github.com'
+          git add --all
+          git commit -m 'Record beta 2 native and local validation'
+          git push origin "HEAD:refs/heads/$ref"

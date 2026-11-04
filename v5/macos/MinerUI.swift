@@ -225,17 +225,23 @@ struct MinerRoot: View {
     }
 }
 struct MinerSettings: View {
-    @ObservedObject var model: MinerModel
-    let controller: AppDelegate
-    var body: some View {
-        Form {
-            Text(model.tr("MINER 설정","MINER Settings")).font(.title2)
-            Picker(model.tr("언어","Language"),selection:$model.language) { Text("한국어").tag("ko"); Text("English").tag("en") }.pickerStyle(.segmented)
-            Text(model.tr("중지·종료 시 WARP를 UDP Traffic and DNS로 복귀합니다.","Stopping or quitting restores WARP to UDP Traffic and DNS.")).font(.caption).foregroundStyle(.secondary)
-            Divider()
-            MinerAbout(model:model)
-            Divider()
-            Button(role:.destructive) { controller.uninstall() } label: { Text(model.tr("MINER 제거…","Uninstall MINER…")) }.disabled(model.busy)
-        }.padding(24).frame(width:420,height:380)
+    @ObservedObject var model:MinerModel
+    let controller:AppDelegate
+    var body:some View {
+        ScrollView {
+            VStack(alignment:.leading,spacing:16) {
+                Text(model.tr("MINER 설정","MINER Settings")).font(.title2)
+                Picker(model.tr("언어","Language"),selection:$model.language) {
+                    Text("한국어").tag("ko");Text("English").tag("en")
+                }.pickerStyle(.segmented)
+                Text(model.tr("중지·종료 시 WARP를 UDP Traffic and DNS로 복귀합니다.","Stopping or quitting restores WARP to UDP Traffic and DNS.")).font(.caption).foregroundStyle(.secondary)
+                Divider()
+                SchoolSummaryView(community:controller.community,model:model,controller:controller)
+                Divider()
+                MinerAbout(model:model)
+                Divider()
+                Button(role:.destructive) { controller.uninstall() } label: { Text(model.tr("MINER 제거…","Uninstall MINER…")) }.disabled(model.busy)
+            }.padding(24).frame(maxWidth:.infinity,alignment:.leading)
+        }.frame(minWidth:440,minHeight:520)
     }
 }

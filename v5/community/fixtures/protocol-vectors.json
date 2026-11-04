@@ -1,0 +1,42 @@
+{
+  "testOnly": true,
+  "canonicalReport": "{\"appVersion\":\"5.0.0-beta.2\",\"catalogVersion\":\"c833feccc81ca49f524e8a64e97d9c453043be0a137b800824ea29ac2373cb83\",\"challenge\":null,\"checks\":{\"engine_running\":true,\"engine_schema\":true,\"native_platform\":true,\"socks5_greeting\":true,\"warp_local_proxy_mode\":true,\"warp_trace\":true},\"clientConfirmed\":true,\"clientReturn\":\"not_tested\",\"diagnosedAt\":\"2020-01-01T00:00:00Z\",\"failureCode\":null,\"game\":\"not_tested\",\"id\":\"11111111-1111-4111-8111-111111111111\",\"osMajor\":16,\"outcome\":\"success\",\"schemaVersion\":1,\"schoolId\":\"TEST:H1\",\"schoolNetworkConfirmed\":true,\"video\":\"not_tested\"}",
+  "report": {
+    "payload": {
+      "schemaVersion": 1,
+      "id": "11111111-1111-4111-8111-111111111111",
+      "schoolId": "TEST:H1",
+      "catalogVersion": "c833feccc81ca49f524e8a64e97d9c453043be0a137b800824ea29ac2373cb83",
+      "diagnosedAt": "2020-01-01T00:00:00Z",
+      "appVersion": "5.0.0-beta.2",
+      "osMajor": 16,
+      "checks": {
+        "engine_running": true,
+        "native_platform": true,
+        "engine_schema": true,
+        "warp_local_proxy_mode": true,
+        "socks5_greeting": true,
+        "warp_trace": true
+      },
+      "schoolNetworkConfirmed": true,
+      "clientConfirmed": true,
+      "game": "not_tested",
+      "video": "not_tested",
+      "clientReturn": "not_tested",
+      "outcome": "success",
+      "failureCode": null,
+      "challenge": null
+    },
+    "publicKey": "BFutHcu-gD-OT2GsYWpcKL1_stVm0ZSl4knOiVfrQK1wbowNMq_NzLr-4PDrSDCbQSJjsqpA39kEEWHABspcIGY",
+    "signature": "LMGFNtv7qVYuA2fF9X5ehAtcSSMiVCWwzBWQy8e40ICk6QHNPWidWC-oW56NL6kAjCafZTg6Bw6P918_iikJtQ"
+  },
+  "snapshotPublicKey": "SVy_Yo6dlTrcXlrAs6WVBW-FARKo4eJqti2tNW1nbQI",
+  "snapshot": {
+    "payload": "eyJjYXRhbG9nVmVyc2lvbiI6ImM4MzNmZWNjYzgxY2E0OWY1MjRlOGE2NGU5N2Q5YzQ1MzA0M2JlMGExMzdiODAwODI0ZWEyOWFjMjM3M2NiODMiLCJjb3VudHMiOnsiZWxlbWVudGFyeSI6MCwiaGlnaCI6MSwibWlkZGxlIjowfSwiZ2VuZXJhdGVkQXQiOiIyMDIwLTAxLTAxVDAwOjAwOjAwLjAwMFoiLCJzY2hlbWFWZXJzaW9uIjoxLCJzY2hvb2xzIjpbeyJsYXN0RmFpbHVyZURheSI6bnVsbCwibGFzdFN1Y2Nlc3NEYXkiOiIyMDIwLTAxLTAxIiwic2Nob29sSWQiOiJURVNUOkgxIn1dLCJzZXF1ZW5jZSI6Mn0",
+    "signature": "GdgsJuPEHNYm3leMvsXAUEajhas99YhVZdtw_S__wwxOnKv8Jxep2pCH0VJk1qJFCM4KWZReGgA099VXfW7FBQ"
+  },
+  "olderSnapshot": {
+    "payload": "eyJjYXRhbG9nVmVyc2lvbiI6ImM4MzNmZWNjYzgxY2E0OWY1MjRlOGE2NGU5N2Q5YzQ1MzA0M2JlMGExMzdiODAwODI0ZWEyOWFjMjM3M2NiODMiLCJjb3VudHMiOnsiZWxlbWVudGFyeSI6MCwiaGlnaCI6MSwibWlkZGxlIjowfSwiZ2VuZXJhdGVkQXQiOiIyMDIwLTAxLTAxVDAwOjAwOjAwLjAwMFoiLCJzY2hlbWFWZXJzaW9uIjoxLCJzY2hvb2xzIjpbeyJsYXN0RmFpbHVyZURheSI6bnVsbCwibGFzdFN1Y2Nlc3NEYXkiOiIyMDIwLTAxLTAxIiwic2Nob29sSWQiOiJURVNUOkgxIn1dLCJzZXF1ZW5jZSI6MX0",
+    "signature": "kfTmvmoEyXXw8bouyvD4FGcIufARh89MUa644Ej3X_mmLL6RqeXeUTPtyHtsZ7F6MmMr9Tt0NUctmbcdOsaTDg"
+  }
+}

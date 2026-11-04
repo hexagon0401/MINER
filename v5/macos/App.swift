@@ -17,6 +17,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     var window: NSWindow!
     let model = MinerModel()
     var settingsWindow: NSWindow?
+    var schoolsWindow:NSWindow?
+    lazy var community = SchoolCommunityModel(dataDirectory:dataDirectory,catalogURL:resources.appendingPathComponent("Community/schools.sqlite3"),cli:cli,engine:engine)
     var managedWarp = false
     var buttons: [NSButton] = []
     var running = false { didSet { model.engine = running } }
@@ -67,7 +69,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             runDeltaSmoke(output:URL(fileURLWithPath:CommandLine.arguments[index+1]),arch:CommandLine.arguments[index+2])
             return
         }
-        append("MINER BETA: 학교 연결·게임 핑·종료 복구는 실기 확인이 필요합니다.")
+        append("MINER BETA 2: 학교 연결·게임 핑·종료 복구는 실기 확인이 필요합니다.")
         refresh()
     }
 
@@ -175,13 +177,24 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
     @objc func showSettings() {
         if settingsWindow == nil {
-            let settings = NSWindow(contentRect:NSRect(x:0,y:0,width:420,height:380),styleMask:[.titled,.closable],backing:.buffered,defer:false)
+            let settings = NSWindow(contentRect:NSRect(x:0,y:0,width:460,height:640),styleMask:[.titled,.closable,.resizable],backing:.buffered,defer:false)
             settings.title = "MINER Settings"
+            settings.minSize = NSSize(width:440,height:520)
             settings.isReleasedWhenClosed = false
             settings.contentView = NSHostingView(rootView:MinerSettings(model:model,controller:self))
             settings.center(); settingsWindow = settings
         }
         settingsWindow?.makeKeyAndOrderFront(nil)
+    }
+    @objc func showSchools() {
+        if schoolsWindow == nil {
+            let window = NSWindow(contentRect:NSRect(x:0,y:0,width:720,height:620),styleMask:[.titled,.closable,.resizable],backing:.buffered,defer:false)
+            window.title = "MINER · Schools"
+            window.minSize = NSSize(width:600,height:480);window.isReleasedWhenClosed = false
+            window.contentView = NSHostingView(rootView:SchoolDetailsView(community:community,model:model))
+            window.center();schoolsWindow = window
+        }
+        schoolsWindow?.makeKeyAndOrderFront(nil)
     }
     @objc func showDiagnostics() {
         let log = URL(fileURLWithPath:"/Library/Application Support/SchoolNet v5 Alpha/engine.log")
@@ -266,6 +279,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             if let data = try? Data(contentsOf: marker),
                let owner = try? JSONSerialization.jsonObject(with: data) as? [String: String], owner["id"] == identifier {
                 try FileManager.default.removeItem(at: self.dataDirectory)
+                try SchoolCrypto.removeKey()
             }
             return result
         }, completion: {
