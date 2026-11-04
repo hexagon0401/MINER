@@ -13,14 +13,14 @@ class DmgLayoutTests(unittest.TestCase):
             background = root / "background.png"
             background.write_bytes(b"fixture-path-only")
             config = settings(app, background)
-            self.assertEqual(config["files"], [str(app)])
+            self.assertEqual(config["files"], [str(app.resolve())])
             self.assertEqual(config["symlinks"], {"Applications": "/Applications"})
             self.assertEqual(config["icon_locations"][app.name], APP_POSITION)
             self.assertEqual(config["icon_locations"]["Applications"], APPLICATIONS_POSITION)
             self.assertLess(APP_POSITION[0], APPLICATIONS_POSITION[0])
             self.assertIsNone(config["arrange_by"])
             self.assertFalse(config["show_toolbar"])
-            self.assertEqual(config["background"], str(background))
+            self.assertEqual(config["background"], str(background.resolve()))
             for x, y in [APP_POSITION, APPLICATIONS_POSITION]:
                 self.assertTrue(ICON_SIZE/2 < x < WINDOW_SIZE[0]-ICON_SIZE/2)
                 self.assertTrue(ICON_SIZE/2 < y < WINDOW_SIZE[1]-ICON_SIZE/2)
