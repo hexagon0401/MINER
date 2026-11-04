@@ -31,7 +31,7 @@ def validate_resource_paths(app):
             raise ValueError(f"non-ASCII bundle path would risk resource sealing: {path}")
 
 
-def build(expected_arch, signing="adhoc", identity=None, notary_profile=None):
+def build(expected_arch, signing="adhoc", identity=None, notary_profile=None, dmg_background=None):
     if platform.system() != "Darwin":
         raise ValueError("DMG builds require macOS (GitHub Actions workflow is provided)")
     arch = platform.machine()
@@ -134,12 +134,16 @@ def build(expected_arch, signing="adhoc", identity=None, notary_profile=None):
     (stage / "Applications").symlink_to("/Applications")
     output = ROOT / "dist"
     output.mkdir(exist_ok=True)
-    name = f"SchoolNet-v{__version__}-macOS-{'AppleSilicon' if arch == 'arm64' else 'Intel'}.dmg"
+    name = f"MINER-v{__version__}-macOS-{'AppleSilicon' if arch == 'arm64' else 'Intel'}.dmg"
     dmg = output / name
     if dmg.exists():
         raise ValueError(f"output already exists: {dmg}")
-    execute("hdiutil", "create", "-volname", "SchoolNet v5 Alpha", "-srcfolder", stage,
-            "-format", "UDZO", dmg)
+    if dmg_background is not None:
+        from macos.dmg_layout import create
+        create(dmg, app, dmg_background, work, execute)
+    else:
+        execute("hdiutil", "create", "-volname", "SchoolNet v5 Alpha", "-srcfolder", stage,
+                "-format", "UDZO", dmg)
     dmg_receipt = None
     if signed:
         execute("codesign", "--force", "--timestamp", "--sign", identity, dmg)
@@ -150,6 +154,9 @@ def build(expected_arch, signing="adhoc", identity=None, notary_profile=None):
         execute("hdiutil", "attach", "-readonly", "-nobrowse", "-mountpoint", mount, dmg)
         try:
             mounted = Path(mount) / "SchoolNet v5 Alpha.app"
+            if dmg_background is not None:
+                from macos.dmg_layout import verify
+                verify(mount, mounted.name)
             execute("codesign", "--verify", "--deep", "--strict", mounted)
             execute(mounted / "Contents/Resources/runtime/schoolnet-cli/schoolnet-cli", "--version")
             # Verify the installed copy as well as the read-only volume. This
@@ -173,6 +180,7 @@ def build(expected_arch, signing="adhoc", identity=None, notary_profile=None):
         "version": __version__, "architecture": arch, "signing": signing,
         "app_notarization": app_receipt, "dmg_notarization": dmg_receipt,
         "dmg_to_disk_signature_verified": True, "sha256": digest,
+        "finder_background_layout_verified": dmg_background is not None,
     }, indent=2), encoding="utf-8")
     print(f"Verified DMG: {dmg}")
 
@@ -183,5 +191,7 @@ if __name__ == "__main__":
     parser.add_argument("--signing", choices=["adhoc", "developer-id"], default="adhoc")
     parser.add_argument("--identity", help="local Developer ID certificate name or fingerprint")
     parser.add_argument("--notary-profile", help="local notarytool keychain profile")
+    default_background = ROOT / "macos/design/dmg-background.png"
+    parser.add_argument("--dmg-background", type=Path, default=default_background if default_background.is_file() else None)
     args = parser.parse_args()
-    build(args.arch, args.signing, args.identity, args.notary_profile)
+    build(args.arch, args.signing, args.identity, args.notary_profile, args.dmg_background)
