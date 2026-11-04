@@ -1,0 +1,87 @@
+203 INFO: PyInstaller: 6.22.3, contrib hooks: 2026.9
+204 INFO: Python: 3.12.10
+397 INFO: Platform: macOS-15.7.9-x86_64-i386-64bit
+398 INFO: Python environment: /Library/Frameworks/Python.framework/Versions/3.12
+399 INFO: wrote /Users/runner/work/MINER/MINER/v5/build/macos-x86_64/schoolnet-cli.spec
+408 INFO: Removing temporary files and cleaning cache in /Users/runner/Library/Application Support/pyinstaller
+411 INFO: Module search paths (PYTHONPATH):
+['/Users/runner/work/MINER/MINER/v5',
+ '/Library/Frameworks/Python.framework/Versions/3.12/lib/python312.zip',
+ '/Library/Frameworks/Python.framework/Versions/3.12/lib/python3.12',
+ '/Library/Frameworks/Python.framework/Versions/3.12/lib/python3.12/lib-dynload',
+ '/Library/Frameworks/Python.framework/Versions/3.12/lib/python3.12/site-packages',
+ '/Users/runner/work/MINER/MINER/v5']
+734 INFO: Appending 'datas' from .spec
+734 INFO: checking Analysis
+734 INFO: Building Analysis because Analysis-00.toc is non existent
+734 INFO: Looking for Python shared library...
+746 INFO: Using Python shared library: /Library/Frameworks/Python.framework/Versions/3.12/Python
+746 INFO: Running Analysis Analysis-00.toc
+746 INFO: Target bytecode optimization level: 0
+746 INFO: Initializing module dependency graph...
+748 INFO: Initializing module graph hook caches...
+767 INFO: Analyzing modules for base_library.zip ...
+2608 INFO: Processing standard module hook 'hook-encodings.py' from '/Library/Frameworks/Python.framework/Versions/3.12/lib/python3.12/site-packages/PyInstaller/hooks'
+5055 INFO: Processing standard module hook 'hook-math.py' from '/Library/Frameworks/Python.framework/Versions/3.12/lib/python3.12/site-packages/PyInstaller/hooks'
+9215 INFO: Processing standard module hook 'hook-pickle.py' from '/Library/Frameworks/Python.framework/Versions/3.12/lib/python3.12/site-packages/PyInstaller/hooks'
+11750 INFO: Processing standard module hook 'hook-heapq.py' from '/Library/Frameworks/Python.framework/Versions/3.12/lib/python3.12/site-packages/PyInstaller/hooks'
+12618 INFO: Caching module dependency graph...
+12690 INFO: Analyzing /Users/runner/work/MINER/MINER/v5/main.py
+12944 INFO: Processing standard module hook 'hook-_ctypes.py' from '/Library/Frameworks/Python.framework/Versions/3.12/lib/python3.12/site-packages/PyInstaller/hooks'
+12997 INFO: Processing standard module hook 'hook-platform.py' from '/Library/Frameworks/Python.framework/Versions/3.12/lib/python3.12/site-packages/PyInstaller/hooks'
+13049 INFO: Processing standard module hook 'hook-xml.py' from '/Library/Frameworks/Python.framework/Versions/3.12/lib/python3.12/site-packages/PyInstaller/hooks'
+13082 INFO: Processing module hooks (post-graph stage)...
+13494 INFO: Performing binary vs. data reclassification (3 entries)
+13526 INFO: Looking for ctypes DLLs
+13539 INFO: Analyzing run-time hooks ...
+13541 INFO: Including run-time hook 'pyi_rth_inspect.py' from '/Library/Frameworks/Python.framework/Versions/3.12/lib/python3.12/site-packages/PyInstaller/hooks/rthooks'
+13552 INFO: Creating base_library.zip...
+13595 INFO: Looking for dynamic libraries
+14359 INFO: Warnings written to /Users/runner/work/MINER/MINER/v5/build/macos-x86_64/pyinstaller/schoolnet-cli/warn-schoolnet-cli.txt
+14393 INFO: Graph cross-reference written to /Users/runner/work/MINER/MINER/v5/build/macos-x86_64/pyinstaller/schoolnet-cli/xref-schoolnet-cli.html
+14629 INFO: checking PYZ
+14630 INFO: Building PYZ because PYZ-00.toc is non existent
+14630 INFO: Building PYZ (ZlibArchive) /Users/runner/work/MINER/MINER/v5/build/macos-x86_64/pyinstaller/schoolnet-cli/PYZ-00.pyz
+14817 INFO: Building PYZ (ZlibArchive) /Users/runner/work/MINER/MINER/v5/build/macos-x86_64/pyinstaller/schoolnet-cli/PYZ-00.pyz completed successfully.
+14824 INFO: EXE target arch: x86_64
+14824 INFO: Code signing identity: None
+14831 INFO: checking PKG
+14831 INFO: Building PKG because PKG-00.toc is non existent
+14831 INFO: Building PKG (CArchive) schoolnet-cli.pkg
+14847 INFO: Building PKG (CArchive) schoolnet-cli.pkg completed successfully.
+14848 INFO: Bootloader /Library/Frameworks/Python.framework/Versions/3.12/lib/python3.12/site-packages/PyInstaller/bootloader/Darwin-64bit/run
+14849 INFO: checking EXE
+14849 INFO: Building EXE because EXE-00.toc is non existent
+14849 INFO: Building EXE from EXE-00.toc
+14849 INFO: Copying bootloader EXE to /Users/runner/work/MINER/MINER/v5/build/macos-x86_64/pyinstaller/schoolnet-cli/schoolnet-cli
+14850 INFO: Converting EXE to target arch (x86_64)
+16625 INFO: Removing signature(s) from EXE
+16655 INFO: Modifying Mach-O image UUID(s) in EXE
+16661 INFO: Appending PKG archive to EXE
+16662 INFO: Fixing EXE headers for code signing
+16678 INFO: Rewriting the executable's macOS SDK version (26.2.0) to match the SDK version of the Python library (12.1.0) in order to avoid inconsistent behavior and potential UI issues in the frozen application.
+16680 INFO: Re-signing the EXE
+16721 INFO: Building EXE from EXE-00.toc completed successfully.
+16723 INFO: checking COLLECT
+16723 INFO: Building COLLECT because COLLECT-00.toc is non existent
+16723 INFO: Building COLLECT COLLECT-00.toc
+22305 INFO: Building COLLECT COLLECT-00.toc completed successfully.
+22308 INFO: Build complete! The results are available in: /Users/runner/work/MINER/MINER/v5/build/macos-x86_64/dmg-root/SchoolNet v5 Alpha.app/Contents/Resources/runtime
+/Users/runner/work/MINER/MINER/v5/macos/MinerUI.swift:103:25: error: the compiler is unable to type-check this expression in reasonable time; try breaking up the expression into distinct sub-expressions
+101 |     @State var joke = ""
+102 |     @Environment(\.accessibilityReduceMotion) var reduceMotion
+103 |     var body: some View {
+    |                         `- error: the compiler is unable to type-check this expression in reasonable time; try breaking up the expression into distinct sub-expressions
+104 |         GeometryReader { geo in
+105 |             VStack(spacing:10) {
+Installed verified sing-box 1.12.0: /Users/runner/work/MINER/MINER/v5/build/macos-x86_64/dmg-root/SchoolNet v5 Alpha.app/Contents/Resources/bin/sing-box
+Traceback (most recent call last):
+  File "/Users/runner/work/MINER/MINER/v5/macos/build.py", line 197, in <module>
+    build(args.arch, args.signing, args.identity, args.notary_profile, args.dmg_background)
+  File "/Users/runner/work/MINER/MINER/v5/macos/build.py", line 64, in build
+    execute("xcrun", "swiftc", "-swift-version", "5", "-parse-as-library", "-O", "-framework", "AppKit", "-framework", "SwiftUI",
+  File "/Users/runner/work/MINER/MINER/v5/macos/build.py", line 23, in execute
+    subprocess.run([str(a) for a in args], check=True, cwd=ROOT)
+  File "/Library/Frameworks/Python.framework/Versions/3.12/lib/python3.12/subprocess.py", line 571, in run
+    raise CalledProcessError(retcode, process.args,
+subprocess.CalledProcessError: Command '['xcrun', 'swiftc', '-swift-version', '5', '-parse-as-library', '-O', '-framework', 'AppKit', '-framework', 'SwiftUI', '-target', 'x86_64-apple-macosx13.0', '/Users/runner/work/MINER/MINER/v5/macos/App.swift', '/Users/runner/work/MINER/MINER/v5/macos/MinerUI.swift', '-o', '/Users/runner/work/MINER/MINER/v5/build/macos-x86_64/dmg-root/SchoolNet v5 Alpha.app/Contents/MacOS/SchoolNet']' returned non-zero exit status 1.
