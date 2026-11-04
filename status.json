@@ -1,0 +1,252 @@
+{
+  "tag": "v5.0.0-beta.1.1",
+  "source_sha": "7999c5ba0c99fe9b3d7b605b839f5cfaad092387",
+  "run_url": "https://github.com/hexagon0401/MINER/actions/runs/41936205340",
+  "build": "success",
+  "publication": "success",
+  "jobs": [
+    {
+      "name": "prerelease",
+      "status": "completed",
+      "conclusion": "success",
+      "started_at": "2026-11-04T23:45:25Z",
+      "completed_at": "2026-11-04T23:45:34Z",
+      "runner_name": "GitHub Actions 1000000121",
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/checkout@v4",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Publish source prerelease while macOS builds",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Post Run actions/checkout@v4",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success"
+        }
+      ],
+      "failed_steps": []
+    },
+    {
+      "name": "build (macos-26, arm64)",
+      "status": "completed",
+      "conclusion": "success",
+      "started_at": "2026-11-04T23:45:37Z",
+      "completed_at": "2026-11-04T23:47:10Z",
+      "runner_name": "GitHub Actions 1000000122",
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/checkout@v4",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/setup-python@v5",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Install packager and checksum-verified engine",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run portable and native engine checks (no TUN activation)",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Import Developer ID if configured",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Build app and verify mounted DMG",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Retain native test/build diagnostics",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Remove temporary signing keychain",
+          "status": "completed",
+          "conclusion": "skipped"
+        },
+        {
+          "name": "Run actions/upload-artifact@v4",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Post Run actions/setup-python@v5",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Post Run actions/checkout@v4",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success"
+        }
+      ],
+      "failed_steps": []
+    },
+    {
+      "name": "release",
+      "status": "completed",
+      "conclusion": "success",
+      "started_at": "2026-11-04T23:47:13Z",
+      "completed_at": "2026-11-04T23:47:25Z",
+      "runner_name": "GitHub Actions 1000000123",
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/checkout@v4",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/download-artifact@v4",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Publish GitHub prerelease",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Post Run actions/checkout@v4",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success"
+        }
+      ],
+      "failed_steps": []
+    },
+    {
+      "name": "report",
+      "status": "in_progress",
+      "conclusion": null,
+      "started_at": "2026-11-04T23:47:27Z",
+      "completed_at": null,
+      "runner_name": "GitHub Actions 1000000124",
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/checkout@v4",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/download-artifact@v4",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Collect native build and release evidence",
+          "status": "in_progress",
+          "conclusion": null
+        },
+        {
+          "name": "Save small report on an isolated Git branch",
+          "status": "pending",
+          "conclusion": null
+        },
+        {
+          "name": "Post Run actions/checkout@v4",
+          "status": "pending",
+          "conclusion": null
+        }
+      ],
+      "failed_steps": []
+    }
+  ],
+  "release": {
+    "assets": [
+      {
+        "apiUrl": "https://api.github.com/repos/hexagon0401/MINER/releases/assets/711362495",
+        "contentType": "application/x-apple-diskimage",
+        "createdAt": "2026-11-04T23:47:20Z",
+        "digest": "sha256:8b430e5d4fac61d6e3c0e3a42f6058d22dc5ad0532df6b85672bc474a0eb40e4",
+        "downloadCount": 0,
+        "id": "RA_kwDOSHKeSc4qZoe_",
+        "label": "",
+        "name": "MINER-v5.0.0-beta.1.1-macOS-AppleSilicon.dmg",
+        "size": 25629309,
+        "state": "uploaded",
+        "updatedAt": "2026-11-04T23:47:22Z",
+        "url": "https://github.com/hexagon0401/MINER/releases/download/v5.0.0-beta.1.1/MINER-v5.0.0-beta.1.1-macOS-AppleSilicon.dmg"
+      },
+      {
+        "apiUrl": "https://api.github.com/repos/hexagon0401/MINER/releases/assets/711362494",
+        "contentType": "application/octet-stream",
+        "createdAt": "2026-11-04T23:47:20Z",
+        "digest": "sha256:605e19a482816b40144ca2de0559def7849a398378c3070aeba917f48846fca5",
+        "downloadCount": 0,
+        "id": "RA_kwDOSHKeSc4qZoe-",
+        "label": "",
+        "name": "MINER-v5.0.0-beta.1.1-macOS-AppleSilicon.dmg.sha256",
+        "size": 111,
+        "state": "uploaded",
+        "updatedAt": "2026-11-04T23:47:21Z",
+        "url": "https://github.com/hexagon0401/MINER/releases/download/v5.0.0-beta.1.1/MINER-v5.0.0-beta.1.1-macOS-AppleSilicon.dmg.sha256"
+      },
+      {
+        "apiUrl": "https://api.github.com/repos/hexagon0401/MINER/releases/assets/711362493",
+        "contentType": "application/json",
+        "createdAt": "2026-11-04T23:47:20Z",
+        "digest": "sha256:ef6b3e79517ce027e9f2758e5c5d33e8726a7820e60f60af9b28f0234848d865",
+        "downloadCount": 0,
+        "id": "RA_kwDOSHKeSc4qZoe9",
+        "label": "",
+        "name": "MINER-v5.0.0-beta.1.1-macOS-AppleSilicon.dmg.verification.json",
+        "size": 1903,
+        "state": "uploaded",
+        "updatedAt": "2026-11-04T23:47:21Z",
+        "url": "https://github.com/hexagon0401/MINER/releases/download/v5.0.0-beta.1.1/MINER-v5.0.0-beta.1.1-macOS-AppleSilicon.dmg.verification.json"
+      }
+    ],
+    "isPrerelease": true,
+    "name": "MINER BETA 1.1",
+    "url": "https://github.com/hexagon0401/MINER/releases/tag/v5.0.0-beta.1.1"
+  }
+}

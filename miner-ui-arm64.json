@@ -1,0 +1,29 @@
+{
+  "architecture" : "arm64",
+  "checks" : [
+    "MINER name and hidden native title",
+    "Full-window native titlebar material",
+    "560x610 entire window",
+    "520x570 minimum window",
+    "Native drag and resize enabled",
+    "Native traffic lights retained",
+    "No forced fullscreen",
+    "All original and Delta image assets loaded",
+    "Idle has zero real ticks and no success check",
+    "Measured Start and Stop placement matches spec",
+    "Minimum-size controls remain visible",
+    "WARP-only does not claim full-engine success",
+    "Native check icon at exact entire-window center",
+    "Verified running drives sharp check and background blur",
+    "Success restores normal content without changing ticks",
+    "Stop cancels success within 180ms",
+    "Actionable error preserves real completed stage",
+    "Reduce Motion retains check without blur",
+    "Error cancels reduced-motion success",
+    "Native settings window opens",
+    "Bundled GitHub developer avatar loads offline",
+    "About profile and GitHub destination match developer"
+  ],
+  "network_actions" : 0,
+  "ok" : true
+}
