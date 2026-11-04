@@ -1,0 +1,70 @@
+{
+  "tag": "v5.0.0-delta.1-dmg.4",
+  "source_sha": "ef443490e8d0cdf6f79dc9aaf2feee79e6380235",
+  "run_url": "https://github.com/hexagon0401/MINER/actions/runs/41868695368",
+  "build": "abandoned",
+  "publication": "skipped",
+  "jobs": [
+    {
+      "name": "build (macos-26, arm64)",
+      "status": "completed",
+      "conclusion": "cancelled",
+      "started_at": "2026-11-04T16:34:50Z",
+      "completed_at": "2026-11-04T16:49:53Z",
+      "runner_name": "",
+      "steps": [],
+      "failed_steps": []
+    },
+    {
+      "name": "report",
+      "status": "in_progress",
+      "conclusion": null,
+      "started_at": "2026-11-04T16:49:55Z",
+      "completed_at": null,
+      "runner_name": "GitHub Actions 1000000093",
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/checkout@v4",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/download-artifact@v4",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Collect native build and release evidence",
+          "status": "in_progress",
+          "conclusion": null
+        },
+        {
+          "name": "Save small report on an isolated Git branch",
+          "status": "pending",
+          "conclusion": null
+        },
+        {
+          "name": "Post Run actions/checkout@v4",
+          "status": "pending",
+          "conclusion": null
+        }
+      ],
+      "failed_steps": []
+    },
+    {
+      "name": "release",
+      "status": "completed",
+      "conclusion": "skipped",
+      "started_at": "2026-11-04T16:49:53Z",
+      "completed_at": "2026-11-04T16:49:53Z",
+      "runner_name": null,
+      "steps": [],
+      "failed_steps": []
+    }
+  ]
+}
