@@ -1,0 +1,141 @@
+"""macOS launchd session, installed only when the user clicks Start.
+
+No login item, persistent launch plist, WARP uninstall, or global firewall reset.
+The native app obtains administrator authorization through macOS, never passwords.
+"""
+import json
+import os
+from pathlib import Path
+import platform
+import re
+import shutil
+import subprocess
+import time
+
+from . import __version__
+from .config import build_config
+from .runtime import check_engine, doctor, instance_lock, load_profile, write_json
+
+LABEL = "org.schoolnet.v5.alpha"
+BASE = Path("/Library/Application Support/SchoolNet v5 Alpha")
+MARKER = ".schoolnet-v5-managed.json"
+APP_RESOURCES = Path("/Applications/SchoolNet v5 Alpha.app/Contents/Resources")
+
+
+def owned_base(base=None):
+    """Never delete a preexisting directory that is not our own managed tree."""
+    base = base if base is not None else BASE
+    if base.is_symlink():
+        raise ValueError("managed service directory must not be a symlink")
+    marker = base / MARKER
+    if base.exists():
+        if not marker.is_file() or marker.is_symlink():
+            raise ValueError("existing service directory is not marked as SchoolNet v5; preserving it")
+        data = json.loads(marker.read_text(encoding="utf-8"))
+        if data.get("id") != LABEL:
+            raise ValueError("service directory ownership marker differs; preserving it")
+    return base
+
+
+def status():
+    result = subprocess.run(["/bin/launchctl", "print", f"system/{LABEL}"],
+                            capture_output=True, text=True, timeout=5)
+    match = re.search(r"^\s*pid = (\d+)\s*$", result.stdout, re.MULTILINE)
+    return {"running": bool(result.returncode == 0 and match),
+            "pid": int(match.group(1)) if match else None,
+            "log": str(BASE / "engine.log")}
+
+
+def stop():
+    before = status()
+    if before["running"]:
+        subprocess.run(["/bin/launchctl", "remove", LABEL], check=True,
+                       capture_output=True, text=True, timeout=10)
+    else:
+        # Remove an exited launchd job too, before the next submit.
+        subprocess.run(["/bin/launchctl", "remove", LABEL], capture_output=True, timeout=10)
+    profile = BASE / "profile"
+    if profile.exists():
+        deadline = time.monotonic() + 15
+        while True:
+            try:
+                with instance_lock(profile):
+                    break
+            except ValueError:
+                if time.monotonic() >= deadline:
+                    raise ValueError("engine cleanup still active; keeping installed files and logs")
+                time.sleep(.1)
+    return {"running": False, "message": "Stopped. WARP remains installed and enabled as a local proxy."}
+
+
+def prepare(resources, profile_dir):
+    if resources is None or resources.resolve() != APP_RESOURCES:
+        raise ValueError("Install SchoolNet v5 Alpha.app in /Applications before starting")
+    if profile_dir is None:
+        raise ValueError("missing user profile")
+    profile = load_profile(profile_dir)
+    if profile.platform != "macos":
+        raise ValueError("the macOS app requires a macos profile")
+    engine = resources / "bin" / "sing-box"
+    doctor(profile_dir, str(engine))
+    base = owned_base()
+    if not base.exists():
+        base.mkdir(mode=0o755)
+        write_json(base / MARKER, {"id": LABEL, "version": __version__})
+    marker = json.loads((base / MARKER).read_text(encoding="utf-8"))
+    if marker["version"] != __version__:
+        raise ValueError("another alpha service version is installed; uninstall it from the app first")
+    runtime = base / "runtime"
+    # Copy bundled runtime to root-owned state. Never execute a user-selected binary.
+    if not runtime.exists():
+        shutil.copytree(resources / "runtime" / "schoolnet-cli", runtime, symlinks=False)
+        (base / "bin").mkdir(exist_ok=True)
+        shutil.copy2(engine, base / "bin" / "sing-box")
+    root_profile = base / "profile"
+    root_profile.mkdir(exist_ok=True)
+    write_json(root_profile / "profile.json", profile.to_dict())
+    write_json(root_profile / "sing-box.json", build_config(profile))
+    check_engine(str(base / "bin" / "sing-box"), root_profile / "sing-box.json")
+    # Readable log for the desktop user; no Riot credentials/packet content is logged.
+    log = base / "engine.log"
+    if log.exists() and log.stat().st_size > 5 * 1024 * 1024:
+        os.replace(log, base / "engine.previous.log")
+    log.touch(exist_ok=True)
+    log.chmod(0o644)
+    return base
+
+
+def manage(operation, resources=None, profile=None):
+    if platform.system() != "Darwin":
+        raise ValueError("desktop service commands are macOS-only")
+    if operation == "status":
+        print(json.dumps(status()))
+        return 0
+    if os.geteuid() != 0:
+        raise ValueError("macOS administrator authorization is required")
+    owned_base()
+    if operation == "start":
+        if status()["running"]:
+            raise ValueError("SchoolNet v5 Alpha is already running")
+        stop()
+        base = prepare(resources, profile)
+        command = ["/bin/launchctl", "submit", "-l", LABEL,
+                   "-o", str(base / "engine.log"), "-e", str(base / "engine.log"), "--",
+                   str(base / "runtime" / "schoolnet-cli"), "run",
+                   "--directory", str(base / "profile"), "--engine", str(base / "bin" / "sing-box")]
+        subprocess.run(command, check=True, capture_output=True, text=True, timeout=10)
+        # A PID is not functional readiness. Report only whether startup stayed alive.
+        time.sleep(1)
+        result = status()
+        if not result["running"]:
+            raise ValueError(f"engine exited during startup; inspect {base / 'engine.log'}")
+        print(json.dumps(result))
+    elif operation == "stop":
+        print(json.dumps(stop()))
+    elif operation == "uninstall":
+        stop()
+        base = owned_base()
+        if base.exists():
+            shutil.rmtree(base)
+        print(json.dumps({"removed": str(base), "warp_removed": False}))
+    return 0
