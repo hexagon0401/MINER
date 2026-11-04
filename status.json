@@ -1,0 +1,33 @@
+{
+  "tag": "v5.0.0-alpha.5-dmg.1",
+  "source_sha": "d648a2774f3bc9c110ea181c6ec7a5851a26644f",
+  "run_url": "https://github.com/hexagon0401/MINER/actions/runs/41837955306",
+  "build": "failure",
+  "publication": "skipped",
+  "jobs": [
+    {
+      "name": "build (macos-15, arm64)",
+      "conclusion": "failure",
+      "failed_steps": [
+        "Run portable and native engine checks (no TUN activation)"
+      ]
+    },
+    {
+      "name": "build (macos-15-intel, x86_64)",
+      "conclusion": "failure",
+      "failed_steps": [
+        "Run portable and native engine checks (no TUN activation)"
+      ]
+    },
+    {
+      "name": "report",
+      "conclusion": null,
+      "failed_steps": []
+    },
+    {
+      "name": "release",
+      "conclusion": "skipped",
+      "failed_steps": []
+    }
+  ]
+}
