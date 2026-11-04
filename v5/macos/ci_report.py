@@ -33,9 +33,13 @@ def main():
                 (output / f"failed-job-{job['id']}.log").write_text(log[-40000:], encoding="utf-8")
             except (subprocess.CalledProcessError, UnicodeError):
                 pass
-    if report["publication"] == "success":
+    try:
         report["release"] = json.loads(gh("release", "view", tag, "--repo", repo,
                                            "--json", "name,url,isPrerelease,assets"))
+    except subprocess.CalledProcessError:
+        if report["publication"] == "success":
+            raise
+    if report["publication"] == "success":
         subprocess.run(["gh", "release", "download", tag, "--repo", repo,
                         "--pattern", "*.verification.json", "--dir", str(output)], check=True)
     (output / "status.json").write_text(json.dumps(report, indent=2), encoding="utf-8")

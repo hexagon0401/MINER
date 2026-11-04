@@ -1,4 +1,4 @@
-MINER DELTA — macOS 테스트 배포
+MINER BETA — macOS 테스트 배포
 
 1. DMG를 열고 MINER.app을 Applications로 드래그하세요.
 2. Applications에서 앱을 실행하세요. Python·sing-box는 앱 안에 포함되어 있습니다.
@@ -51,3 +51,6 @@ MINER 디자인 UI: 시작/중지와 실제 다섯 단계 상태를 표시합니
 
 Delta v2.1: 네이티브 창 버튼을 유지한 전체 동굴 화면입니다. 성공 연출은 전체 엔진 실행 때만 나타납니다.
 기존 SchoolNet 앱을 먼저 중지·종료하고 새 MINER 앱을 설치하세요. 기존 설정은 유지합니다.
+
+BETA 아이콘 적용. 설정의 개발자 소개에서 Punkthats*it · @hexagon0401의 프로필을 확인할 수 있습니다.
+프로필 이미지는 앱에 포함되어 있으며 GitHub 링크를 누를 때만 브라우저를 엽니다.

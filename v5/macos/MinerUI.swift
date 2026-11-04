@@ -233,7 +233,9 @@ struct MinerSettings: View {
             Picker(model.tr("언어","Language"),selection:$model.language) { Text("한국어").tag("ko"); Text("English").tag("en") }.pickerStyle(.segmented)
             Text(model.tr("중지·종료 시 WARP를 UDP Traffic and DNS로 복귀합니다.","Stopping or quitting restores WARP to UDP Traffic and DNS.")).font(.caption).foregroundStyle(.secondary)
             Divider()
+            MinerAbout(model:model)
+            Divider()
             Button(role:.destructive) { controller.uninstall() } label: { Text(model.tr("MINER 제거…","Uninstall MINER…")) }.disabled(model.busy)
-        }.padding(24).frame(width:420,height:200)
+        }.padding(24).frame(width:420,height:380)
     }
 }

@@ -64,7 +64,7 @@ def build(expected_arch, signing="adhoc", identity=None, notary_profile=None, dm
     execute("xcrun", "swiftc", "-swift-version", "5", "-parse-as-library", "-O", "-framework", "AppKit", "-framework", "SwiftUI",
             "-target", f"{arch}-apple-macosx13.0", ROOT / "macos" / "App.swift",
             ROOT / "macos" / "MinerUI.swift", ROOT / "macos" / "DeltaUI.swift",
-            ROOT / "macos" / "DeltaSmoke.swift", "-o", contents / "MacOS" / "MINER")
+            ROOT / "macos" / "DeltaSmoke.swift", ROOT / "macos" / "DeveloperAbout.swift", "-o", contents / "MacOS" / "MINER")
     ui_assets = resources / "UIAssets"
     ui_assets.mkdir()
     for source in (ROOT / "macos/design/assets").iterdir():
@@ -72,6 +72,8 @@ def build(expected_arch, signing="adhoc", identity=None, notary_profile=None, dm
             shutil.copy2(source, ui_assets / source.name)
     for source in (ROOT / "macos/delta/assets").glob("*.png"):
         shutil.copy2(source, ui_assets / ("delta-" + source.name))
+    from macos.profile_assets import bundle_avatar
+    developer = bundle_avatar(ui_assets, work, execute)
     iconset = work / "AppIcon.iconset"
     iconset.mkdir()
     for size in [16,32,128,256,512]:
@@ -83,7 +85,7 @@ def build(expected_arch, signing="adhoc", identity=None, notary_profile=None, dm
         "CFBundleName": "MINER", "CFBundleDisplayName": "MINER", "CFBundleIconFile": "AppIcon",
         "CFBundleIdentifier": "org.schoolnet.v5.alpha", "CFBundleExecutable": "MINER",
         "CFBundlePackageType": "APPL", "CFBundleShortVersionString": "5.0.0",
-        "CFBundleVersion": f"{501 if 'delta' in __version__ else 500}{int(__version__.rsplit('.', 1)[1]):03d}", "SchoolNetReleaseVersion": __version__,
+        "CFBundleVersion": f"{502 if 'beta' in __version__ else 501 if 'delta' in __version__ else 500}{int(__version__.rsplit('.', 1)[1]):03d}", "SchoolNetReleaseVersion": __version__,
         "LSMinimumSystemVersion": "13.0", "NSHighResolutionCapable": True,
     }
     (contents / "Info.plist").write_bytes(plistlib.dumps(info))
@@ -109,7 +111,7 @@ def build(expected_arch, signing="adhoc", identity=None, notary_profile=None, dm
         stream.write("certifi 2026.10.23 / Mozilla CA bundle (MPL-2.0): https://github.com/certifi/python-certifi\n")
     build_info = {"version": __version__, "architecture": arch, "build_os": platform.mac_ver()[0],
                   "python": platform.python_version(), "signed": "developer-id" if signed else "ad-hoc",
-                  "notarization_required": signed}
+                  "notarization_required": signed, "developer": developer}
     (resources / "build-info.json").write_text(json.dumps(build_info, indent=2), encoding="utf-8")
     validate_resource_paths(app)
     if signed:
@@ -150,7 +152,7 @@ def build(expected_arch, signing="adhoc", identity=None, notary_profile=None, dm
         from macos.dmg_layout import create
         create(dmg, app, dmg_background, work, execute)
     else:
-        execute("hdiutil", "create", "-volname", "MINER DELTA", "-srcfolder", stage,
+        execute("hdiutil", "create", "-volname", "MINER BETA", "-srcfolder", stage,
                 "-format", "UDZO", dmg)
     dmg_receipt = None
     if signed:
@@ -190,6 +192,7 @@ def build(expected_arch, signing="adhoc", identity=None, notary_profile=None, dm
         "dmg_to_disk_signature_verified": True, "sha256": digest,
         "finder_background_layout_verified": dmg_background is not None,
         "app_name": app.name, "native_ui_smoke": ui_report,
+        "developer": developer, "app_icon_sha256": hashlib.sha256((ui_assets / "AppIcon.png").read_bytes()).hexdigest(),
     }, indent=2), encoding="utf-8")
     print(f"Verified DMG: {dmg}")
 

@@ -67,7 +67,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             runDeltaSmoke(output:URL(fileURLWithPath:CommandLine.arguments[index+1]),arch:CommandLine.arguments[index+2])
             return
         }
-        append("MINER DELTA: 학교 연결·게임 핑·종료 복구는 실기 확인이 필요합니다.")
+        append("MINER BETA: 학교 연결·게임 핑·종료 복구는 실기 확인이 필요합니다.")
         refresh()
     }
 
@@ -175,7 +175,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
     @objc func showSettings() {
         if settingsWindow == nil {
-            let settings = NSWindow(contentRect:NSRect(x:0,y:0,width:420,height:200),styleMask:[.titled,.closable],backing:.buffered,defer:false)
+            let settings = NSWindow(contentRect:NSRect(x:0,y:0,width:420,height:380),styleMask:[.titled,.closable],backing:.buffered,defer:false)
             settings.title = "MINER Settings"
             settings.isReleasedWhenClosed = false
             settings.contentView = NSHostingView(rootView:MinerSettings(model:model,controller:self))

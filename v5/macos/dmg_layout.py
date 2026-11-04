@@ -37,7 +37,7 @@ def create(dmg, app, background, work, execute):
     prepared = Path(work) / "installer-background.png"
     execute("sips", "-s", "format", "png", "-z", WINDOW_SIZE[1], WINDOW_SIZE[0], background, "--out", prepared)
     config = settings(app, prepared)
-    dmgbuild.build_dmg(str(dmg), "MINER DELTA", settings=config, lookForHiDPI=False)
+    dmgbuild.build_dmg(str(dmg), "MINER BETA", settings=config, lookForHiDPI=False)
 
 
 def verify(mount, app_name):

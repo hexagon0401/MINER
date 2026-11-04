@@ -37,8 +37,8 @@ extension AppDelegate {
                 host.frame = backdrop.bounds; host.autoresizingMask = [.width,.height]
                 backdrop.addSubview(host)
             }
-            @MainActor func capture(_ name:String) throws {
-                let view = self.window.contentView!
+            @MainActor func capture(_ name:String,view target:NSView? = nil) throws {
+                let view = target ?? self.window.contentView!
                 guard let bitmap = view.bitmapImageRepForCachingDisplay(in:view.bounds) else {
                     throw NSError(domain:"MINER.NativeUI",code:2,userInfo:[NSLocalizedDescriptionKey:"Cannot render native view"])
                 }
@@ -107,6 +107,9 @@ extension AppDelegate {
                 self.model.phase = "idle"; self.model.engine = false; self.model.completed = 0
                 self.showSettings(); try await settle()
                 try require(self.settingsWindow?.isVisible == true,"Native settings window opens")
+                try require(MinerDeveloper.avatar?.isValid == true,"Bundled GitHub developer avatar loads offline")
+                try require(MinerDeveloper.current.login == "hexagon0401" && MinerDeveloper.current.profileURL.absoluteString == "https://github.com/hexagon0401","About profile and GitHub destination match developer")
+                if let settingsView = self.settingsWindow?.contentView { try capture("settings-about",view:settingsView) }
                 self.settingsWindow?.close()
                 let result:[String:Any] = ["ok":true,"architecture":arch,"checks":checks,"network_actions":0]
                 try JSONSerialization.data(withJSONObject:result,options:[.prettyPrinted,.sortedKeys]).write(to:output.appendingPathComponent("miner-ui-\(arch).json"))

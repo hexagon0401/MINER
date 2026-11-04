@@ -1,12 +1,12 @@
-# MINER DELTA — v5 분리 연결 실험판
+# MINER BETA — v5 분리 연결 실험판
 
-**macOS 우선의 `5.0.0-delta.1`입니다.** 개인용 WARP의 Local proxy와 sing-box TUN을 연결해, Riot/LoL **클라이언트·웹 Helper의 TCP는 WARP**, **게임 실행 파일과 나머지 트래픽은 직접 경로**로 보냅니다. 게임 시작/종료 때 WARP를 전환하지 않습니다. DMG 앱은 제공된 MINER 디자인·캐릭터를 사용하며 `⌘,` 설정 창에서 한국어/English를 선택할 수 있습니다.
+**macOS 우선의 `5.0.0-beta.1`입니다.** 개인용 WARP의 Local proxy와 sing-box TUN을 연결해, Riot/LoL **클라이언트·웹 Helper의 TCP는 WARP**, **게임 실행 파일과 나머지 트래픽은 직접 경로**로 보냅니다. 게임 시작/종료 때 WARP를 전환하지 않습니다. DMG 앱은 제공된 MINER 디자인·캐릭터를 사용하며 `⌘,` 설정 창에서 한국어/English를 선택할 수 있습니다.
 
 사용자가 제공한 환경은 **개인용 WARP / macOS 27.1.1**입니다. 개발·자동 검증 환경은 Linux이므로 해당 macOS 버전의 실제 호환성, 학교에서의 연결 성공, 게임 핑 개선은 **아직 검증되지 않았습니다**. Windows용 설정도 생성하지만 Windows 네이티브 동작은 미검증입니다. 기존 v1~v4는 변경하지 않습니다.
 
 ## DMG 앱 설치·제거
 
-GitHub의 `v5.0.0-delta.*` **사전 릴리스**는 Apple Silicon DMG를 우선 제공합니다. 이전 Alpha는 Apple Silicon 또는 Intel DMG를 선택할 수 있습니다. 앱을 **Applications로 드래그**한 뒤 실행하면 됩니다. Python과 엔진이 포함되어 있습니다. 개인용 WARP는 별도로 설치·등록해두세요.
+GitHub의 `v5.0.0-beta.*` **사전 릴리스**는 Apple Silicon DMG를 우선 빌드합니다. DMG가 첨부되지 않은 릴리스는 소스 배포이며 설치 파일은 아직 제공되지 않습니다. 이전 Alpha는 Apple Silicon 또는 Intel DMG를 선택할 수 있습니다. 앱을 **Applications로 드래그**한 뒤 실행하면 됩니다. Python과 엔진이 포함되어 있습니다. 개인용 WARP는 별도로 설치·등록해두세요.
 
 앱의 **시작**은 WARP CLI로 Local Proxy·기본 포트 40000 연결과 검증을 수행한 뒤 v5를 실행합니다. **WARP 자동 연결**은 WARP 설정·검증만 실행하고, **WARP 연결 확인**은 설정을 바꾸지 않습니다. **중지·앱 종료**는 엔진을 먼저 중지하고 `warp-cli mode warp`로 UDP Traffic and DNS에 복귀합니다. 설정·연결 확인에 실패하면 오류를 표시하며, 종료 복귀 실패 시 앱을 유지합니다. **WARP 끄기**는 v5를 먼저 중지한 뒤 WARP 연결을 해제합니다. 최초 전체 터널 → 프록시 전환은 게임 밖에서 진행하세요.
 
@@ -157,3 +157,11 @@ macOS CI는 네트워크를 실행하지 않는 네이티브 UI fixture로 기�
 앱 파일·실행 파일·Dock 이름은 **MINER**입니다. 기존 설치를 중지·종료한 뒤 `/Applications/MINER.app`으로 설치하세요. 이전 SchoolNet 앱을 동시에 실행하지 마세요. 사용자 프로필·지원 파일·서비스 식별자는 기존 데이터 호환성을 위해 유지합니다.
 
 명시적인 UDP 복귀 명령: `python3 main.py warp restore`. 설치된 CLI가 `mode warp`를 지원하고 실제 settings가 `Mode: Warp`, status가 Connected인 경우에만 복귀 성공으로 표시합니다. 다른 이름을 쓰는 WARP 버전은 설정을 확인해야 합니다. 지원 파일 경로와 서비스 식별자는 구버전 호환성을 위해 유지합니다.
+
+## BETA 아이콘 · 개발자 소개
+
+`macos/design/MINER-BETA.icon/`에 제공된 원본을 보존하고, 밝은 기본 배경과 원본 레이어 크기·이동 값을 반영한 1024px ICNS 호환 PNG를 사용합니다. 기존 앱 내부 캐릭터는 변경하지 않습니다.
+
+설정(⌘,)의 개발자 소개에는 GitHub 공개 프로필의 **Punkthats*it · @hexagon0401**, 이미지와 프로필 링크를 표시합니다. `macos/design/assets/developer-profile.json`이 프로필 정보의 원본이며, 빌드 시 이미지를 앱에 포함하고 해시를 검증 JSON에 기록합니다. 앱 실행 중에는 프로필 이미지를 요청하지 않습니다.
+
+BETA 릴리스는 소스 프리릴리스를 먼저 게시하고 검증된 DMG를 나중에 첨부합니다. 네이티브 서버가 2분 동안 배정되지 않으면 해당 시도를 중단하고 소스 배포임을 표시합니다. 반복 재시도는 하지 않습니다.
