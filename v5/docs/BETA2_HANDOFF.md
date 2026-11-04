@@ -13,7 +13,7 @@
 
 ## 필요한 사용자 입력
 
-1. **전체 학교 명부**: 공식 NEIS 전체 API 키를 GitHub `NEIS_API_KEY` Secret에 추가하거나, 포털의 필터 없는 전체 CSV와 원본 총수를 준비해 주세요. API 키 없이 받은 일부 샘플은 거부했습니다. 가져오기 명령은 [학교 시스템 안내](../community/README.md)에 있습니다.
+1. **전체 학교 명부**: 공식 NEIS 전체 API 키를 GitHub `NEIS_API_KEY` Secret에 추가하거나, 포털의 필터 없는 전체 CSV와 원본 총수를 준비해 주세요. API 키 없이 받은 일부 샘플은 거부했습니다. 가져오기 명령은 [학교 시스템 안내](../community/README.md)에 있습니다. 키 등록 후에는 `MINER official school catalog` 작업을 실행하고, 성공한 `miner-school-catalog/<실행 ID>` 브랜치의 `schools.sqlite3`·`schools.json`을 `v5/community/data/`에 검증·반영해야 합니다. 키 등록만으로 앱의 명부가 자동 교체되지는 않습니다.
 2. **Apple 서명**: 공개 설치 경험을 위해 Developer ID 인증서·개인 키와 공증 자격 증명을 준비해야 합니다. Developer 등록만으로 CI가 서명되지는 않습니다. [설정 안내](SIGNING.md).
 3. **공개 전환**: MINER와 Homebrew tap 공개는 본인이 결정할 때 진행합니다. 현재 저장소를 공개하거나 새 공개 저장소를 생성하지 않았습니다.
 4. **향후 공유 운영**: Cloudflare 계정/D1/운영용 서명 키·실제 HTTPS 주소·앱 공개 키 설정이 필요합니다. 지금은 로컬 코드와 테스트만 준비했습니다.

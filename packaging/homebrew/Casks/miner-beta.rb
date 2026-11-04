@@ -8,25 +8,44 @@ cask "miner-beta" do
   desc "Split routing and school connection records"
   homepage "https://github.com/hexagon0401/MINER"
 
+  conflicts_with cask: "miner"
   depends_on arch: :arm64
   depends_on macos: ">= :ventura"
-  conflicts_with cask: "miner"
-
-  preflight do
-    app_running = system_command("/usr/bin/pgrep", args: ["-x", "MINER"], must_succeed: false).exit_status.zero?
-    service = system_command("/bin/launchctl", args: ["print", "system/org.schoolnet.v5.alpha"], must_succeed: false)
-    if app_running || service.stdout.match?(/pid = \d+/)
-      raise Cask::CaskError, "Stop and quit MINER before installing or upgrading. WARP must finish restoring first."
-    end
-  end
 
   app "MINER.app"
 
-  uninstall_preflight do
-    app_running = system_command("/usr/bin/pgrep", args: ["-x", "MINER"], must_succeed: false).exit_status.zero?
-    service = system_command("/bin/launchctl", args: ["print", "system/org.schoolnet.v5.alpha"], must_succeed: false)
+  preflight do
+    app_running = system_command(
+      "/usr/bin/pgrep",
+      args: ["-x", "MINER"],
+      must_succeed: false,
+    ).exit_status.zero?
+    service = system_command(
+      "/bin/launchctl",
+      args: ["print", "system/org.schoolnet.v5.alpha"],
+      must_succeed: false,
+    )
     if app_running || service.stdout.match?(/pid = \d+/)
-      raise Cask::CaskError, "Stop and quit MINER before uninstalling. For complete service/data removal, use Settings > Uninstall MINER first."
+      raise Cask::CaskError,
+            "Stop and quit MINER before installing or upgrading. WARP must finish restoring first."
+    end
+  end
+
+  uninstall_preflight do
+    app_running = system_command(
+      "/usr/bin/pgrep",
+      args: ["-x", "MINER"],
+      must_succeed: false,
+    ).exit_status.zero?
+    service = system_command(
+      "/bin/launchctl",
+      args: ["print", "system/org.schoolnet.v5.alpha"],
+      must_succeed: false,
+    )
+    if app_running || service.stdout.match?(/pid = \d+/)
+      raise Cask::CaskError,
+            "Stop and quit MINER before uninstalling. " \
+            "For complete service/data removal, use Settings > Uninstall MINER first."
     end
   end
 

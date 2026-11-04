@@ -60,7 +60,14 @@ jobs:
           ruby -c packaging/homebrew/Casks/miner-beta.rb > "$RUNNER_TEMP/miner-homebrew.log" 2>&1
           result=$?
           if [ "$result" = 0 ]; then
-            brew style --cask packaging/homebrew/Casks/miner-beta.rb >> "$RUNNER_TEMP/miner-homebrew.log" 2>&1
+            brew tap-new --no-git miner-ci/local >> "$RUNNER_TEMP/miner-homebrew.log" 2>&1
+            result=$?
+          fi
+          if [ "$result" = 0 ]; then
+            tap_dir="$(brew --repository miner-ci/local)"
+            mkdir -p "$tap_dir/Casks"
+            cp packaging/homebrew/Casks/miner-beta.rb "$tap_dir/Casks/miner-beta.rb"
+            brew style --cask "$tap_dir/Casks/miner-beta.rb" >> "$RUNNER_TEMP/miner-homebrew.log" 2>&1
             result=$?
           fi
           cat "$RUNNER_TEMP/miner-homebrew.log"

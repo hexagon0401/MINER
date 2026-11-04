@@ -8,7 +8,7 @@
 
 1. MINER 릴리스와 `hexagon0401/homebrew-miner` tap을 공개합니다. tap에 이 디렉터리의 `Casks/`를 복사합니다.
 2. 토큰 없는 환경에서 DMG 다운로드와 SHA-256을 확인합니다.
-3. `brew style --cask Casks/miner-beta.rb`, `brew audit --cask --online miner-beta`를 실행합니다.
+3. tap을 설치한 뒤 `brew style --cask hexagon0401/miner/miner-beta`, `brew audit --cask --online hexagon0401/miner/miner-beta`를 실행합니다.
 4. 새 Mac에서 설치·중지·업데이트·제거를 확인합니다.
 5. 공개 전 Gatekeeper 제한을 피하려면 Developer ID와 Apple 공증을 구성합니다. 현재 베타 1은 ad-hoc이며 공증이 없습니다.
 
