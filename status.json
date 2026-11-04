@@ -1,0 +1,31 @@
+{
+  "tag": "v5.0.0-delta.1-dmg.1",
+  "source_sha": "959f063b047d1afd5ceba15c5167b007f9d173a7",
+  "run_url": "https://github.com/hexagon0401/MINER/actions/runs/41861424343",
+  "build": "failure",
+  "publication": "skipped",
+  "jobs": [
+    {
+      "name": "build (macos-15, arm64)",
+      "conclusion": null,
+      "failed_steps": []
+    },
+    {
+      "name": "build (macos-15-intel, x86_64)",
+      "conclusion": "failure",
+      "failed_steps": [
+        "Build app and verify mounted DMG"
+      ]
+    },
+    {
+      "name": "report",
+      "conclusion": null,
+      "failed_steps": []
+    },
+    {
+      "name": "release",
+      "conclusion": "skipped",
+      "failed_steps": []
+    }
+  ]
+}

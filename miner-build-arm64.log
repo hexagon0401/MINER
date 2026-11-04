@@ -1,0 +1,317 @@
+36 INFO: PyInstaller: 6.22.3, contrib hooks: 2026.9
+37 INFO: Python: 3.12.10
+63 INFO: Platform: macOS-15.8.2-arm64-arm-64bit
+63 INFO: Python environment: /Library/Frameworks/Python.framework/Versions/3.12
+64 INFO: wrote /Users/runner/work/MINER/MINER/v5/build/macos-arm64/schoolnet-cli.spec
+66 INFO: Removing temporary files and cleaning cache in /Users/runner/Library/Application Support/pyinstaller
+67 INFO: Module search paths (PYTHONPATH):
+['/Users/runner/work/MINER/MINER/v5',
+ '/Library/Frameworks/Python.framework/Versions/3.12/lib/python312.zip',
+ '/Library/Frameworks/Python.framework/Versions/3.12/lib/python3.12',
+ '/Library/Frameworks/Python.framework/Versions/3.12/lib/python3.12/lib-dynload',
+ '/Library/Frameworks/Python.framework/Versions/3.12/lib/python3.12/site-packages',
+ '/Users/runner/work/MINER/MINER/v5']
+190 INFO: Appending 'datas' from .spec
+191 INFO: checking Analysis
+191 INFO: Building Analysis because Analysis-00.toc is non existent
+191 INFO: Looking for Python shared library...
+195 INFO: Using Python shared library: /Library/Frameworks/Python.framework/Versions/3.12/Python
+195 INFO: Running Analysis Analysis-00.toc
+195 INFO: Target bytecode optimization level: 0
+195 INFO: Initializing module dependency graph...
+196 INFO: Initializing module graph hook caches...
+202 INFO: Analyzing modules for base_library.zip ...
+769 INFO: Processing standard module hook 'hook-encodings.py' from '/Library/Frameworks/Python.framework/Versions/3.12/lib/python3.12/site-packages/PyInstaller/hooks'
+940 INFO: Processing standard module hook 'hook-math.py' from '/Library/Frameworks/Python.framework/Versions/3.12/lib/python3.12/site-packages/PyInstaller/hooks'
+1762 INFO: Processing standard module hook 'hook-pickle.py' from '/Library/Frameworks/Python.framework/Versions/3.12/lib/python3.12/site-packages/PyInstaller/hooks'
+2468 INFO: Processing standard module hook 'hook-heapq.py' from '/Library/Frameworks/Python.framework/Versions/3.12/lib/python3.12/site-packages/PyInstaller/hooks'
+2717 INFO: Caching module dependency graph...
+2739 INFO: Analyzing /Users/runner/work/MINER/MINER/v5/main.py
+2828 INFO: Processing standard module hook 'hook-_ctypes.py' from '/Library/Frameworks/Python.framework/Versions/3.12/lib/python3.12/site-packages/PyInstaller/hooks'
+2846 INFO: Processing standard module hook 'hook-platform.py' from '/Library/Frameworks/Python.framework/Versions/3.12/lib/python3.12/site-packages/PyInstaller/hooks'
+2865 INFO: Processing standard module hook 'hook-xml.py' from '/Library/Frameworks/Python.framework/Versions/3.12/lib/python3.12/site-packages/PyInstaller/hooks'
+2877 INFO: Processing module hooks (post-graph stage)...
+3022 INFO: Performing binary vs. data reclassification (3 entries)
+3036 INFO: Looking for ctypes DLLs
+3042 INFO: Analyzing run-time hooks ...
+3043 INFO: Including run-time hook 'pyi_rth_inspect.py' from '/Library/Frameworks/Python.framework/Versions/3.12/lib/python3.12/site-packages/PyInstaller/hooks/rthooks'
+3052 INFO: Creating base_library.zip...
+3087 INFO: Looking for dynamic libraries
+3250 INFO: Warnings written to /Users/runner/work/MINER/MINER/v5/build/macos-arm64/pyinstaller/schoolnet-cli/warn-schoolnet-cli.txt
+3257 INFO: Graph cross-reference written to /Users/runner/work/MINER/MINER/v5/build/macos-arm64/pyinstaller/schoolnet-cli/xref-schoolnet-cli.html
+3324 INFO: checking PYZ
+3324 INFO: Building PYZ because PYZ-00.toc is non existent
+3324 INFO: Building PYZ (ZlibArchive) /Users/runner/work/MINER/MINER/v5/build/macos-arm64/pyinstaller/schoolnet-cli/PYZ-00.pyz
+3483 INFO: Building PYZ (ZlibArchive) /Users/runner/work/MINER/MINER/v5/build/macos-arm64/pyinstaller/schoolnet-cli/PYZ-00.pyz completed successfully.
+3488 INFO: EXE target arch: arm64
+3488 INFO: Code signing identity: None
+3490 INFO: checking PKG
+3490 INFO: Building PKG because PKG-00.toc is non existent
+3490 INFO: Building PKG (CArchive) schoolnet-cli.pkg
+3507 INFO: Building PKG (CArchive) schoolnet-cli.pkg completed successfully.
+3507 INFO: Bootloader /Library/Frameworks/Python.framework/Versions/3.12/lib/python3.12/site-packages/PyInstaller/bootloader/Darwin-64bit/run
+3507 INFO: checking EXE
+3507 INFO: Building EXE because EXE-00.toc is non existent
+3507 INFO: Building EXE from EXE-00.toc
+3507 INFO: Copying bootloader EXE to /Users/runner/work/MINER/MINER/v5/build/macos-arm64/pyinstaller/schoolnet-cli/schoolnet-cli
+3509 INFO: Converting EXE to target arch (arm64)
+4253 INFO: Removing signature(s) from EXE
+4275 INFO: Modifying Mach-O image UUID(s) in EXE
+4278 INFO: Appending PKG archive to EXE
+4279 INFO: Fixing EXE headers for code signing
+4287 INFO: Rewriting the executable's macOS SDK version (26.2.0) to match the SDK version of the Python library (12.1.0) in order to avoid inconsistent behavior and potential UI issues in the frozen application.
+4287 INFO: Re-signing the EXE
+4310 INFO: Building EXE from EXE-00.toc completed successfully.
+4312 INFO: checking COLLECT
+4312 INFO: Building COLLECT because COLLECT-00.toc is non existent
+4312 INFO: Building COLLECT COLLECT-00.toc
+8299 INFO: Building COLLECT COLLECT-00.toc completed successfully.
+8301 INFO: Build complete! The results are available in: /Users/runner/work/MINER/MINER/v5/build/macos-arm64/dmg-root/MINER.app/Contents/Resources/runtime
+/Users/runner/work/MINER/MINER/v5/macos/DeltaSmoke.swift:33:34: error: cannot convert value of type 'KeyPath<EnvironmentValues, Bool>' to expected argument type 'WritableKeyPath<EnvironmentValues, Bool>'
+ 31 |             func install(reduced:Bool = false,highContrast:Bool = false) {
+ 32 |                 let root = DeltaRoot(model:self.model,controller:self,visualAudit:audit.accept)
+ 33 |                     .environment(\.accessibilityReduceMotion,reduced)
+    |                                  `- error: cannot convert value of type 'KeyPath<EnvironmentValues, Bool>' to expected argument type 'WritableKeyPath<EnvironmentValues, Bool>'
+ 34 |                     .environment(\.accessibilityReduceTransparency,reduced)
+ 35 |                     .environment(\.colorSchemeContrast,highContrast ? .increased : .standard)
+
+/Users/runner/work/MINER/MINER/v5/macos/DeltaSmoke.swift:34:34: error: cannot convert value of type 'KeyPath<EnvironmentValues, Bool>' to expected argument type 'WritableKeyPath<EnvironmentValues, Bool>'
+ 32 |                 let root = DeltaRoot(model:self.model,controller:self,visualAudit:audit.accept)
+ 33 |                     .environment(\.accessibilityReduceMotion,reduced)
+ 34 |                     .environment(\.accessibilityReduceTransparency,reduced)
+    |                                  `- error: cannot convert value of type 'KeyPath<EnvironmentValues, Bool>' to expected argument type 'WritableKeyPath<EnvironmentValues, Bool>'
+ 35 |                     .environment(\.colorSchemeContrast,highContrast ? .increased : .standard)
+ 36 |                 let backdrop = self.window.contentView!
+
+/Users/runner/work/MINER/MINER/v5/macos/DeltaSmoke.swift:35:34: error: cannot convert value of type 'KeyPath<EnvironmentValues, ColorSchemeContrast>' to expected argument type 'WritableKeyPath<EnvironmentValues, V>'
+ 33 |                     .environment(\.accessibilityReduceMotion,reduced)
+ 34 |                     .environment(\.accessibilityReduceTransparency,reduced)
+ 35 |                     .environment(\.colorSchemeContrast,highContrast ? .increased : .standard)
+    |                                  `- error: cannot convert value of type 'KeyPath<EnvironmentValues, ColorSchemeContrast>' to expected argument type 'WritableKeyPath<EnvironmentValues, V>'
+ 36 |                 let backdrop = self.window.contentView!
+ 37 |                 backdrop.subviews.forEach { $0.removeFromSuperview() }
+
+/Users/runner/work/MINER/MINER/v5/macos/DeltaSmoke.swift:35:72: error: cannot infer contextual base in reference to member 'increased'
+ 33 |                     .environment(\.accessibilityReduceMotion,reduced)
+ 34 |                     .environment(\.accessibilityReduceTransparency,reduced)
+ 35 |                     .environment(\.colorSchemeContrast,highContrast ? .increased : .standard)
+    |                                                                        `- error: cannot infer contextual base in reference to member 'increased'
+ 36 |                 let backdrop = self.window.contentView!
+ 37 |                 backdrop.subviews.forEach { $0.removeFromSuperview() }
+
+/Users/runner/work/MINER/MINER/v5/macos/DeltaSmoke.swift:39:73: error: reference to member 'width' cannot be resolved without a contextual type
+ 37 |                 backdrop.subviews.forEach { $0.removeFromSuperview() }
+ 38 |                 let host = NSHostingView(rootView:root)
+ 39 |                 host.frame = backdrop.bounds; host.autoresizingMask = [.width,.height]
+    |                                                                         `- error: reference to member 'width' cannot be resolved without a contextual type
+ 40 |                 backdrop.addSubview(host)
+ 41 |             }
+
+/Users/runner/work/MINER/MINER/v5/macos/DeltaSmoke.swift:39:80: error: reference to member 'height' cannot be resolved without a contextual type
+ 37 |                 backdrop.subviews.forEach { $0.removeFromSuperview() }
+ 38 |                 let host = NSHostingView(rootView:root)
+ 39 |                 host.frame = backdrop.bounds; host.autoresizingMask = [.width,.height]
+    |                                                                                `- error: reference to member 'height' cannot be resolved without a contextual type
+ 40 |                 backdrop.addSubview(host)
+ 41 |             }
+
+/Users/runner/work/MINER/MINER/v5/macos/DeltaSmoke.swift:36:44: warning: main actor-isolated property 'contentView' can not be referenced from a nonisolated context; this is an error in the Swift 6 language mode
+ 29 |                 self.window.displayIfNeeded()
+ 30 |             }
+ 31 |             func install(reduced:Bool = false,highContrast:Bool = false) {
+    |                  `- note: add '@MainActor' to make local function 'install(reduced:highContrast:)' part of global actor 'MainActor'
+ 32 |                 let root = DeltaRoot(model:self.model,controller:self,visualAudit:audit.accept)
+ 33 |                     .environment(\.accessibilityReduceMotion,reduced)
+ 34 |                     .environment(\.accessibilityReduceTransparency,reduced)
+ 35 |                     .environment(\.colorSchemeContrast,highContrast ? .increased : .standard)
+ 36 |                 let backdrop = self.window.contentView!
+    |                                            `- warning: main actor-isolated property 'contentView' can not be referenced from a nonisolated context; this is an error in the Swift 6 language mode
+ 37 |                 backdrop.subviews.forEach { $0.removeFromSuperview() }
+ 38 |                 let host = NSHostingView(rootView:root)
+
+/Applications/Xcode_16.4.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX15.5.sdk/System/Library/Frameworks/AppKit.framework/Headers/NSWindow.h:337:47: note: property declared here
+ 335 | - (void)setTitleWithRepresentedFilename:(NSString *)filename;
+ 336 | @property (getter=isExcludedFromWindowsMenu) BOOL excludedFromWindowsMenu;
+ 337 | @property (nullable, strong) __kindof NSView *contentView;
+     |                                               `- note: property declared here
+ 338 | @property (nullable, weak) id<NSWindowDelegate> delegate;
+ 339 | @property (readonly) NSInteger windowNumber;
+
+/Users/runner/work/MINER/MINER/v5/macos/DeltaSmoke.swift:37:26: warning: main actor-isolated property 'subviews' can not be referenced from a nonisolated context; this is an error in the Swift 6 language mode
+ 29 |                 self.window.displayIfNeeded()
+ 30 |             }
+ 31 |             func install(reduced:Bool = false,highContrast:Bool = false) {
+    |                  `- note: add '@MainActor' to make local function 'install(reduced:highContrast:)' part of global actor 'MainActor'
+ 32 |                 let root = DeltaRoot(model:self.model,controller:self,visualAudit:audit.accept)
+ 33 |                     .environment(\.accessibilityReduceMotion,reduced)
+    :
+ 35 |                     .environment(\.colorSchemeContrast,highContrast ? .increased : .standard)
+ 36 |                 let backdrop = self.window.contentView!
+ 37 |                 backdrop.subviews.forEach { $0.removeFromSuperview() }
+    |                          `- warning: main actor-isolated property 'subviews' can not be referenced from a nonisolated context; this is an error in the Swift 6 language mode
+ 38 |                 let host = NSHostingView(rootView:root)
+ 39 |                 host.frame = backdrop.bounds; host.autoresizingMask = [.width,.height]
+
+/Applications/Xcode_16.4.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX15.5.sdk/System/Library/Frameworks/AppKit.framework/Headers/NSView.h:88:46: note: property declared here
+ 86 | @property (nullable, readonly, unsafe_unretained) NSWindow *window;
+ 87 | @property (nullable, readonly, unsafe_unretained) NSView *superview;
+ 88 | @property (copy) NSArray<__kindof NSView *> *subviews;
+    |                                              `- note: property declared here
+ 89 | - (BOOL)isDescendantOf:(NSView *)view;
+ 90 | - (nullable NSView *)ancestorSharedWithView:(NSView *)view;
+
+/Users/runner/work/MINER/MINER/v5/macos/DeltaSmoke.swift:37:48: warning: call to main actor-isolated instance method 'removeFromSuperview()' in a synchronous nonisolated context; this is an error in the Swift 6 language mode
+ 35 |                     .environment(\.colorSchemeContrast,highContrast ? .increased : .standard)
+ 36 |                 let backdrop = self.window.contentView!
+ 37 |                 backdrop.subviews.forEach { $0.removeFromSuperview() }
+    |                                                `- warning: call to main actor-isolated instance method 'removeFromSuperview()' in a synchronous nonisolated context; this is an error in the Swift 6 language mode
+ 38 |                 let host = NSHostingView(rootView:root)
+ 39 |                 host.frame = backdrop.bounds; host.autoresizingMask = [.width,.height]
+
+AppKit.NSView.removeFromSuperview:2:22: note: calls to instance method 'removeFromSuperview()' from outside of its actor context are implicitly asynchronous
+1 | class NSView {
+2 | @MainActor open func removeFromSuperview()}
+  |                      |- note: calls to instance method 'removeFromSuperview()' from outside of its actor context are implicitly asynchronous
+  |                      `- note: main actor isolation inferred from inheritance from class 'NSResponder'
+3 | 
+
+/Users/runner/work/MINER/MINER/v5/macos/DeltaSmoke.swift:43:40: warning: main actor-isolated property 'contentView' can not be referenced from a nonisolated context; this is an error in the Swift 6 language mode
+ 40 |                 backdrop.addSubview(host)
+ 41 |             }
+ 42 |             func capture(_ name:String) throws {
+    |                  `- note: add '@MainActor' to make local function 'capture' part of global actor 'MainActor'
+ 43 |                 let view = self.window.contentView!
+    |                                        `- warning: main actor-isolated property 'contentView' can not be referenced from a nonisolated context; this is an error in the Swift 6 language mode
+ 44 |                 guard let bitmap = view.bitmapImageRepForCachingDisplay(in:view.bounds) else {
+ 45 |                     throw NSError(domain:"MINER.NativeUI",code:2,userInfo:[NSLocalizedDescriptionKey:"Cannot render native view"])
+
+/Applications/Xcode_16.4.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX15.5.sdk/System/Library/Frameworks/AppKit.framework/Headers/NSWindow.h:337:47: note: property declared here
+ 335 | - (void)setTitleWithRepresentedFilename:(NSString *)filename;
+ 336 | @property (getter=isExcludedFromWindowsMenu) BOOL excludedFromWindowsMenu;
+ 337 | @property (nullable, strong) __kindof NSView *contentView;
+     |                                               `- note: property declared here
+ 338 | @property (nullable, weak) id<NSWindowDelegate> delegate;
+ 339 | @property (readonly) NSInteger windowNumber;
+
+/Users/runner/work/MINER/MINER/v5/macos/DeltaSmoke.swift:44:41: warning: call to main actor-isolated instance method 'bitmapImageRepForCachingDisplay(in:)' in a synchronous nonisolated context; this is an error in the Swift 6 language mode
+ 40 |                 backdrop.addSubview(host)
+ 41 |             }
+ 42 |             func capture(_ name:String) throws {
+    |                  `- note: add '@MainActor' to make local function 'capture' part of global actor 'MainActor'
+ 43 |                 let view = self.window.contentView!
+ 44 |                 guard let bitmap = view.bitmapImageRepForCachingDisplay(in:view.bounds) else {
+    |                                         `- warning: call to main actor-isolated instance method 'bitmapImageRepForCachingDisplay(in:)' in a synchronous nonisolated context; this is an error in the Swift 6 language mode
+ 45 |                     throw NSError(domain:"MINER.NativeUI",code:2,userInfo:[NSLocalizedDescriptionKey:"Cannot render native view"])
+ 46 |                 }
+
+AppKit.NSView.bitmapImageRepForCachingDisplay:2:22: note: calls to instance method 'bitmapImageRepForCachingDisplay(in:)' from outside of its actor context are implicitly asynchronous
+1 | class NSView {
+2 | @MainActor open func bitmapImageRepForCachingDisplay(in rect: NSRect) -> NSBitmapImageRep?}
+  |                      |- note: calls to instance method 'bitmapImageRepForCachingDisplay(in:)' from outside of its actor context are implicitly asynchronous
+  |                      `- note: main actor isolation inferred from inheritance from class 'NSResponder'
+3 | 
+
+/Users/runner/work/MINER/MINER/v5/macos/DeltaSmoke.swift:44:81: warning: main actor-isolated property 'bounds' can not be referenced from a nonisolated context; this is an error in the Swift 6 language mode
+ 40 |                 backdrop.addSubview(host)
+ 41 |             }
+ 42 |             func capture(_ name:String) throws {
+    |                  `- note: add '@MainActor' to make local function 'capture' part of global actor 'MainActor'
+ 43 |                 let view = self.window.contentView!
+ 44 |                 guard let bitmap = view.bitmapImageRepForCachingDisplay(in:view.bounds) else {
+    |                                                                                 `- warning: main actor-isolated property 'bounds' can not be referenced from a nonisolated context; this is an error in the Swift 6 language mode
+ 45 |                     throw NSError(domain:"MINER.NativeUI",code:2,userInfo:[NSLocalizedDescriptionKey:"Cannot render native view"])
+ 46 |                 }
+
+/Applications/Xcode_16.4.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX15.5.sdk/System/Library/Frameworks/AppKit.framework/Headers/NSView.h:139:18: note: property declared here
+137 | - (void)scaleUnitSquareToSize:(NSSize)newUnitSize;
+138 | - (void)rotateByAngle:(CGFloat)angle;
+139 | @property NSRect bounds;
+    |                  `- note: property declared here
+140 | 
+141 | @property (getter=isFlipped, readonly) BOOL flipped;
+
+/Users/runner/work/MINER/MINER/v5/macos/DeltaSmoke.swift:47:22: warning: call to main actor-isolated instance method 'cacheDisplay(in:to:)' in a synchronous nonisolated context; this is an error in the Swift 6 language mode
+ 40 |                 backdrop.addSubview(host)
+ 41 |             }
+ 42 |             func capture(_ name:String) throws {
+    |                  `- note: add '@MainActor' to make local function 'capture' part of global actor 'MainActor'
+ 43 |                 let view = self.window.contentView!
+ 44 |                 guard let bitmap = view.bitmapImageRepForCachingDisplay(in:view.bounds) else {
+ 45 |                     throw NSError(domain:"MINER.NativeUI",code:2,userInfo:[NSLocalizedDescriptionKey:"Cannot render native view"])
+ 46 |                 }
+ 47 |                 view.cacheDisplay(in:view.bounds,to:bitmap)
+    |                      `- warning: call to main actor-isolated instance method 'cacheDisplay(in:to:)' in a synchronous nonisolated context; this is an error in the Swift 6 language mode
+ 48 |                 guard let png = bitmap.representation(using:.png,properties:[:]),png.count > 1000 else {
+ 49 |                     throw NSError(domain:"MINER.NativeUI",code:3,userInfo:[NSLocalizedDescriptionKey:"Empty native view render"])
+
+AppKit.NSView.cacheDisplay:2:22: note: calls to instance method 'cacheDisplay(in:to:)' from outside of its actor context are implicitly asynchronous
+1 | class NSView {
+2 | @MainActor open func cacheDisplay(in rect: NSRect, to bitmapImageRep: NSBitmapImageRep)}
+  |                      |- note: calls to instance method 'cacheDisplay(in:to:)' from outside of its actor context are implicitly asynchronous
+  |                      `- note: main actor isolation inferred from inheritance from class 'NSResponder'
+3 | 
+
+/Users/runner/work/MINER/MINER/v5/macos/DeltaSmoke.swift:47:43: warning: main actor-isolated property 'bounds' can not be referenced from a nonisolated context; this is an error in the Swift 6 language mode
+ 40 |                 backdrop.addSubview(host)
+ 41 |             }
+ 42 |             func capture(_ name:String) throws {
+    |                  `- note: add '@MainActor' to make local function 'capture' part of global actor 'MainActor'
+ 43 |                 let view = self.window.contentView!
+ 44 |                 guard let bitmap = view.bitmapImageRepForCachingDisplay(in:view.bounds) else {
+ 45 |                     throw NSError(domain:"MINER.NativeUI",code:2,userInfo:[NSLocalizedDescriptionKey:"Cannot render native view"])
+ 46 |                 }
+ 47 |                 view.cacheDisplay(in:view.bounds,to:bitmap)
+    |                                           `- warning: main actor-isolated property 'bounds' can not be referenced from a nonisolated context; this is an error in the Swift 6 language mode
+ 48 |                 guard let png = bitmap.representation(using:.png,properties:[:]),png.count > 1000 else {
+ 49 |                     throw NSError(domain:"MINER.NativeUI",code:3,userInfo:[NSLocalizedDescriptionKey:"Empty native view render"])
+
+/Applications/Xcode_16.4.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX15.5.sdk/System/Library/Frameworks/AppKit.framework/Headers/NSView.h:139:18: note: property declared here
+137 | - (void)scaleUnitSquareToSize:(NSSize)newUnitSize;
+138 | - (void)rotateByAngle:(CGFloat)angle;
+139 | @property NSRect bounds;
+    |                  `- note: property declared here
+140 | 
+141 | @property (getter=isFlipped, readonly) BOOL flipped;
+
+/Users/runner/work/MINER/MINER/v5/macos/DeltaSmoke.swift:28:17: warning: expression is 'async' but is not marked with 'await'; this is an error in the Swift 6 language mode
+ 26 |             func settle(_ milliseconds:UInt64 = 160) async throws {
+ 27 |                 try await Task.sleep(nanoseconds:milliseconds*1_000_000)
+ 28 |                 self.window.contentView?.layoutSubtreeIfNeeded()
+    |                 |- warning: expression is 'async' but is not marked with 'await'; this is an error in the Swift 6 language mode
+    |                 |- note: calls to instance method 'layoutSubtreeIfNeeded()' from outside of its actor context are implicitly asynchronous
+    |                 `- note: property access is 'async'
+ 29 |                 self.window.displayIfNeeded()
+ 30 |             }
+
+AppKit.NSView.layoutSubtreeIfNeeded:3:24: note: main actor isolation inferred from inheritance from class 'NSResponder'
+1 | class NSView {
+2 | @available(macOS 10.7, *)
+3 |   @MainActor open func layoutSubtreeIfNeeded()}
+  |                        `- note: main actor isolation inferred from inheritance from class 'NSResponder'
+4 | 
+
+/Users/runner/work/MINER/MINER/v5/macos/DeltaSmoke.swift:29:17: warning: expression is 'async' but is not marked with 'await'; this is an error in the Swift 6 language mode
+ 27 |                 try await Task.sleep(nanoseconds:milliseconds*1_000_000)
+ 28 |                 self.window.contentView?.layoutSubtreeIfNeeded()
+ 29 |                 self.window.displayIfNeeded()
+    |                 |- warning: expression is 'async' but is not marked with 'await'; this is an error in the Swift 6 language mode
+    |                 `- note: calls to instance method 'displayIfNeeded()' from outside of its actor context are implicitly asynchronous
+ 30 |             }
+ 31 |             func install(reduced:Bool = false,highContrast:Bool = false) {
+
+AppKit.NSWindow.displayIfNeeded:2:22: note: main actor isolation inferred from inheritance from class 'NSResponder'
+1 | class NSWindow {
+2 | @MainActor open func displayIfNeeded()}
+  |                      `- note: main actor isolation inferred from inheritance from class 'NSResponder'
+3 | 
+Installed verified sing-box 1.12.0: /Users/runner/work/MINER/MINER/v5/build/macos-arm64/dmg-root/MINER.app/Contents/Resources/bin/sing-box
+Traceback (most recent call last):
+  File "/Users/runner/work/MINER/MINER/v5/macos/build.py", line 206, in <module>
+    build(args.arch, args.signing, args.identity, args.notary_profile, args.dmg_background)
+  File "/Users/runner/work/MINER/MINER/v5/macos/build.py", line 64, in build
+    execute("xcrun", "swiftc", "-swift-version", "5", "-parse-as-library", "-O", "-framework", "AppKit", "-framework", "SwiftUI",
+  File "/Users/runner/work/MINER/MINER/v5/macos/build.py", line 24, in execute
+    subprocess.run([str(a) for a in args], check=True, cwd=ROOT)
+  File "/Library/Frameworks/Python.framework/Versions/3.12/lib/python3.12/subprocess.py", line 571, in run
+    raise CalledProcessError(retcode, process.args,
+subprocess.CalledProcessError: Command '['xcrun', 'swiftc', '-swift-version', '5', '-parse-as-library', '-O', '-framework', 'AppKit', '-framework', 'SwiftUI', '-target', 'arm64-apple-macosx13.0', '/Users/runner/work/MINER/MINER/v5/macos/App.swift', '/Users/runner/work/MINER/MINER/v5/macos/MinerUI.swift', '/Users/runner/work/MINER/MINER/v5/macos/DeltaUI.swift', '/Users/runner/work/MINER/MINER/v5/macos/DeltaSmoke.swift', '-o', '/Users/runner/work/MINER/MINER/v5/build/macos-arm64/dmg-root/MINER.app/Contents/MacOS/MINER']' returned non-zero exit status 1.
