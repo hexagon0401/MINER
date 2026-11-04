@@ -19,12 +19,9 @@ jobs:
     if: github.ref_type == 'tag' || github.event_name == 'workflow_dispatch'
     strategy:
       fail-fast: false
+      # Delta prioritizes the user's Apple Silicon Mac. Alpha retains both.
       matrix:
-        include:
-          - runner: macos-15
-            arch: arm64
-          - runner: macos-15-intel
-            arch: x86_64
+        include: ${{ fromJSON(startsWith(github.ref, 'refs/tags/v5.0.0-delta.') && '[{"runner":"macos-15","arch":"arm64"}]' || '[{"runner":"macos-15","arch":"arm64"},{"runner":"macos-15-intel","arch":"x86_64"}]') }}
     runs-on: ${{ matrix.runner }}
     timeout-minutes: 60
     steps:

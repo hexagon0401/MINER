@@ -21,7 +21,10 @@ def main():
     report = {"tag": tag, "source_sha": os.environ["GITHUB_SHA"],
               "run_url": f"https://github.com/{repo}/actions/runs/{run}",
               "build": os.environ["BUILD_RESULT"], "publication": os.environ["RELEASE_RESULT"],
-              "jobs": [{"name": j["name"], "conclusion": j["conclusion"],
+              "jobs": [{"name": j["name"], "status": j["status"], "conclusion": j["conclusion"],
+                        "started_at": j.get("started_at"), "completed_at": j.get("completed_at"),
+                        "runner_name": j.get("runner_name"),
+                        "steps": [{"name": s["name"], "status": s["status"], "conclusion": s["conclusion"]} for s in j.get("steps", [])],
                         "failed_steps": [s["name"] for s in j.get("steps", []) if s.get("conclusion") == "failure"]} for j in jobs]}
     for job in jobs:
         if job.get("conclusion") == "failure":
