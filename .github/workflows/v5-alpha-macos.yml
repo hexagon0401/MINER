@@ -27,7 +27,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           GH_REPO: ${{ github.repository }}
           RELEASE_TAG: ${{ github.ref_name }}
-          RELEASE_TITLE: ${{ startsWith(github.ref, 'refs/tags/v5.0.0-beta.') && 'MINER BETA' || startsWith(github.ref, 'refs/tags/v5.0.0-delta.') && 'MINER DELTA' || 'MINER Alpha' }}
+          RELEASE_TITLE: ${{ startsWith(github.ref, 'refs/tags/v5.0.0-beta.') && 'MINER BETA 1.1' || startsWith(github.ref, 'refs/tags/v5.0.0-delta.') && 'MINER DELTA' || 'MINER Alpha' }}
         run: |
           if gh release view "$RELEASE_TAG" >/dev/null 2>&1; then exit 0; fi
           python3 - <<'PYNOTES'
@@ -36,22 +36,6 @@ jobs:
           Path('pending-release-notes.md').write_text(text + Path('v5/macos/RELEASE_NOTES.md').read_text())
           PYNOTES
           gh release create "$RELEASE_TAG" --verify-tag --prerelease --title "$RELEASE_TITLE" --notes-file pending-release-notes.md
-
-  queue_guard:
-    if: startsWith(github.ref, 'refs/tags/v5.0.0-beta.')
-    needs: prerelease
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
-      actions: write
-    steps:
-      - uses: actions/checkout@v4
-      - name: Bound unassigned macOS queue wait
-        env:
-          GH_TOKEN: ${{ github.token }}
-          GH_REPO: ${{ github.repository }}
-          RELEASE_TAG: ${{ github.ref_name }}
-        run: python3 v5/macos/ci_queue_guard.py
 
   build:
     if: always() && (github.ref_type == 'tag' || github.event_name == 'workflow_dispatch') && needs.prerelease.result != 'failure'
@@ -151,7 +135,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           GH_REPO: ${{ github.repository }}
           RELEASE_TAG: ${{ github.ref_name }}
-          RELEASE_TITLE: ${{ startsWith(github.ref, 'refs/tags/v5.0.0-beta.') && 'MINER BETA' || startsWith(github.ref, 'refs/tags/v5.0.0-delta.') && 'MINER DELTA' || 'MINER Alpha' }}
+          RELEASE_TITLE: ${{ startsWith(github.ref, 'refs/tags/v5.0.0-beta.') && 'MINER BETA 1.1' || startsWith(github.ref, 'refs/tags/v5.0.0-delta.') && 'MINER DELTA' || 'MINER Alpha' }}
         run: |
           gh release upload "$RELEASE_TAG" release-assets/*
           gh release edit "$RELEASE_TAG" --prerelease --title "$RELEASE_TITLE" --notes-file v5/macos/RELEASE_NOTES.md

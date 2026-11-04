@@ -85,7 +85,7 @@ def build(expected_arch, signing="adhoc", identity=None, notary_profile=None, dm
         "CFBundleName": "MINER", "CFBundleDisplayName": "MINER", "CFBundleIconFile": "AppIcon",
         "CFBundleIdentifier": "org.schoolnet.v5.alpha", "CFBundleExecutable": "MINER",
         "CFBundlePackageType": "APPL", "CFBundleShortVersionString": "5.0.0",
-        "CFBundleVersion": f"{502 if 'beta' in __version__ else 501 if 'delta' in __version__ else 500}{int(__version__.rsplit('.', 1)[1]):03d}", "SchoolNetReleaseVersion": __version__,
+        "CFBundleVersion": "502101", "SchoolNetReleaseVersion": __version__,
         "LSMinimumSystemVersion": "13.0", "NSHighResolutionCapable": True,
     }
     (contents / "Info.plist").write_bytes(plistlib.dumps(info))
