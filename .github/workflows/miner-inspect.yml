@@ -1,0 +1,49 @@
+name: Inspect MINER DELTA native build
+on:
+  push:
+    branches: [miner-inspect-delta-4]
+permissions:
+  contents: write
+  actions: read
+  checks: read
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Inspect native job status without restarting it
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TARGET_SHA: ef44349
+        run: |
+          python3 - <<'PYCODE'
+          import json, os, subprocess
+          from pathlib import Path
+          def api(endpoint):
+              return json.loads(subprocess.check_output(['gh','api',endpoint],text=True))
+          repo=os.environ['GITHUB_REPOSITORY']
+          runs=api(f'repos/{repo}/actions/runs?per_page=25')['workflow_runs']
+          found=[]
+          for run in runs:
+              if not run['head_sha'].startswith(os.environ['TARGET_SHA']): continue
+              item={k:run.get(k) for k in ['id','name','head_branch','head_sha','status','conclusion','html_url','created_at','updated_at']}
+              item['jobs']=api(f"repos/{repo}/actions/runs/{run['id']}/jobs?per_page=100")['jobs']
+              for job in item['jobs']:
+                  if job.get('check_run_url'):
+                      try:
+                          check=api(job['check_run_url'])
+                          job['check_output']=check.get('output')
+                          job['annotations']=api(job['check_run_url']+'/annotations')
+                      except subprocess.CalledProcessError: pass
+              found.append(item)
+          Path(os.environ['RUNNER_TEMP'],'native-live.json').write_text(json.dumps(found,indent=2))
+          PYCODE
+      - name: Save live diagnosis to Git
+        run: |
+          git switch --orphan "miner-live-status/${{ github.run_id }}"
+          cp "$RUNNER_TEMP/native-live.json" .
+          git config user.name 'MINER Build Reports'
+          git config user.email 'github-actions[bot]@users.noreply.github.com'
+          git add native-live.json
+          git commit -m 'Record current MINER DELTA native runner status'
+          git push origin "HEAD:refs/heads/miner-live-status/${{ github.run_id }}"
