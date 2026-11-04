@@ -99,68 +99,129 @@ struct MinerRoot: View {
     @ObservedObject var model: MinerModel
     let controller: AppDelegate
     @State var joke = ""
-    @Environment(\.accessibilityReduceMotion) var reduceMotion
+    var chipColor: Color { model.phase == "error" ? .red : model.engine ? .green : model.busy ? .yellow : .gray }
+    var chipText: String {
+        if model.phase == "error" { return model.tr("오류","Error") }
+        if model.engine { return model.tr("실행 중","Running") }
+        return model.busy ? model.tr("연결 중","Connecting") : model.tr("대기","Idle")
+    }
+    var actionText: String { model.phase == "error" ? model.tr("다시 시도","Try again") : model.tr("시작","Start") }
+    var jokeText: String {
+        if model.mining && model.phase != "admin_auth" { return joke }
+        return model.phase == "running" ? model.tr("땅굴 속에도 빛이 있답니다.","A little light at the end of the tunnel.") : " "
+    }
+    var warpText: String {
+        if model.restored { return "WARP: UDP · Traffic and DNS" }
+        return "WARP: " + (model.warp ? model.tr("연결됨 · SOCKS5","Connected · SOCKS5") : model.tr("미확인","Unknown"))
+    }
+    var header: some View {
+        HStack {
+            VStack(alignment:.leading,spacing:3) {
+                Text("MINER").font(.system(size:24,weight:.semibold))
+                Text("Dig your way out.").font(.system(size:11,weight:.medium)).foregroundStyle(.secondary)
+            }
+            Spacer()
+            Button { controller.refresh(); model.diagnostics = true } label: {
+                HStack(spacing:5) {
+                    Circle().fill(chipColor).frame(width:6,height:6)
+                    Text(chipText)
+                }.font(.system(size:11,weight:.medium)).padding(8).background(.thinMaterial,in:Capsule())
+            }.buttonStyle(.plain)
+        }.frame(height:42)
+    }
+    var statusPanel: some View {
+        VStack(alignment:.leading,spacing:5) {
+            HStack {
+                Text(model.title).font(.system(size:16,weight:.semibold))
+                Spacer()
+                Text("\(model.completed)/5").font(.system(size:11)).foregroundStyle(.secondary)
+            }
+            Text(model.detail).font(.system(size:12))
+                .foregroundStyle(model.phase == "error" ? Color.red : Color.secondary)
+                .lineLimit(2).textSelection(.enabled)
+            Text(jokeText).font(.system(size:11)).foregroundStyle(.tertiary).lineLimit(1)
+            HStack(spacing:5) {
+                ForEach(0..<5) { index in
+                    Capsule().fill(index < model.completed ? Color.green : Color.gray.opacity(0.24)).frame(height:4)
+                }
+            }
+        }.frame(maxWidth:.infinity,alignment:.leading).frame(height:84)
+    }
+    var actions: some View {
+        HStack(spacing:12) {
+            Button { controller.start() } label: { Text(actionText).frame(maxWidth:.infinity,minHeight:28) }
+                .buttonStyle(.borderedProminent).tint(Color(red:0.05,green:0.85,blue:0.15))
+                .keyboardShortcut(.defaultAction).frame(maxWidth:.infinity).disabled(model.busy || model.engine)
+            Button { controller.stop() } label: { Text(model.tr("중지","Stop")).frame(width:100,minHeight:28) }
+                .buttonStyle(.bordered).frame(width:124).disabled(model.busy || (!model.engine && !model.warp))
+        }.controlSize(.large)
+    }
+    var tools: some View {
+        HStack {
+            Button(model.tr("WARP 자동 연결","Connect WARP")) { controller.connectWarp() }.disabled(model.busy || model.engine)
+            Spacer()
+            Menu(model.tr("⋯ 도구","⋯ Tools")) {
+                Button(model.tr("WARP 열기","Open WARP")) { controller.openWarp() }
+                Button(model.tr("사전 점검","Preflight")) { controller.check(); model.diagnostics = true }
+                Button(model.tr("상태·로그","Status & logs")) { controller.showDiagnostics() }
+                Button(model.tr("WARP 연결 확인","Check WARP")) { controller.checkWarp(); model.diagnostics = true }
+                Button(model.tr("WARP 연결 끄기","Disconnect WARP")) { controller.disconnectWarp() }
+                Button(model.tr("도움말","Help")) { controller.openGuide() }
+                Divider()
+                Button(model.tr("설정…","Settings…")) { controller.showSettings() }.keyboardShortcut(",",modifiers:.command)
+            }.menuStyle(.borderlessButton).fixedSize().disabled(model.busy)
+        }.buttonStyle(.plain).font(.system(size:11))
+    }
+    var badges: some View {
+        HStack {
+            Text(warpText)
+            Spacer()
+            Text(model.engine ? "ENGINE: ON" : "ENGINE: OFF")
+        }.font(.system(size:10)).foregroundStyle(.secondary)
+    }
+    var diagnosticsPanel: some View {
+        VStack(alignment:.leading,spacing:12) {
+            Text(model.tr("상태·로그","Status & logs")).font(.headline)
+            Text(model.detail).font(.caption).textSelection(.enabled)
+            ScrollView {
+                Text(model.redact(model.logs)).font(.system(size:11,design:.monospaced))
+                    .textSelection(.enabled).frame(maxWidth:.infinity,alignment:.leading)
+            }.frame(minWidth:470,minHeight:260)
+            HStack {
+                Button(model.tr("복사","Copy")) {
+                    NSPasteboard.general.clearContents()
+                    NSPasteboard.general.setString(model.redact(model.logs),forType:.string)
+                }
+                Button(model.tr("로그 파일 열기","Open log file")) { controller.openLog() }
+                Spacer()
+                Button(model.tr("닫기","Close")) { model.diagnostics = false }
+            }
+        }.padding(20)
+    }
+    func rotateJokes() async {
+        while !Task.isCancelled && model.mining && model.active {
+            if model.language == "ko", let lines = model.copy["lolParodies"] as? [[String:Any]] {
+                let eligible = lines.filter { ($0["states"] as? [String] ?? []).contains(model.phase) }
+                joke = eligible.randomElement()?["text"] as? String ?? ""
+            } else { joke = "One small tunnel. One steady connection." }
+            try? await Task.sleep(nanoseconds:5_000_000_000)
+        }
+    }
     var body: some View {
         GeometryReader { geo in
             VStack(spacing:10) {
-                HStack {
-                    VStack(alignment:.leading,spacing:3) { Text("MINER").font(.system(size:24,weight:.semibold)); Text("Dig your way out.").font(.system(size:11,weight:.medium)).foregroundStyle(.secondary) }
-                    Spacer()
-                    Button { controller.refresh(); model.diagnostics = true } label: {
-                        HStack(spacing:5) { Circle().fill(model.phase == "error" ? Color.red : model.engine ? .green : model.busy ? .yellow : .gray).frame(width:6,height:6)
-                            Text(model.phase == "error" ? model.tr("오류","Error") : model.engine ? model.tr("실행 중","Running") : model.busy ? model.tr("연결 중","Connecting") : model.tr("대기","Idle"))
-                        }.font(.system(size:11,weight:.medium)).padding(8).background(.thinMaterial,in:Capsule())
-                    }.buttonStyle(.plain)
-                }.frame(height:42)
+                header
                 MinerScene(model:model).frame(height:max(140,min(184,geo.size.height-320)))
-                VStack(alignment:.leading,spacing:5) {
-                    HStack { Text(model.title).font(.system(size:16,weight:.semibold)); Spacer(); Text("\(model.completed)/5").font(.system(size:11)).foregroundStyle(.secondary) }
-                    Text(model.detail).font(.system(size:12)).foregroundStyle(model.phase == "error" ? Color.red : Color.secondary).lineLimit(2).textSelection(.enabled)
-                    Text(model.mining && model.phase != "admin_auth" ? joke : model.phase == "running" ? model.tr("땅굴 속에도 빛이 있답니다.","A little light at the end of the tunnel.") : " ").font(.system(size:11)).foregroundStyle(.tertiary).lineLimit(1)
-                    HStack(spacing:5) { ForEach(0..<5) { index in Capsule().fill(index < model.completed ? Color.green : Color.gray.opacity(0.24)).frame(height:4) } }
-                }.frame(maxWidth:.infinity,alignment:.leading).frame(height:84)
-                HStack(spacing:12) {
-                    Button { controller.start() } label: { Text(model.phase == "error" ? model.tr("다시 시도","Try again") : model.tr("시작","Start")).frame(maxWidth:.infinity,minHeight:28) }
-                        .buttonStyle(.borderedProminent).tint(Color(red:0.05,green:0.85,blue:0.15)).keyboardShortcut(.defaultAction).frame(maxWidth:.infinity)
-                        .disabled(model.busy || model.engine)
-                    Button { controller.stop() } label: { Text(model.tr("중지","Stop")).frame(width:100,minHeight:28) }.buttonStyle(.bordered).frame(width:124).disabled(model.busy || (!model.engine && !model.warp))
-                }.controlSize(.large)
-                HStack {
-                    Button(model.tr("WARP 자동 연결","Connect WARP")) { controller.connectWarp() }.disabled(model.busy || model.engine)
-                    Spacer()
-                    Menu(model.tr("⋯ 도구","⋯ Tools")) {
-                        Button(model.tr("WARP 열기","Open WARP")) { controller.openWarp() }
-                        Button(model.tr("사전 점검","Preflight")) { controller.check(); model.diagnostics = true }
-                        Button(model.tr("상태·로그","Status & logs")) { controller.showDiagnostics() }
-                        Button(model.tr("WARP 연결 확인","Check WARP")) { controller.checkWarp(); model.diagnostics = true }
-                        Button(model.tr("WARP 연결 끄기","Disconnect WARP")) { controller.disconnectWarp() }
-                        Button(model.tr("도움말","Help")) { controller.openGuide() }
-                        Divider()
-                        Button(model.tr("설정…","Settings…")) { controller.showSettings() }.keyboardShortcut(",",modifiers:.command)
-                    }.menuStyle(.borderlessButton).fixedSize().disabled(model.busy)
-                }.buttonStyle(.plain).font(.system(size:11))
-                HStack { Text("WARP: " + (model.restored ? "UDP · Traffic and DNS" : model.warp ? model.tr("연결됨 · SOCKS5","Connected · SOCKS5") : model.tr("미확인","Unknown"))); Spacer(); Text("ENGINE: " + (model.engine ? "ON":"OFF")) }.font(.system(size:10)).foregroundStyle(.secondary)
+                statusPanel
+                actions
+                tools
+                badges
             }.padding(20)
         }.background(.regularMaterial)
-        .sheet(isPresented:$model.diagnostics) {
-            VStack(alignment:.leading,spacing:12) {
-                Text(model.tr("상태·로그","Status & logs")).font(.headline)
-                Text(model.detail).font(.caption).textSelection(.enabled)
-                ScrollView { Text(model.redact(model.logs)).font(.system(size:11,design:.monospaced)).textSelection(.enabled).frame(maxWidth:.infinity,alignment:.leading) }.frame(minWidth:470,minHeight:260)
-                HStack { Button(model.tr("복사","Copy")) { NSPasteboard.general.clearContents(); NSPasteboard.general.setString(model.redact(model.logs),forType:.string) }; Button(model.tr("로그 파일 열기","Open log file")) { controller.openLog() }; Spacer(); Button(model.tr("닫기","Close")) { model.diagnostics = false } }
-            }.padding(20)
-        }
+        .sheet(isPresented:$model.diagnostics) { diagnosticsPanel }
         .onReceive(NotificationCenter.default.publisher(for:NSApplication.didBecomeActiveNotification)) { _ in model.active = true }
         .onReceive(NotificationCenter.default.publisher(for:NSApplication.didResignActiveNotification)) { _ in model.active = false }
-        .task(id: model.phase + model.language + String(model.active)) {
-            while !Task.isCancelled && model.mining && model.active {
-                if model.language == "ko", let lines = model.copy["lolParodies"] as? [[String:Any]] {
-                    let eligible = lines.filter { ($0["states"] as? [String] ?? []).contains(model.phase) }
-                    joke = eligible.randomElement()?["text"] as? String ?? ""
-                } else { joke = "One small tunnel. One steady connection." }
-                try? await Task.sleep(nanoseconds:5_000_000_000)
-            }
-        }
+        .task(id:model.phase + model.language + String(model.active)) { await rotateJokes() }
     }
 }
 struct MinerSettings: View {
