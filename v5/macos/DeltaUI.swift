@@ -5,6 +5,23 @@ private let deltaNavy = Color(red:0.055,green:0.075,blue:0.122)
 private let deltaGreen = Color(red:0.055,green:0.984,blue:0.180)
 private let deltaRed = Color(red:1,green:0.353,blue:0.380)
 
+// Default values defer to macOS. Fixtures can exercise both native preferences
+// without trying to write SwiftUI's read-only accessibility environment keys.
+struct DeltaAccessibility {
+    var reduceMotion:Bool? = nil
+    var reduceTransparency:Bool? = nil
+    var increasedContrast:Bool? = nil
+}
+private struct DeltaAccessibilityKey:EnvironmentKey {
+    static let defaultValue = DeltaAccessibility()
+}
+extension EnvironmentValues {
+    var deltaAccessibility:DeltaAccessibility {
+        get { self[DeltaAccessibilityKey.self] }
+        set { self[DeltaAccessibilityKey.self] = newValue }
+    }
+}
+
 enum DeltaArt {
     static let images: [String:NSImage] = Dictionary(uniqueKeysWithValues: ["full-window-strata","shaft-reveal","dig-wall-cracks","pickaxe-impact","dirt-particle-cluster","pebble","skylight-beam","exit-ceiling"].map { name in
         (name,NSImage(contentsOf:Bundle.main.resourceURL!.appendingPathComponent("UIAssets/delta-" + name + ".png")) ?? NSImage())
@@ -14,7 +31,9 @@ private func deltaArt(_ name:String) -> Image { Image(nsImage:DeltaArt.images[na
 
 private struct DeltaGlass: ViewModifier {
     var radius: CGFloat
-    @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
+    @Environment(\.accessibilityReduceTransparency) private var systemReduceTransparency
+    @Environment(\.deltaAccessibility) private var accessibility
+    private var reduceTransparency:Bool { accessibility.reduceTransparency ?? systemReduceTransparency }
     func body(content:Content) -> some View {
         if reduceTransparency {
             content.background(deltaNavy,in:RoundedRectangle(cornerRadius:radius))
@@ -46,7 +65,9 @@ private struct DeltaCave: View {
     let shaft:Bool
     let light:Bool
     @State private var errorDrop = false
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.deltaAccessibility) private var accessibility
+    @Environment(\.accessibilityReduceMotion) private var systemReduceMotion
+    private var reduceMotion:Bool { accessibility.reduceMotion ?? systemReduceMotion }
     private var sy:CGFloat { size.height/610 }
     private var minerX:CGFloat { model.mining ? size.width/2 + CGFloat(model.completed)*16 : size.width*0.66 }
     var body: some View {
@@ -72,6 +93,7 @@ private struct DeltaCave: View {
             miner(t)
             debris(t)
         }.frame(width:size.width,height:size.height)
+        .animation(.easeInOut(duration:reduceMotion ? 0.12 : 0.55),value:model.completed)
     }
     private var school: some View {
         ZStack {
@@ -132,9 +154,13 @@ struct DeltaRoot: View {
     @ObservedObject var model:MinerModel
     let controller:AppDelegate
     var visualAudit:((Double,CGFloat,[String:CGRect])->Void)? = nil
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
-    @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
-    @Environment(\.colorSchemeContrast) private var contrast
+    @Environment(\.accessibilityReduceMotion) private var systemReduceMotion
+    private var reduceMotion:Bool { accessibility.reduceMotion ?? systemReduceMotion }
+    @Environment(\.accessibilityReduceTransparency) private var systemReduceTransparency
+    @Environment(\.deltaAccessibility) private var accessibility
+    private var reduceTransparency:Bool { accessibility.reduceTransparency ?? systemReduceTransparency }
+    @Environment(\.colorSchemeContrast) private var systemContrast
+    private var increasedContrast:Bool { accessibility.increasedContrast ?? (systemContrast == .increased) }
     @State private var shaft = false
     @State private var light = false
     @State private var blur:CGFloat = 0
@@ -183,7 +209,7 @@ struct DeltaRoot: View {
         ZStack {
             if reduceTransparency { deltaNavy }
             else { Rectangle().fill(.ultraThinMaterial) }
-            LinearGradient(colors:[deltaNavy.opacity(reduceTransparency ? 1 : contrast == .increased ? 0.82 : 0.66),deltaNavy.opacity(reduceTransparency ? 1 : 0.85)],startPoint:.top,endPoint:.bottom)
+            LinearGradient(colors:[deltaNavy.opacity(reduceTransparency ? 1 : increasedContrast ? 0.82 : 0.66),deltaNavy.opacity(reduceTransparency ? 1 : 0.85)],startPoint:.top,endPoint:.bottom)
         }.allowsHitTesting(false)
     }
     private func regularContent(_ size:CGSize) -> some View {
@@ -210,7 +236,7 @@ struct DeltaRoot: View {
             Button { controller.refresh(); model.diagnostics = true } label: {
                 HStack(spacing:5) { Circle().fill(base.chipColor).frame(width:6,height:6); Text(base.chipText) }
                     .font(.system(size:11)).padding(8).modifier(DeltaGlass(radius:12))
-            }.buttonStyle(.plain)
+            }.buttonStyle(.plain).padding(.top,6)
         }
     }
     private var statusPanel: some View {
@@ -263,10 +289,14 @@ struct DeltaRoot: View {
         return model.engine ? model.tr("땅굴 속에도 빛이 있답니다.","A little light at the end of the tunnel.") : " "
     }
     private var successOverlay: some View {
-        VStack(spacing:10) {
-            Image(systemName:"checkmark.circle.fill").font(.system(size:64)).foregroundStyle(.green)
-            Text(model.tr("연결 완료","Connected")).font(.system(size:18,weight:.semibold)).foregroundStyle(.white)
-        }.scaleEffect(checkScale).opacity(checkOpacity).offset(y:checkLift)
+        Image(systemName:"checkmark.circle.fill").resizable().scaledToFit()
+            .foregroundStyle(.green).frame(width:64,height:64)
+            .background(GeometryReader { proxy in Color.clear.preference(key:DeltaControlFrames.self,value:["success":proxy.frame(in:.named("deltaWindow"))]) })
+            .overlay(alignment:.bottom) {
+                Text(model.tr("연결 완료","Connected")).font(.system(size:18,weight:.semibold))
+                    .foregroundStyle(.white).fixedSize().offset(y:32)
+            }
+            .scaleEffect(checkScale).opacity(checkOpacity).offset(y:checkLift)
         .accessibilityHidden(checkOpacity == 0)
     }
     private func pulseLayer(_ size:CGSize) -> some View {

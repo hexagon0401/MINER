@@ -19,27 +19,25 @@ extension AppDelegate {
         Task { @MainActor in
             var checks:[String] = []
             let audit = DeltaSmokeAudit()
-            func require(_ condition:Bool,_ message:String) throws {
+            @MainActor func require(_ condition:Bool,_ message:String) throws {
                 guard condition else { throw NSError(domain:"MINER.NativeUI",code:1,userInfo:[NSLocalizedDescriptionKey:message]) }
                 checks.append(message)
             }
-            func settle(_ milliseconds:UInt64 = 160) async throws {
+            @MainActor func settle(_ milliseconds:UInt64 = 160) async throws {
                 try await Task.sleep(nanoseconds:milliseconds*1_000_000)
                 self.window.contentView?.layoutSubtreeIfNeeded()
                 self.window.displayIfNeeded()
             }
-            func install(reduced:Bool = false,highContrast:Bool = false) {
+            @MainActor func install(reduced:Bool = false,highContrast:Bool = false) {
                 let root = DeltaRoot(model:self.model,controller:self,visualAudit:audit.accept)
-                    .environment(\.accessibilityReduceMotion,reduced)
-                    .environment(\.accessibilityReduceTransparency,reduced)
-                    .environment(\.colorSchemeContrast,highContrast ? .increased : .standard)
+                    .environment(\.deltaAccessibility,DeltaAccessibility(reduceMotion:reduced,reduceTransparency:reduced,increasedContrast:highContrast))
                 let backdrop = self.window.contentView!
                 backdrop.subviews.forEach { $0.removeFromSuperview() }
                 let host = NSHostingView(rootView:root)
                 host.frame = backdrop.bounds; host.autoresizingMask = [.width,.height]
                 backdrop.addSubview(host)
             }
-            func capture(_ name:String) throws {
+            @MainActor func capture(_ name:String) throws {
                 let view = self.window.contentView!
                 guard let bitmap = view.bitmapImageRepForCachingDisplay(in:view.bounds) else {
                     throw NSError(domain:"MINER.NativeUI",code:2,userInfo:[NSLocalizedDescriptionKey:"Cannot render native view"])
@@ -81,6 +79,8 @@ extension AppDelegate {
                 try require(audit.check == 0 && !audit.sawSuccess && self.model.completed == 3,"WARP-only does not claim full-engine success")
                 self.model.phase = "running"; self.model.engine = true; self.model.completed = 5
                 try await settle(700); try capture("success")
+                let success = audit.frames["success"] ?? .zero
+                try require(abs(success.midX-280)<2 && abs(success.midY-305)<2,"Native check icon at exact entire-window center")
                 try require(audit.check > 0 && audit.blur > 0 && audit.sawSuccess,"Verified running drives sharp check and background blur")
                 try await settle(1050); try capture("restored")
                 try require(audit.check == 0 && audit.blur == 0 && self.model.completed == 5,"Success restores normal content without changing ticks")

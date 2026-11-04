@@ -32,6 +32,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         window.title = "MINER"
         window.titleVisibility = .hidden
         window.titlebarAppearsTransparent = true
+        window.titlebarSeparatorStyle = .none
         window.styleMask.insert(.fullSizeContentView)
         window.setFrame(NSRect(x:0,y:0,width:560,height:610), display:false)
         window.isMovableByWindowBackground = true
