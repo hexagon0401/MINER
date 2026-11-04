@@ -24,7 +24,9 @@ def settings(app, background):
         "show_status_bar": False, "show_tab_view": False, "show_toolbar": False,
         "show_pathbar": False, "show_sidebar": False,
         "include_icon_view_settings": True, "include_list_view_settings": False,
-        "hide_extensions": [app.name],
+        # SetFile -a E adds FinderInfo to the signed .app and invalidates strict
+        # verification. Keep the app untouched; only the volume owns metadata.
+        "hide_extensions": [],
     }
 
 

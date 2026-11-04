@@ -20,6 +20,7 @@ class DmgLayoutTests(unittest.TestCase):
             self.assertLess(APP_POSITION[0], APPLICATIONS_POSITION[0])
             self.assertIsNone(config["arrange_by"])
             self.assertFalse(config["show_toolbar"])
+            self.assertEqual(config["hide_extensions"], [])
             self.assertEqual(config["background"], str(background.resolve()))
             for x, y in [APP_POSITION, APPLICATIONS_POSITION]:
                 self.assertTrue(ICON_SIZE/2 < x < WINDOW_SIZE[0]-ICON_SIZE/2)
