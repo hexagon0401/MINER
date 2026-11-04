@@ -1,0 +1,44 @@
+name: MINER official school catalog
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths: ['.github/workflows/miner-school-catalog.yml', 'v5/community/catalog.py']
+permissions:
+  contents: write
+concurrency:
+  group: miner-school-catalog
+  cancel-in-progress: false
+jobs:
+  import:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Fetch full official catalog, never sample data
+        env:
+          NEIS_API_KEY: ${{ secrets.NEIS_API_KEY }}
+        run: |
+          mkdir "$RUNNER_TEMP/catalog-result"
+          python3 - <<'PY'
+          import json,os
+          from pathlib import Path
+          from v5.community.catalog import fetch_neis,write_catalog
+          from datetime import date
+          target=Path(os.environ['RUNNER_TEMP'])/'catalog-result'
+          try:
+              rows=fetch_neis(os.environ.get('NEIS_API_KEY'))
+              meta=write_catalog(rows,target/'schools.sqlite3',date.today().isoformat())
+              (target/'status.json').write_text(json.dumps({'ok':True,'metadata':meta},ensure_ascii=False,indent=2))
+          except Exception as e:
+              (target/'status.json').write_text(json.dumps({'ok':False,'error':str(e),'required':'Official NEIS CSV or NEIS_API_KEY; no sample schools published'},ensure_ascii=False,indent=2))
+          PY
+      - name: Save source data and import result on isolated branch
+        run: |
+          ref="miner-school-catalog/${GITHUB_RUN_ID}"
+          git switch --orphan "$ref"
+          cp "$RUNNER_TEMP/catalog-result"/* .
+          git config user.name 'MINER Catalog Imports'
+          git config user.email 'github-actions[bot]@users.noreply.github.com'
+          git add --all
+          git commit -m 'Record full official school catalog import outcome'
+          git push origin "HEAD:refs/heads/$ref"

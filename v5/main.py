@@ -44,9 +44,20 @@ def main(argv=None):
     desktop.add_argument("operation", choices=["start", "stop", "status", "uninstall"])
     desktop.add_argument("--resources", type=Path)
     desktop.add_argument("--profile", type=Path)
+    community = commands.add_parser("community-diagnose", help="read-only school report diagnostics; no routing changes")
+    community.add_argument("--directory", type=Path, required=True)
+    community.add_argument("--engine", required=True)
     args = parser.parse_args(argv)
     try:
-        if args.command == "init":
+        if args.command == "community-diagnose":
+            from community.diagnostics import diagnose
+            try:
+                result = diagnose(args.directory, args.engine)
+            except (OSError, ValueError, TypeError, subprocess.CalledProcessError, subprocess.TimeoutExpired):
+                result = {"schemaVersion":1,"passed":False,"checks":{},"failureCode":"diagnostic_failed"}
+            print(json.dumps(result))
+            return 0
+        elif args.command == "init":
             profile = Profile(platform=args.platform, proxy_port=args.proxy_port,
                               physical_interface=args.physical_interface).validate()
             args.directory.mkdir(parents=True, exist_ok=True)

@@ -1,0 +1,6 @@
+[
+ {"ATPT_OFCDC_SC_CODE":"TEST","SD_SCHUL_CODE":"H1","SCHUL_NM":"테스트한빛고등학교","SCHUL_KND_SC_NM":"고등학교","LCTN_SC_NM":"테스트서울","ORG_RDNMA":"테스트서울 테스트구 예시로 1"},
+ {"ATPT_OFCDC_SC_CODE":"TEST","SD_SCHUL_CODE":"H2","SCHUL_NM":"테스트한빛고등학교","SCHUL_KND_SC_NM":"고등학교","LCTN_SC_NM":"테스트부산","ORG_RDNMA":"테스트부산 테스트구 예시로 2"},
+ {"ATPT_OFCDC_SC_CODE":"TEST","SD_SCHUL_CODE":"M1","SCHUL_NM":"테스트새봄중학교","SCHUL_KND_SC_NM":"중학교","LCTN_SC_NM":"테스트서울","ORG_RDNMA":"테스트서울 테스트구 예시로 3"},
+ {"ATPT_OFCDC_SC_CODE":"TEST","SD_SCHUL_CODE":"E1","SCHUL_NM":"테스트새봄초등학교","SCHUL_KND_SC_NM":"초등학교","LCTN_SC_NM":"테스트서울","ORG_RDNMA":"테스트서울 테스트구 예시로 4"}
+]

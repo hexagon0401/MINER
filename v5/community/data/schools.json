@@ -1,0 +1,16 @@
+{
+  "schema_version": 1,
+  "catalog_version": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+  "as_of": "2026-11-04",
+  "source_url": "https://open.neis.go.kr/hub/schoolInfo",
+  "complete": false,
+  "fixture": false,
+  "record_count": 0,
+  "counts": {
+    "high": 0,
+    "middle": 0,
+    "elementary": 0
+  },
+  "coverage": "Current official schoolInfo records; explicit closed/suspended records excluded",
+  "attribution": "교육부·시도교육청 / 나이스 교육정보 개방 포털 학교기본정보. 출처와 기준일을 함께 표시합니다."
+}
