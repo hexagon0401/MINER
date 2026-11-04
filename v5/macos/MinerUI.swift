@@ -152,7 +152,7 @@ struct MinerRoot: View {
             Button { controller.start() } label: { Text(actionText).frame(maxWidth:.infinity,minHeight:28) }
                 .buttonStyle(.borderedProminent).tint(Color(red:0.05,green:0.85,blue:0.15))
                 .keyboardShortcut(.defaultAction).frame(maxWidth:.infinity).disabled(model.busy || model.engine)
-            Button { controller.stop() } label: { Text(model.tr("중지","Stop")).frame(width:100,minHeight:28) }
+            Button { controller.stop() } label: { Text(model.tr("중지","Stop")).frame(width:100,height:28) }
                 .buttonStyle(.bordered).frame(width:124).disabled(model.busy || (!model.engine && !model.warp))
         }.controlSize(.large)
     }
