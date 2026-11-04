@@ -10,43 +10,28 @@ cask "miner-beta" do
 
   conflicts_with cask: "miner"
   depends_on arch: :arm64
-  depends_on macos: ">= :ventura"
+  depends_on macos: :ventura
 
   app "MINER.app"
 
-  preflight do
-    app_running = system_command(
-      "/usr/bin/pgrep",
-      args: ["-x", "MINER"],
-      must_succeed: false,
-    ).exit_status.zero?
-    service = system_command(
-      "/bin/launchctl",
-      args: ["print", "system/org.schoolnet.v5.alpha"],
-      must_succeed: false,
-    )
-    if app_running || service.stdout.match?(/pid = \d+/)
-      raise Cask::CaskError,
-            "Stop and quit MINER before installing or upgrading. WARP must finish restoring first."
-    end
+  preflight_steps do
+    run "/bin/sh", args: ["-c", <<~SH]
+      if /usr/bin/pgrep -x MINER >/dev/null 2>&1 ||
+          /bin/launchctl print system/org.schoolnet.v5.alpha 2>/dev/null | /usr/bin/grep -Eq 'pid = [0-9]+'; then
+        echo "Stop and quit MINER before installing or upgrading. Wait for WARP restoration." >&2
+        exit 1
+      fi
+    SH
   end
 
-  uninstall_preflight do
-    app_running = system_command(
-      "/usr/bin/pgrep",
-      args: ["-x", "MINER"],
-      must_succeed: false,
-    ).exit_status.zero?
-    service = system_command(
-      "/bin/launchctl",
-      args: ["print", "system/org.schoolnet.v5.alpha"],
-      must_succeed: false,
-    )
-    if app_running || service.stdout.match?(/pid = \d+/)
-      raise Cask::CaskError,
-            "Stop and quit MINER before uninstalling. " \
-            "For complete service/data removal, use Settings > Uninstall MINER first."
-    end
+  uninstall_preflight_steps do
+    run "/bin/sh", args: ["-c", <<~SH]
+      if /usr/bin/pgrep -x MINER >/dev/null 2>&1 ||
+          /bin/launchctl print system/org.schoolnet.v5.alpha 2>/dev/null | /usr/bin/grep -Eq 'pid = [0-9]+'; then
+        echo "Stop and quit MINER before uninstalling. Use Settings > Uninstall MINER for full cleanup." >&2
+        exit 1
+      fi
+    SH
   end
 
   zap trash: [
