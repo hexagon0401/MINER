@@ -1,7 +1,6 @@
 {
-  "state": "retry_requested",
-  "dispatch": true,
-  "runner": "macos-26",
+  "state": "complete",
+  "dispatch": false,
   "tag": "v5.0.0-beta.1",
   "source_sha": "8cc4f8f880b2d438b297941af038f743aca18af4",
   "release_url": "https://github.com/hexagon0401/MINER/releases/tag/v5.0.0-beta.1"
