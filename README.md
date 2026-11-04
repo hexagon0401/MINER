@@ -39,13 +39,19 @@
 
 `“MINER.app” Not Opened`(MINER.app을 열지 못함) 창이 나타나면 **Done(완료)**을 누릅니다. **Move to Trash(휴지통으로 이동)**는 누르지 않습니다.
 
+<img src="docs/images/macos-install/01-app-blocked.png" alt="macOS에서 MINER.app의 첫 실행을 차단한 창" width="460" />
+
 **2. 시스템 설정에서 실행 허용**
 
 **시스템 설정 → 개인정보 보호 및 보안 → 보안**으로 이동합니다. `“MINER.app” was blocked to protect your Mac` 안내 옆의 **Open Anyway(확인 없이 열기)**를 누릅니다. 항목이 보이지 않으면 응용 프로그램 폴더에서 MINER를 한 번 실행한 뒤 설정을 다시 확인합니다.
 
+<img src="docs/images/macos-install/02-privacy-security.png" alt="개인정보 보호 및 보안 설정의 Open Anyway 버튼" width="760" />
+
 **3. 최종 확인 창에서도 실행 허용**
 
 `Open “MINER.app”?` 확인 창이 나타나면 여기서도 **Open Anyway(확인 없이 열기)**를 누릅니다. macOS에서 암호나 Touch ID 인증을 요구하면 인증합니다. 이후 MINER 창이 열립니다.
+
+<img src="docs/images/macos-install/03-open-anyway.png" alt="최종 실행 확인 창의 Open Anyway 버튼" width="460" />
 
 macOS 버전과 표시 언어에 따라 버튼 이름이나 화면 구성은 조금 다를 수 있습니다. `앱이 손상되어 열 수 없습니다`처럼 다른 오류가 표시되는 경우에는 이 안내와 다른 문제일 수 있으므로 오류 문구를 확인해 주세요.
 
