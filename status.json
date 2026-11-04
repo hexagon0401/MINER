@@ -1,0 +1,120 @@
+{
+  "tag": "v5.0.0-alpha.5-dmg.6",
+  "source_sha": "e8a9d291497fb1118f4605e67becaff455347717",
+  "run_url": "https://github.com/hexagon0401/MINER/actions/runs/41841049543",
+  "build": "success",
+  "publication": "success",
+  "jobs": [
+    {
+      "name": "build (macos-15, arm64)",
+      "conclusion": "success",
+      "failed_steps": []
+    },
+    {
+      "name": "build (macos-15-intel, x86_64)",
+      "conclusion": "success",
+      "failed_steps": []
+    },
+    {
+      "name": "release",
+      "conclusion": "success",
+      "failed_steps": []
+    },
+    {
+      "name": "report",
+      "conclusion": null,
+      "failed_steps": []
+    }
+  ],
+  "release": {
+    "assets": [
+      {
+        "apiUrl": "https://api.github.com/repos/hexagon0401/MINER/releases/assets/709676018",
+        "contentType": "application/x-apple-diskimage",
+        "createdAt": "2026-11-04T13:48:04Z",
+        "digest": "sha256:b17154a56cfa9402876396d52228971de948910860765e4f4cb30469d40be4d8",
+        "downloadCount": 0,
+        "id": "RA_kwDOSHKeSc4qTMvy",
+        "label": "",
+        "name": "MINER-v5.0.0-alpha.5-macOS-AppleSilicon.dmg",
+        "size": 27112534,
+        "state": "uploaded",
+        "updatedAt": "2026-11-04T13:48:06Z",
+        "url": "https://github.com/hexagon0401/MINER/releases/download/v5.0.0-alpha.5-dmg.6/MINER-v5.0.0-alpha.5-macOS-AppleSilicon.dmg"
+      },
+      {
+        "apiUrl": "https://api.github.com/repos/hexagon0401/MINER/releases/assets/709676015",
+        "contentType": "application/octet-stream",
+        "createdAt": "2026-11-04T13:48:04Z",
+        "digest": "sha256:9c944f1998b6fc0b4c1acb8c924e3805617e3628f732166971877299046c0899",
+        "downloadCount": 0,
+        "id": "RA_kwDOSHKeSc4qTMvv",
+        "label": "",
+        "name": "MINER-v5.0.0-alpha.5-macOS-AppleSilicon.dmg.sha256",
+        "size": 110,
+        "state": "uploaded",
+        "updatedAt": "2026-11-04T13:48:04Z",
+        "url": "https://github.com/hexagon0401/MINER/releases/download/v5.0.0-alpha.5-dmg.6/MINER-v5.0.0-alpha.5-macOS-AppleSilicon.dmg.sha256"
+      },
+      {
+        "apiUrl": "https://api.github.com/repos/hexagon0401/MINER/releases/assets/709676014",
+        "contentType": "application/json",
+        "createdAt": "2026-11-04T13:48:04Z",
+        "digest": "sha256:240b57440cd07b4ddeb9cc742313d0e0da2a09dce8655bf0bd44f95d76a315a7",
+        "downloadCount": 0,
+        "id": "RA_kwDOSHKeSc4qTMvu",
+        "label": "",
+        "name": "MINER-v5.0.0-alpha.5-macOS-AppleSilicon.dmg.verification.json",
+        "size": 304,
+        "state": "uploaded",
+        "updatedAt": "2026-11-04T13:48:04Z",
+        "url": "https://github.com/hexagon0401/MINER/releases/download/v5.0.0-alpha.5-dmg.6/MINER-v5.0.0-alpha.5-macOS-AppleSilicon.dmg.verification.json"
+      },
+      {
+        "apiUrl": "https://api.github.com/repos/hexagon0401/MINER/releases/assets/709676017",
+        "contentType": "application/x-apple-diskimage",
+        "createdAt": "2026-11-04T13:48:04Z",
+        "digest": "sha256:f8d15f5ba00b1d478149a793880d6b3feebd951ff4922a5a780e5c491728ad64",
+        "downloadCount": 0,
+        "id": "RA_kwDOSHKeSc4qTMvx",
+        "label": "",
+        "name": "MINER-v5.0.0-alpha.5-macOS-Intel.dmg",
+        "size": 28731818,
+        "state": "uploaded",
+        "updatedAt": "2026-11-04T13:48:06Z",
+        "url": "https://github.com/hexagon0401/MINER/releases/download/v5.0.0-alpha.5-dmg.6/MINER-v5.0.0-alpha.5-macOS-Intel.dmg"
+      },
+      {
+        "apiUrl": "https://api.github.com/repos/hexagon0401/MINER/releases/assets/709676012",
+        "contentType": "application/octet-stream",
+        "createdAt": "2026-11-04T13:48:04Z",
+        "digest": "sha256:36020f0d51ea967a5e5cc8ab394685ad58e10034b2af98c8b18ff240dd3a4ce9",
+        "downloadCount": 0,
+        "id": "RA_kwDOSHKeSc4qTMvs",
+        "label": "",
+        "name": "MINER-v5.0.0-alpha.5-macOS-Intel.dmg.sha256",
+        "size": 103,
+        "state": "uploaded",
+        "updatedAt": "2026-11-04T13:48:05Z",
+        "url": "https://github.com/hexagon0401/MINER/releases/download/v5.0.0-alpha.5-dmg.6/MINER-v5.0.0-alpha.5-macOS-Intel.dmg.sha256"
+      },
+      {
+        "apiUrl": "https://api.github.com/repos/hexagon0401/MINER/releases/assets/709676063",
+        "contentType": "application/json",
+        "createdAt": "2026-11-04T13:48:05Z",
+        "digest": "sha256:6d2018c6809e07f41eb641fab9b2cd1d863478c8c9151561d317f09abd3ee530",
+        "downloadCount": 0,
+        "id": "RA_kwDOSHKeSc4qTMwf",
+        "label": "",
+        "name": "MINER-v5.0.0-alpha.5-macOS-Intel.dmg.verification.json",
+        "size": 305,
+        "state": "uploaded",
+        "updatedAt": "2026-11-04T13:48:05Z",
+        "url": "https://github.com/hexagon0401/MINER/releases/download/v5.0.0-alpha.5-dmg.6/MINER-v5.0.0-alpha.5-macOS-Intel.dmg.verification.json"
+      }
+    ],
+    "isPrerelease": true,
+    "name": "MINER Alpha",
+    "url": "https://github.com/hexagon0401/MINER/releases/tag/v5.0.0-alpha.5-dmg.6"
+  }
+}

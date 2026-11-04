@@ -1,0 +1,10 @@
+{
+  "version": "5.0.0-alpha.5",
+  "architecture": "x86_64",
+  "signing": "adhoc",
+  "app_notarization": null,
+  "dmg_notarization": null,
+  "dmg_to_disk_signature_verified": true,
+  "sha256": "f8d15f5ba00b1d478149a793880d6b3feebd951ff4922a5a780e5c491728ad64",
+  "finder_background_layout_verified": true
+}

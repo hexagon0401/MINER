@@ -1,0 +1,136 @@
+132 INFO: PyInstaller: 6.22.3, contrib hooks: 2026.9
+133 INFO: Python: 3.12.10
+282 INFO: Platform: macOS-15.7.9-x86_64-i386-64bit
+283 INFO: Python environment: /Library/Frameworks/Python.framework/Versions/3.12
+285 INFO: wrote /Users/runner/work/MINER/MINER/v5/build/macos-x86_64/schoolnet-cli.spec
+305 INFO: Removing temporary files and cleaning cache in /Users/runner/Library/Application Support/pyinstaller
+312 INFO: Module search paths (PYTHONPATH):
+['/Users/runner/work/MINER/MINER/v5',
+ '/Library/Frameworks/Python.framework/Versions/3.12/lib/python312.zip',
+ '/Library/Frameworks/Python.framework/Versions/3.12/lib/python3.12',
+ '/Library/Frameworks/Python.framework/Versions/3.12/lib/python3.12/lib-dynload',
+ '/Library/Frameworks/Python.framework/Versions/3.12/lib/python3.12/site-packages',
+ '/Users/runner/work/MINER/MINER/v5']
+704 INFO: Appending 'datas' from .spec
+705 INFO: checking Analysis
+705 INFO: Building Analysis because Analysis-00.toc is non existent
+705 INFO: Looking for Python shared library...
+715 INFO: Using Python shared library: /Library/Frameworks/Python.framework/Versions/3.12/Python
+715 INFO: Running Analysis Analysis-00.toc
+715 INFO: Target bytecode optimization level: 0
+715 INFO: Initializing module dependency graph...
+718 INFO: Initializing module graph hook caches...
+741 INFO: Analyzing modules for base_library.zip ...
+2345 INFO: Processing standard module hook 'hook-heapq.py' from '/Library/Frameworks/Python.framework/Versions/3.12/lib/python3.12/site-packages/PyInstaller/hooks'
+2511 INFO: Processing standard module hook 'hook-encodings.py' from '/Library/Frameworks/Python.framework/Versions/3.12/lib/python3.12/site-packages/PyInstaller/hooks'
+5256 INFO: Processing standard module hook 'hook-math.py' from '/Library/Frameworks/Python.framework/Versions/3.12/lib/python3.12/site-packages/PyInstaller/hooks'
+5756 INFO: Processing standard module hook 'hook-pickle.py' from '/Library/Frameworks/Python.framework/Versions/3.12/lib/python3.12/site-packages/PyInstaller/hooks'
+8983 INFO: Caching module dependency graph...
+9078 INFO: Analyzing /Users/runner/work/MINER/MINER/v5/main.py
+9358 INFO: Processing standard module hook 'hook-_ctypes.py' from '/Library/Frameworks/Python.framework/Versions/3.12/lib/python3.12/site-packages/PyInstaller/hooks'
+9421 INFO: Processing standard module hook 'hook-platform.py' from '/Library/Frameworks/Python.framework/Versions/3.12/lib/python3.12/site-packages/PyInstaller/hooks'
+9480 INFO: Processing standard module hook 'hook-xml.py' from '/Library/Frameworks/Python.framework/Versions/3.12/lib/python3.12/site-packages/PyInstaller/hooks'
+9514 INFO: Processing module hooks (post-graph stage)...
+9995 INFO: Performing binary vs. data reclassification (3 entries)
+10025 INFO: Looking for ctypes DLLs
+10041 INFO: Analyzing run-time hooks ...
+10043 INFO: Including run-time hook 'pyi_rth_inspect.py' from '/Library/Frameworks/Python.framework/Versions/3.12/lib/python3.12/site-packages/PyInstaller/hooks/rthooks'
+10058 INFO: Creating base_library.zip...
+10108 INFO: Looking for dynamic libraries
+10912 INFO: Warnings written to /Users/runner/work/MINER/MINER/v5/build/macos-x86_64/pyinstaller/schoolnet-cli/warn-schoolnet-cli.txt
+10941 INFO: Graph cross-reference written to /Users/runner/work/MINER/MINER/v5/build/macos-x86_64/pyinstaller/schoolnet-cli/xref-schoolnet-cli.html
+11155 INFO: checking PYZ
+11155 INFO: Building PYZ because PYZ-00.toc is non existent
+11155 INFO: Building PYZ (ZlibArchive) /Users/runner/work/MINER/MINER/v5/build/macos-x86_64/pyinstaller/schoolnet-cli/PYZ-00.pyz
+11355 INFO: Building PYZ (ZlibArchive) /Users/runner/work/MINER/MINER/v5/build/macos-x86_64/pyinstaller/schoolnet-cli/PYZ-00.pyz completed successfully.
+11362 INFO: EXE target arch: x86_64
+11362 INFO: Code signing identity: None
+11372 INFO: checking PKG
+11372 INFO: Building PKG because PKG-00.toc is non existent
+11372 INFO: Building PKG (CArchive) schoolnet-cli.pkg
+11390 INFO: Building PKG (CArchive) schoolnet-cli.pkg completed successfully.
+11392 INFO: Bootloader /Library/Frameworks/Python.framework/Versions/3.12/lib/python3.12/site-packages/PyInstaller/bootloader/Darwin-64bit/run
+11392 INFO: checking EXE
+11392 INFO: Building EXE because EXE-00.toc is non existent
+11392 INFO: Building EXE from EXE-00.toc
+11392 INFO: Copying bootloader EXE to /Users/runner/work/MINER/MINER/v5/build/macos-x86_64/pyinstaller/schoolnet-cli/schoolnet-cli
+11392 INFO: Converting EXE to target arch (x86_64)
+14049 INFO: Removing signature(s) from EXE
+14091 INFO: Modifying Mach-O image UUID(s) in EXE
+14099 INFO: Appending PKG archive to EXE
+14101 INFO: Fixing EXE headers for code signing
+14124 INFO: Rewriting the executable's macOS SDK version (26.2.0) to match the SDK version of the Python library (12.1.0) in order to avoid inconsistent behavior and potential UI issues in the frozen application.
+14127 INFO: Re-signing the EXE
+14176 INFO: Building EXE from EXE-00.toc completed successfully.
+14179 INFO: checking COLLECT
+14179 INFO: Building COLLECT because COLLECT-00.toc is non existent
+14179 INFO: Building COLLECT COLLECT-00.toc
+20593 INFO: Building COLLECT COLLECT-00.toc completed successfully.
+20596 INFO: Build complete! The results are available in: /Users/runner/work/MINER/MINER/v5/build/macos-x86_64/dmg-root/SchoolNet v5 Alpha.app/Contents/Resources/runtime
+/Users/runner/work/MINER/MINER/v5/build/macos-x86_64/dmg-root/SchoolNet v5 Alpha.app/Contents/Resources/UIAssets/AppIcon.png
+  /Users/runner/work/MINER/MINER/v5/build/macos-x86_64/AppIcon.iconset/icon_16x16.png
+/Users/runner/work/MINER/MINER/v5/build/macos-x86_64/dmg-root/SchoolNet v5 Alpha.app/Contents/Resources/UIAssets/AppIcon.png
+  /Users/runner/work/MINER/MINER/v5/build/macos-x86_64/AppIcon.iconset/icon_16x16@2x.png
+/Users/runner/work/MINER/MINER/v5/build/macos-x86_64/dmg-root/SchoolNet v5 Alpha.app/Contents/Resources/UIAssets/AppIcon.png
+  /Users/runner/work/MINER/MINER/v5/build/macos-x86_64/AppIcon.iconset/icon_32x32.png
+/Users/runner/work/MINER/MINER/v5/build/macos-x86_64/dmg-root/SchoolNet v5 Alpha.app/Contents/Resources/UIAssets/AppIcon.png
+  /Users/runner/work/MINER/MINER/v5/build/macos-x86_64/AppIcon.iconset/icon_32x32@2x.png
+/Users/runner/work/MINER/MINER/v5/build/macos-x86_64/dmg-root/SchoolNet v5 Alpha.app/Contents/Resources/UIAssets/AppIcon.png
+  /Users/runner/work/MINER/MINER/v5/build/macos-x86_64/AppIcon.iconset/icon_128x128.png
+/Users/runner/work/MINER/MINER/v5/build/macos-x86_64/dmg-root/SchoolNet v5 Alpha.app/Contents/Resources/UIAssets/AppIcon.png
+  /Users/runner/work/MINER/MINER/v5/build/macos-x86_64/AppIcon.iconset/icon_128x128@2x.png
+/Users/runner/work/MINER/MINER/v5/build/macos-x86_64/dmg-root/SchoolNet v5 Alpha.app/Contents/Resources/UIAssets/AppIcon.png
+  /Users/runner/work/MINER/MINER/v5/build/macos-x86_64/AppIcon.iconset/icon_256x256.png
+/Users/runner/work/MINER/MINER/v5/build/macos-x86_64/dmg-root/SchoolNet v5 Alpha.app/Contents/Resources/UIAssets/AppIcon.png
+  /Users/runner/work/MINER/MINER/v5/build/macos-x86_64/AppIcon.iconset/icon_256x256@2x.png
+/Users/runner/work/MINER/MINER/v5/build/macos-x86_64/dmg-root/SchoolNet v5 Alpha.app/Contents/Resources/UIAssets/AppIcon.png
+  /Users/runner/work/MINER/MINER/v5/build/macos-x86_64/AppIcon.iconset/icon_512x512.png
+/Users/runner/work/MINER/MINER/v5/build/macos-x86_64/dmg-root/SchoolNet v5 Alpha.app/Contents/Resources/UIAssets/AppIcon.png
+  /Users/runner/work/MINER/MINER/v5/build/macos-x86_64/AppIcon.iconset/icon_512x512@2x.png
+5.0.0-alpha.5
+usage: schoolnet-cli [-h] [--version]
+                     {init,render,doctor,run,benchmark,warp,desktop} ...
+
+SchoolNet v5 alpha: Riot TCP via WARP, game direct
+
+positional arguments:
+  {init,render,doctor,run,benchmark,warp,desktop}
+    init                write a new profile; does not change network settings
+    render              regenerate engine config after editing profile.json
+    benchmark           compare TCP connection times, not game ping
+    warp                configure or inspect the installed WARP Local Proxy
+    desktop             macOS app service management
+
+options:
+  -h, --help            show this help message and exit
+  --version             show program's version number and exit
+{"running": false, "pid": null, "log": "/Library/Application Support/SchoolNet v5 Alpha/engine.log"}
+Created /Users/runner/work/MINER/MINER/v5/build/macos-x86_64/schema-smoke; no network settings changed
+/Users/runner/work/MINER/MINER/v5/macos/design/dmg-background.png
+  /Users/runner/work/MINER/MINER/v5/build/macos-x86_64/installer-background.png
+Checksumming Protective Master Boot Record (MBR : 0)…
+Protective Master Boot Record (MBR :: verified   CRC32 $9551CB54
+Checksumming GPT Header (Primary GPT Header : 1)…
+ GPT Header (Primary GPT Header : 1): verified   CRC32 $79E8CAD1
+Checksumming GPT Partition Data (Primary GPT Table : 2)…
+GPT Partition Data (Primary GPT Tabl: verified   CRC32 $C928F314
+Checksumming  (Apple_Free : 3)…
+                    (Apple_Free : 3): verified   CRC32 $00000000
+Checksumming disk image (Apple_HFS : 4)…
+          disk image (Apple_HFS : 4): verified   CRC32 $8B8F13A0
+Checksumming  (Apple_Free : 5)…
+                    (Apple_Free : 5): verified   CRC32 $00000000
+Checksumming GPT Partition Data (Backup GPT Table : 6)…
+GPT Partition Data (Backup GPT Table: verified   CRC32 $C928F314
+Checksumming GPT Header (Backup GPT Header : 7)…
+  GPT Header (Backup GPT Header : 7): verified   CRC32 $7D0A11C1
+verified   CRC32 $1FA3B6E4
+hdiutil: verify: checksum of "/Users/runner/work/MINER/MINER/v5/dist/MINER-v5.0.0-alpha.5-macOS-Intel.dmg" is VALID
+expected   CRC32 $1FA3B6E4
+/dev/disk2          	GUID_partition_scheme          	
+/dev/disk2s1        	Apple_HFS                      	/private/var/folders/20/jp1_0n3n7kndh6rnbqb5344m0000gn/T/schoolnet-dmg-7jo3gexi
+5.0.0-alpha.5
+5.0.0-alpha.5
+"disk2" ejected.
+Installed verified sing-box 1.12.0: /Users/runner/work/MINER/MINER/v5/build/macos-x86_64/dmg-root/SchoolNet v5 Alpha.app/Contents/Resources/bin/sing-box
+Verified DMG: /Users/runner/work/MINER/MINER/v5/dist/MINER-v5.0.0-alpha.5-macOS-Intel.dmg
