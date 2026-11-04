@@ -1,0 +1,29 @@
+{
+  "tag": "v5.0.0-delta.1-dmg.2",
+  "source_sha": "955f617bd6a5e8f2fe10ed8f8ea4c615455a5779",
+  "run_url": "https://github.com/hexagon0401/MINER/actions/runs/41863388481",
+  "build": "abandoned",
+  "publication": "skipped",
+  "jobs": [
+    {
+      "name": "build (macos-15, arm64)",
+      "conclusion": null,
+      "failed_steps": []
+    },
+    {
+      "name": "build (macos-15-intel, x86_64)",
+      "conclusion": null,
+      "failed_steps": []
+    },
+    {
+      "name": "report",
+      "conclusion": null,
+      "failed_steps": []
+    },
+    {
+      "name": "release",
+      "conclusion": "skipped",
+      "failed_steps": []
+    }
+  ]
+}
