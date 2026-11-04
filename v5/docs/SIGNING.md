@@ -93,12 +93,12 @@ Linux 자동 테스트는 이 Apple 절차의 성공을 보장하지 않습니�
 다음 검사를 통과해야 기존의 파일 봉인 오류가 해결됐다고 볼 수 있습니다.
 
 ```bash
-codesign --verify --deep --strict --verbose=2 '/Applications/SchoolNet v5 Alpha.app'
+codesign --verify --deep --strict --verbose=2 '/Applications/MINER.app'
 ```
 
 Developer ID로 공증한 배포라면 아래도 통과해야 합니다. ad-hoc 빌드에는 공증 성공을 기대하지 않습니다.
 
 ```bash
-spctl --assess --type execute --verbose=2 '/Applications/SchoolNet v5 Alpha.app'
-xcrun stapler validate '/Applications/SchoolNet v5 Alpha.app'
+spctl --assess --type execute --verbose=2 '/Applications/MINER.app'
+xcrun stapler validate '/Applications/MINER.app'
 ```

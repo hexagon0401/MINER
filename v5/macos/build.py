@@ -3,6 +3,7 @@
 import argparse
 import hashlib
 import json
+import os
 from pathlib import Path
 import platform
 import plistlib
@@ -40,7 +41,6 @@ def build(expected_arch, signing="adhoc", identity=None, notary_profile=None, dm
     import certifi
     signed = signing == "developer-id"
     if signed:
-        import os
         identity = developer_identity(identity or os.environ.get("CODE_SIGN_IDENTITY"))
         validate_notary_credentials(notary_profile)
     work = ROOT / "build" / f"macos-{arch}"
@@ -48,7 +48,7 @@ def build(expected_arch, signing="adhoc", identity=None, notary_profile=None, dm
         raise ValueError(f"build directory already exists; preserve or remove it explicitly: {work}")
     work.mkdir(parents=True)
     stage = work / "dmg-root"
-    app = stage / "SchoolNet v5 Alpha.app"
+    app = stage / "MINER.app"
     contents = app / "Contents"
     resources = contents / "Resources"
     (contents / "MacOS").mkdir(parents=True)
@@ -63,12 +63,15 @@ def build(expected_arch, signing="adhoc", identity=None, notary_profile=None, dm
     execute(*packager, ROOT / "main.py")
     execute("xcrun", "swiftc", "-swift-version", "5", "-parse-as-library", "-O", "-framework", "AppKit", "-framework", "SwiftUI",
             "-target", f"{arch}-apple-macosx13.0", ROOT / "macos" / "App.swift",
-            ROOT / "macos" / "MinerUI.swift", "-o", contents / "MacOS" / "SchoolNet")
+            ROOT / "macos" / "MinerUI.swift", ROOT / "macos" / "DeltaUI.swift",
+            ROOT / "macos" / "DeltaSmoke.swift", "-o", contents / "MacOS" / "MINER")
     ui_assets = resources / "UIAssets"
     ui_assets.mkdir()
     for source in (ROOT / "macos/design/assets").iterdir():
         if source.suffix in {".png", ".json"} and source.name not in {"app-icon-ministry.png", "app-icon-ministry-sejong.png", "storyboard-reference.png"}:
             shutil.copy2(source, ui_assets / source.name)
+    for source in (ROOT / "macos/delta/assets").glob("*.png"):
+        shutil.copy2(source, ui_assets / ("delta-" + source.name))
     iconset = work / "AppIcon.iconset"
     iconset.mkdir()
     for size in [16,32,128,256,512]:
@@ -78,9 +81,9 @@ def build(expected_arch, signing="adhoc", identity=None, notary_profile=None, dm
     execute("iconutil", "-c", "icns", iconset, "-o", resources / "AppIcon.icns")
     info = {
         "CFBundleName": "MINER", "CFBundleDisplayName": "MINER", "CFBundleIconFile": "AppIcon",
-        "CFBundleIdentifier": "org.schoolnet.v5.alpha", "CFBundleExecutable": "SchoolNet",
+        "CFBundleIdentifier": "org.schoolnet.v5.alpha", "CFBundleExecutable": "MINER",
         "CFBundlePackageType": "APPL", "CFBundleShortVersionString": "5.0.0",
-        "CFBundleVersion": f"500{int(__version__.rsplit('.', 1)[1]):03d}", "SchoolNetReleaseVersion": __version__,
+        "CFBundleVersion": f"{501 if 'delta' in __version__ else 500}{int(__version__.rsplit('.', 1)[1]):03d}", "SchoolNetReleaseVersion": __version__,
         "LSMinimumSystemVersion": "13.0", "NSHighResolutionCapable": True,
     }
     (contents / "Info.plist").write_bytes(plistlib.dumps(info))
@@ -122,6 +125,11 @@ def build(expected_arch, signing="adhoc", identity=None, notary_profile=None, dm
     smoke = work / "schema-smoke"
     execute(cli, "init", "--directory", smoke, "--platform", "macos")
     execute(engine, "check", "-c", smoke / "sing-box.json")
+    ui_report_dir = Path(os.environ.get("RUNNER_TEMP", str(work / "ui-smoke")))
+    subprocess.run([str(contents / "MacOS/MINER"), "--ui-smoke", str(ui_report_dir), arch], check=True, timeout=45)
+    ui_report = json.loads((ui_report_dir / f"miner-ui-{arch}.json").read_text())
+    if ui_report.get("ok") is not True or ui_report.get("network_actions") != 0:
+        raise ValueError("Native UI checks did not pass")
     app_receipt = None
     if signed:
         archive = work / "notary-app.zip"
@@ -142,7 +150,7 @@ def build(expected_arch, signing="adhoc", identity=None, notary_profile=None, dm
         from macos.dmg_layout import create
         create(dmg, app, dmg_background, work, execute)
     else:
-        execute("hdiutil", "create", "-volname", "SchoolNet v5 Alpha", "-srcfolder", stage,
+        execute("hdiutil", "create", "-volname", "MINER DELTA", "-srcfolder", stage,
                 "-format", "UDZO", dmg)
     dmg_receipt = None
     if signed:
@@ -153,7 +161,7 @@ def build(expected_arch, signing="adhoc", identity=None, notary_profile=None, dm
     with tempfile.TemporaryDirectory(prefix="schoolnet-dmg-") as mount:
         execute("hdiutil", "attach", "-readonly", "-nobrowse", "-mountpoint", mount, dmg)
         try:
-            mounted = Path(mount) / "SchoolNet v5 Alpha.app"
+            mounted = Path(mount) / "MINER.app"
             if dmg_background is not None:
                 from macos.dmg_layout import verify
                 verify(mount, mounted.name)
@@ -162,7 +170,7 @@ def build(expected_arch, signing="adhoc", identity=None, notary_profile=None, dm
             # Verify the installed copy as well as the read-only volume. This
             # exercises the DMG -> filesystem boundary that broke the old guide.
             with tempfile.TemporaryDirectory(prefix="schoolnet-install-smoke-") as install_dir:
-                installed = Path(install_dir) / "SchoolNet v5 Alpha.app"
+                installed = Path(install_dir) / "MINER.app"
                 execute("ditto", mounted, installed)
                 validate_resource_paths(installed)
                 execute("codesign", "--verify", "--deep", "--strict", installed)
@@ -181,6 +189,7 @@ def build(expected_arch, signing="adhoc", identity=None, notary_profile=None, dm
         "app_notarization": app_receipt, "dmg_notarization": dmg_receipt,
         "dmg_to_disk_signature_verified": True, "sha256": digest,
         "finder_background_layout_verified": dmg_background is not None,
+        "app_name": app.name, "native_ui_smoke": ui_report,
     }, indent=2), encoding="utf-8")
     print(f"Verified DMG: {dmg}")
 

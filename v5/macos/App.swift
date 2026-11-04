@@ -1,7 +1,7 @@
 import AppKit
 import SwiftUI
 
-let applicationName = "SchoolNet v5 Alpha"
+let applicationName = "MINER"
 let identifier = "org.schoolnet.v5.alpha"
 
 func shellQuote(_ value: String) -> String {
@@ -28,12 +28,27 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     var engine: String { resources.appendingPathComponent("bin/sing-box").path }
 
     func applicationDidFinishLaunching(_ notification: Notification) {
-        window = NSWindow(contentRect: NSRect(x:0,y:0,width:540,height:528), styleMask:[.titled,.closable,.miniaturizable,.resizable], backing:.buffered, defer:false)
+        window = NSWindow(contentRect: NSRect(x:0,y:0,width:560,height:610), styleMask:[.titled,.closable,.miniaturizable,.resizable], backing:.buffered, defer:false)
         window.title = "MINER"
-        window.minSize = NSSize(width:500,height:470)
+        window.titleVisibility = .hidden
+        window.titlebarAppearsTransparent = true
+        window.styleMask.insert(.fullSizeContentView)
+        window.setFrame(NSRect(x:0,y:0,width:560,height:610), display:false)
+        window.isMovableByWindowBackground = true
+        window.isOpaque = false
+        window.backgroundColor = .clear
+        window.minSize = NSSize(width:520,height:570)
         window.collectionBehavior = [.fullScreenNone]
         window.isReleasedWhenClosed = false
-        window.contentView = NSHostingView(rootView: MinerRoot(model:model,controller:self))
+        let backdrop = NSVisualEffectView(frame:window.contentView!.bounds)
+        backdrop.material = .underWindowBackground
+        backdrop.blendingMode = .behindWindow
+        backdrop.state = .followsWindowActiveState
+        let host = NSHostingView(rootView:DeltaRoot(model:model,controller:self))
+        host.frame = backdrop.bounds
+        host.autoresizingMask = [.width,.height]
+        backdrop.addSubview(host)
+        window.contentView = backdrop
         window.center()
         let menu = NSMenu()
         let item = NSMenuItem()
@@ -47,7 +62,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         NSApp.mainMenu = menu
         window.makeKeyAndOrderFront(nil)
         NSApp.activate(ignoringOtherApps: true)
-        append("Alpha: macOS 27.1.1에서 학교 연결·게임 핑·종료 복구는 실기 확인이 필요합니다.")
+        if let index = CommandLine.arguments.firstIndex(of:"--ui-smoke"), CommandLine.arguments.count > index+2 {
+            runDeltaSmoke(output:URL(fileURLWithPath:CommandLine.arguments[index+1]),arch:CommandLine.arguments[index+2])
+            return
+        }
+        append("MINER DELTA: 학교 연결·게임 핑·종료 복구는 실기 확인이 필요합니다.")
         refresh()
     }
 
@@ -62,6 +81,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     func execute(_ arguments: [String], administrator: Bool = false) throws -> String {
+        guard !CommandLine.arguments.contains("--ui-smoke") else {
+            throw NSError(domain:identifier,code:1,userInfo:[NSLocalizedDescriptionKey:"Network/backend actions are disabled in UI smoke fixtures"])
+        }
         if administrator && arguments.prefix(2).elementsEqual(["desktop", "start"]) {
             DispatchQueue.main.async { self.model.phase = "admin_auth"; self.model.completed = 3 }
         }
@@ -200,7 +222,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     @objc func start() {
         guard !busy && !running else { return }
         managedWarp = true; model.phase = "cli_check"; model.completed = 0; model.error = ""
-        guard Bundle.main.bundleURL.path == "/Applications/SchoolNet v5 Alpha.app" else {
+        guard Bundle.main.bundleURL.path == "/Applications/MINER.app" else {
             append("DMG에서 앱을 Applications로 복사한 뒤 그 앱을 실행하세요."); return
         }
         operation({
@@ -247,7 +269,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             return result
         }, completion: {
             self.running = false; self.managedWarp = false
-            guard Bundle.main.bundleURL.path == "/Applications/SchoolNet v5 Alpha.app" else { return }
+            guard Bundle.main.bundleURL.path == "/Applications/MINER.app" else { return }
             NSWorkspace.shared.recycle([Bundle.main.bundleURL]) { _, error in
                 DispatchQueue.main.async {
                     if let error = error { self.append("서비스 제거 완료. 앱은 Finder에서 제거하세요: " + error.localizedDescription) }

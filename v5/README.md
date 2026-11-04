@@ -1,12 +1,12 @@
-# SchoolNet v5 — 분리 연결 실험판
+# MINER DELTA — v5 분리 연결 실험판
 
-**macOS 우선의 `5.0.0-alpha.5`입니다.** 개인용 WARP의 Local proxy와 sing-box TUN을 연결해, Riot/LoL **클라이언트·웹 Helper의 TCP는 WARP**, **게임 실행 파일과 나머지 트래픽은 직접 경로**로 보냅니다. 게임 시작/종료 때 WARP를 전환하지 않습니다. DMG 앱은 제공된 MINER 디자인·캐릭터를 사용하며 `⌘,` 설정 창에서 한국어/English를 선택할 수 있습니다.
+**macOS 우선의 `5.0.0-delta.1`입니다.** 개인용 WARP의 Local proxy와 sing-box TUN을 연결해, Riot/LoL **클라이언트·웹 Helper의 TCP는 WARP**, **게임 실행 파일과 나머지 트래픽은 직접 경로**로 보냅니다. 게임 시작/종료 때 WARP를 전환하지 않습니다. DMG 앱은 제공된 MINER 디자인·캐릭터를 사용하며 `⌘,` 설정 창에서 한국어/English를 선택할 수 있습니다.
 
 사용자가 제공한 환경은 **개인용 WARP / macOS 27.1.1**입니다. 개발·자동 검증 환경은 Linux이므로 해당 macOS 버전의 실제 호환성, 학교에서의 연결 성공, 게임 핑 개선은 **아직 검증되지 않았습니다**. Windows용 설정도 생성하지만 Windows 네이티브 동작은 미검증입니다. 기존 v1~v4는 변경하지 않습니다.
 
 ## DMG 앱 설치·제거
 
-GitHub의 `v5.0.0-alpha.*` **사전 릴리스**에서 Apple Silicon 또는 Intel DMG를 선택합니다. 앱을 **Applications로 드래그**한 뒤 실행하면 됩니다. Python과 엔진이 포함되어 있습니다. 개인용 WARP는 별도로 설치·등록해두세요.
+GitHub의 `v5.0.0-delta.*` **사전 릴리스**에서 Apple Silicon 또는 Intel DMG를 선택합니다. 앱을 **Applications로 드래그**한 뒤 실행하면 됩니다. Python과 엔진이 포함되어 있습니다. 개인용 WARP는 별도로 설치·등록해두세요.
 
 앱의 **시작**은 WARP CLI로 Local Proxy·기본 포트 40000 연결과 검증을 수행한 뒤 v5를 실행합니다. **WARP 자동 연결**은 WARP 설정·검증만 실행하고, **WARP 연결 확인**은 설정을 바꾸지 않습니다. **중지·앱 종료**는 엔진을 먼저 중지하고 `warp-cli mode warp`로 UDP Traffic and DNS에 복귀합니다. 설정·연결 확인에 실패하면 오류를 표시하며, 종료 복귀 실패 시 앱을 유지합니다. **WARP 끄기**는 v5를 먼저 중지한 뒤 WARP 연결을 해제합니다. 최초 전체 터널 → 프록시 전환은 게임 밖에서 진행하세요.
 
@@ -144,12 +144,16 @@ Python과 개인용 WARP 설치 후 `python install_engine.py`, `python main.py 
 
 sing-box는 별도 설치되는 GPL-3.0 프로젝트입니다. upstream의 라이선스와 릴리스 조건은 [공식 저장소](https://github.com/SagerNet/sing-box)를 따릅니다. 이 저장소에는 엔진 바이너리를 포함하지 않습니다.
 
-## MINER UI (alpha.5)
+## MINER DELTA UI (Delta v2.1)
 
 원본 계획서와 확정 자산은 `macos/design/DESIGN_SPEC.md`, `macos/design/README.md`, `macos/design/assets/`에 보존했습니다. `preview/index.html`의 가상 연결 타이머는 사용하지 않습니다. UI의 다섯 노드는 실제 CLI 지원 확인·프록시 준비·TLS 확인·관리자 승인·엔진 프로세스 실행 결과로만 진행합니다. 엔진 실행은 실제 게임 접속 성공을 뜻하지 않습니다.
 
-macOS 창은 작은 기본 크기(540×528 content pt), 최소 500×470이며 화면 높이에 따라 장면 높이를 조정합니다. 확정 PNG 광부를 변경하지 않고 사용하며, 동작은 cutout 회전/이동과 최대 네 개의 흙 입자로 제한합니다. 앱 비활성화와 동작 줄이기를 반영합니다. 별도 진단 시트에서 로그·실제 오류를 확인하고 복사할 수 있습니다.
+Delta의 최우선 명세는 `macos/delta/UPGRADE_SPEC.md`입니다. 전체 창 560×610pt, 최소 520×570pt이며 네이티브 신호등·드래그·크기 조절은 유지하고 제목 표시줄 표면만 숨깁니다. 시스템 소재 위에 투명 지층을 올리고 시작·중지를 세로로 배치했습니다. 기존 캐릭터·학교·아이콘·한국어 문구와 실제 다섯 개의 얇은 진행 막대를 보존했습니다.
 
-제공된 MINER.icon의 원본 레이어/위치와 원본 프로젝트를 보존하고, 호환 ICNS용 합성 PNG를 빌드에 사용합니다. 개발 컨테이너에서는 네이티브 macOS 화면/접근성/Swift 컴파일을 실행하지 못했으며, macOS CI와 실기 확인이 필요합니다.
+초록 시작·빨강 중지 파동은 요청 피드백입니다. 성공 빛·중앙 SF 체크·배경 블러는 실제 전체 엔진 실행 상태에서 한 번 재생하고 복원하며, WARP-only 준비에는 재생하지 않습니다. 중지·오류·비활성화는 성공 연출을 취소합니다. 동작 줄이기에서는 입자·흔들림·블러를 제거하고 투명도 줄이기에서는 불투명 네이비를 사용합니다. 로그·설정·제거·도움말은 기존 도구에 유지합니다.
 
-명시적인 UDP 복귀 명령: `python3 main.py warp restore`. 설치된 CLI가 `mode warp`를 지원하고 실제 settings가 `Mode: Warp`, status가 Connected인 경우에만 복귀 성공으로 표시합니다. 다른 이름을 쓰는 WARP 버전은 설정을 확인해야 합니다. 기존 앱 설치 경로는 구버전 호환성을 위해 유지합니다.
+macOS CI는 네트워크를 실행하지 않는 네이티브 UI fixture로 기본/최소 크기, 영문, WARP-only, 전체 성공/복원, 중지·오류 취소와 접근성 모드를 검증합니다. 앱 자체 뷰의 PNG와 결과는 빌드 진단에 보관합니다. 이는 학교·WARP·게임의 실제 연결 검증을 대신하지 않습니다.
+
+앱 파일·실행 파일·Dock 이름은 **MINER**입니다. 기존 설치를 중지·종료한 뒤 `/Applications/MINER.app`으로 설치하세요. 이전 SchoolNet 앱을 동시에 실행하지 마세요. 사용자 프로필·지원 파일·서비스 식별자는 기존 데이터 호환성을 위해 유지합니다.
+
+명시적인 UDP 복귀 명령: `python3 main.py warp restore`. 설치된 CLI가 `mode warp`를 지원하고 실제 settings가 `Mode: Warp`, status가 Connected인 경우에만 복귀 성공으로 표시합니다. 다른 이름을 쓰는 WARP 버전은 설정을 확인해야 합니다. 지원 파일 경로와 서비스 식별자는 구버전 호환성을 위해 유지합니다.

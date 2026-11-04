@@ -1,0 +1,40 @@
+{
+  "version": "MINER UI Delta 2.1",
+  "scope": "UI-only additive update; retain existing MINER engine and copy data",
+  "window": {
+    "widthPt": 560, "heightPt": 610, "minWidthPt": 520, "minHeightPt": 570,
+    "contentIsFullBleed": true, "macOSNativeFullscreen": false,
+    "visuallyHiddenTitlebar": true, "removeDuplicateCenteredTitle": true,
+    "nativeTrafficLights": true, "contentUnderTitlebar": true,
+    "preserveNormalDragResizeFocus": true, "trafficLightSafeZoneY": [0, 47]
+  },
+  "ambientBackdrop": {
+    "useNativeMaterial": true, "systemMaterial": "ultraThinMaterial",
+    "glassEffectWhereSupported": true, "sampleBackdropBySystem": true,
+    "neverReadWallpaperPixels": true, "avoidCustomPerFrameShaders": true,
+    "topNavyTintAlpha": [0.60, 0.72], "tunnelNavyTintAlpha": [0.78, 0.88],
+    "preferredContrastColor": "#0E131F", "reduceTransparencyFallback": "#0E131F",
+    "ambientAccentLocation": "top and rounded outer edges, not tunnel center"
+  },
+  "palette": {"cave": "#0E131F", "soil": "#27374B", "glass": "#DCE7EE", "start": "#0EFB2E", "stop": "#FF5A61", "success": "systemGreen", "primaryText": "#E6E8E6"},
+  "verticalLayoutPt": {
+    "coordinateOrigin": "full window content upper-left, includes hidden titlebar area",
+    "titlebarVisibleHeight": 0, "headerTop": 64, "taglineY": 96,
+    "statusChipTop": 70, "schoolTop": 129, "shaftTop": 204,
+    "sceneStarts": 0, "statusY": 389, "statusHeight": 58,
+    "startButtonY": 459, "startButtonHeight": 48,
+    "stopButtonY": 515, "stopButtonHeight": 36, "footerY": 564
+  },
+  "progress": {"keepExistingFiveTicks": true, "segmentCount": 5, "advanceOnlyOnRealBackendCallbacks": true, "doNotReplaceWithTunnelBar": true},
+  "controls": {"primaryWidthPt": 340, "secondaryWidthPt": 166, "centerXPercent": 50},
+  "wave": {
+    "start": {"color": "#0EFB2E", "durationMs": 520, "peakAlpha": 0.32, "origin": "startButtonCenter"},
+    "stop": {"color": "#FF5A61", "durationMs": 480, "peakAlpha": 0.30, "origin": "stopButtonCenter"},
+    "curve": "easeOut",
+    "behavior": "one radial expansion to window corners then fade out; never leave a colored screen",
+    "doNotIndicateBackendSuccess": true
+  },
+  "success": {"lightInMs": 260, "blurRadiusPt": 10, "blurInMs": 220, "checkIcon": "checkmark.circle.fill", "checkSizePt": 64, "checkInMs": 260, "checkHoldMs": 650, "restoreMs": 420, "totalMs": 1550},
+  "dig": {"toyRockingMs": 570, "impactWindowJitterMs": 88, "maxJitterPt": 2, "particlesPerHit": [3, 5], "particleLifetimeMs": [380, 670], "maxActiveParticles": 14, "rockChipPerMilestone": 1},
+  "reduceMotion": {"disableExpandingWaves": true, "disableParticles": true, "disableBlur": true, "checkStillVisible": true, "simpleCrossfadeMs": 120}
+}

@@ -20,7 +20,7 @@ from .runtime import check_engine, doctor, instance_lock, load_profile, write_js
 LABEL = "org.schoolnet.v5.alpha"
 BASE = Path("/Library/Application Support/SchoolNet v5 Alpha")
 MARKER = ".schoolnet-v5-managed.json"
-APP_RESOURCES = Path("/Applications/SchoolNet v5 Alpha.app/Contents/Resources")
+APP_RESOURCES = Path("/Applications/MINER.app/Contents/Resources")
 
 
 def owned_base(base=None):
@@ -103,7 +103,7 @@ def install_runtime(base, resources, profile):
 
 def prepare(resources, profile_dir):
     if resources is None or resources.resolve() != APP_RESOURCES:
-        raise ValueError("Install SchoolNet v5 Alpha.app in /Applications before starting")
+        raise ValueError("Install MINER.app in /Applications before starting")
     if profile_dir is None:
         raise ValueError("missing user profile")
     profile = load_profile(profile_dir)
@@ -147,7 +147,7 @@ def manage(operation, resources=None, profile=None):
         from .warp import progress
         progress("routing", 4)
         if status()["running"]:
-            raise ValueError("SchoolNet v5 Alpha is already running")
+            raise ValueError("MINER is already running")
         stop()
         base = prepare(resources, profile)
         command = ["/bin/launchctl", "submit", "-l", LABEL,
