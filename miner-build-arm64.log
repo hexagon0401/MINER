@@ -1,0 +1,209 @@
+33 INFO: PyInstaller: 6.22.3, contrib hooks: 2026.9
+33 INFO: Python: 3.12.10
+47 INFO: Platform: macOS-26.7.2-arm64-arm-64bit
+47 INFO: Python environment: /Library/Frameworks/Python.framework/Versions/3.12
+47 INFO: wrote /Users/runner/work/MINER/MINER/v5/build/macos-arm64/schoolnet-cli.spec
+50 INFO: Removing temporary files and cleaning cache in /Users/runner/Library/Application Support/pyinstaller
+51 INFO: Module search paths (PYTHONPATH):
+['/Users/runner/work/MINER/MINER/v5',
+ '/Library/Frameworks/Python.framework/Versions/3.12/lib/python312.zip',
+ '/Library/Frameworks/Python.framework/Versions/3.12/lib/python3.12',
+ '/Library/Frameworks/Python.framework/Versions/3.12/lib/python3.12/lib-dynload',
+ '/Library/Frameworks/Python.framework/Versions/3.12/lib/python3.12/site-packages',
+ '/Users/runner/work/MINER/MINER/v5']
+215 INFO: Appending 'datas' from .spec
+215 INFO: checking Analysis
+215 INFO: Building Analysis because Analysis-00.toc is non existent
+215 INFO: Looking for Python shared library...
+218 INFO: Using Python shared library: /Library/Frameworks/Python.framework/Versions/3.12/Python
+218 INFO: Running Analysis Analysis-00.toc
+218 INFO: Target bytecode optimization level: 0
+218 INFO: Initializing module dependency graph...
+219 INFO: Initializing module graph hook caches...
+224 INFO: Analyzing modules for base_library.zip ...
+704 INFO: Processing standard module hook 'hook-encodings.py' from '/Library/Frameworks/Python.framework/Versions/3.12/lib/python3.12/site-packages/PyInstaller/hooks'
+993 INFO: Processing standard module hook 'hook-math.py' from '/Library/Frameworks/Python.framework/Versions/3.12/lib/python3.12/site-packages/PyInstaller/hooks'
+1610 INFO: Processing standard module hook 'hook-pickle.py' from '/Library/Frameworks/Python.framework/Versions/3.12/lib/python3.12/site-packages/PyInstaller/hooks'
+2187 INFO: Processing standard module hook 'hook-heapq.py' from '/Library/Frameworks/Python.framework/Versions/3.12/lib/python3.12/site-packages/PyInstaller/hooks'
+2447 INFO: Caching module dependency graph...
+2466 INFO: Analyzing /Users/runner/work/MINER/MINER/v5/main.py
+2547 INFO: Processing standard module hook 'hook-_ctypes.py' from '/Library/Frameworks/Python.framework/Versions/3.12/lib/python3.12/site-packages/PyInstaller/hooks'
+2565 INFO: Processing standard module hook 'hook-platform.py' from '/Library/Frameworks/Python.framework/Versions/3.12/lib/python3.12/site-packages/PyInstaller/hooks'
+2581 INFO: Processing standard module hook 'hook-xml.py' from '/Library/Frameworks/Python.framework/Versions/3.12/lib/python3.12/site-packages/PyInstaller/hooks'
+2592 INFO: Processing module hooks (post-graph stage)...
+2730 INFO: Performing binary vs. data reclassification (3 entries)
+2740 INFO: Looking for ctypes DLLs
+2744 INFO: Analyzing run-time hooks ...
+2745 INFO: Including run-time hook 'pyi_rth_inspect.py' from '/Library/Frameworks/Python.framework/Versions/3.12/lib/python3.12/site-packages/PyInstaller/hooks/rthooks'
+2748 INFO: Creating base_library.zip...
+2758 INFO: Looking for dynamic libraries
+2900 INFO: Warnings written to /Users/runner/work/MINER/MINER/v5/build/macos-arm64/pyinstaller/schoolnet-cli/warn-schoolnet-cli.txt
+2906 INFO: Graph cross-reference written to /Users/runner/work/MINER/MINER/v5/build/macos-arm64/pyinstaller/schoolnet-cli/xref-schoolnet-cli.html
+2974 INFO: checking PYZ
+2974 INFO: Building PYZ because PYZ-00.toc is non existent
+2974 INFO: Building PYZ (ZlibArchive) /Users/runner/work/MINER/MINER/v5/build/macos-arm64/pyinstaller/schoolnet-cli/PYZ-00.pyz
+3102 INFO: Building PYZ (ZlibArchive) /Users/runner/work/MINER/MINER/v5/build/macos-arm64/pyinstaller/schoolnet-cli/PYZ-00.pyz completed successfully.
+3104 INFO: EXE target arch: arm64
+3104 INFO: Code signing identity: None
+3106 INFO: checking PKG
+3106 INFO: Building PKG because PKG-00.toc is non existent
+3106 INFO: Building PKG (CArchive) schoolnet-cli.pkg
+3117 INFO: Building PKG (CArchive) schoolnet-cli.pkg completed successfully.
+3117 INFO: Bootloader /Library/Frameworks/Python.framework/Versions/3.12/lib/python3.12/site-packages/PyInstaller/bootloader/Darwin-64bit/run
+3117 INFO: checking EXE
+3117 INFO: Building EXE because EXE-00.toc is non existent
+3117 INFO: Building EXE from EXE-00.toc
+3117 INFO: Copying bootloader EXE to /Users/runner/work/MINER/MINER/v5/build/macos-arm64/pyinstaller/schoolnet-cli/schoolnet-cli
+3118 INFO: Converting EXE to target arch (arm64)
+4147 INFO: Removing signature(s) from EXE
+4175 INFO: Modifying Mach-O image UUID(s) in EXE
+4177 INFO: Appending PKG archive to EXE
+4178 INFO: Fixing EXE headers for code signing
+4183 INFO: Rewriting the executable's macOS SDK version (26.2.0) to match the SDK version of the Python library (12.1.0) in order to avoid inconsistent behavior and potential UI issues in the frozen application.
+4184 INFO: Re-signing the EXE
+4203 INFO: Building EXE from EXE-00.toc completed successfully.
+4205 INFO: checking COLLECT
+4205 INFO: Building COLLECT because COLLECT-00.toc is non existent
+4206 INFO: Building COLLECT COLLECT-00.toc
+6971 INFO: Building COLLECT COLLECT-00.toc completed successfully.
+6972 INFO: Build complete! The results are available in: /Users/runner/work/MINER/MINER/v5/build/macos-arm64/dmg-root/MINER.app/Contents/Resources/runtime
+/Users/runner/work/MINER/MINER/v5/macos/SchoolCommunity.swift:237:42: warning: capture of 'self' with non-Sendable type 'SchoolCommunityModel' in a '@Sendable' closure [#SendableClosureCaptures]
+ 55 | }
+ 56 | 
+ 57 | final class SchoolCommunityModel:ObservableObject {
+    |             `- note: class 'SchoolCommunityModel' does not conform to the 'Sendable' protocol
+ 58 |     @Published var metadata = SchoolCatalogMetadata.missing
+ 59 |     @Published var ready = false
+    :
+235 |                 queue.async {
+236 |                     do {
+237 |                         guard let repo = self.repository else { throw schoolError("Catalog not loaded") }
+    |                                          `- warning: capture of 'self' with non-Sendable type 'SchoolCommunityModel' in a '@Sendable' closure [#SendableClosureCaptures]
+238 |                         let snapshot = try repo.installSnapshot(data,publicKey:key)
+239 |                         DispatchQueue.main.async { self.apply(snapshot);self.syncing = false }
+
+/Users/runner/work/MINER/MINER/v5/macos/SchoolCommunity.swift:242:50: warning: capture of 'self' with non-Sendable type 'SchoolCommunityModel' in a '@Sendable' closure [#SendableClosureCaptures]
+ 55 | }
+ 56 | 
+ 57 | final class SchoolCommunityModel:ObservableObject {
+    |             `- note: class 'SchoolCommunityModel' does not conform to the 'Sendable' protocol
+ 58 |     @Published var metadata = SchoolCatalogMetadata.missing
+ 59 |     @Published var ready = false
+    :
+240 |                     } catch { DispatchQueue.main.async { self.error = error.localizedDescription;self.syncing = false } }
+241 |                 }
+242 |             } catch { DispatchQueue.main.async { self.error = error.localizedDescription;self.syncing = false } }
+    |                                                  `- warning: capture of 'self' with non-Sendable type 'SchoolCommunityModel' in a '@Sendable' closure [#SendableClosureCaptures]
+243 |         }
+244 |     }
+
+/Users/runner/work/MINER/MINER/v5/macos/SchoolCommunity.swift:267:33: warning: capture of 'self' with non-Sendable type 'SchoolCommunityModel' in an isolated closure
+ 55 | }
+ 56 | 
+ 57 | final class SchoolCommunityModel:ObservableObject {
+    |             `- note: class 'SchoolCommunityModel' does not conform to the 'Sendable' protocol
+ 58 |     @Published var metadata = SchoolCatalogMetadata.missing
+ 59 |     @Published var ready = false
+    :
+265 |                             let signed = try SchoolCrypto.sign(body,key:signingKey);envelope = try SchoolCrypto.canonical(signed)
+266 |                             try await withCheckedThrowingContinuation { (continuation:CheckedContinuation<Void,Error>) in
+267 |                                 self.queue.async {
+    |                                 `- warning: capture of 'self' with non-Sendable type 'SchoolCommunityModel' in an isolated closure
+268 |                                     do { try repo.prepareUpload(report.payload.id,data:envelope);continuation.resume() }
+269 |                                     catch { continuation.resume(throwing:error) }
+
+/Users/runner/work/MINER/MINER/v5/macos/SchoolCommunity.swift:268:46: warning: capture of 'repo' with non-Sendable type 'SchoolRepository' in a '@Sendable' closure [#SendableClosureCaptures]
+266 |                             try await withCheckedThrowingContinuation { (continuation:CheckedContinuation<Void,Error>) in
+267 |                                 self.queue.async {
+268 |                                     do { try repo.prepareUpload(report.payload.id,data:envelope);continuation.resume() }
+    |                                              `- warning: capture of 'repo' with non-Sendable type 'SchoolRepository' in a '@Sendable' closure [#SendableClosureCaptures]
+269 |                                     catch { continuation.resume(throwing:error) }
+270 |                                 }
+
+/Users/runner/work/MINER/MINER/v5/macos/SchoolStore.swift:182:13: note: class 'SchoolRepository' does not conform to the 'Sendable' protocol
+180 | }
+181 | 
+182 | final class SchoolRepository {
+    |             `- note: class 'SchoolRepository' does not conform to the 'Sendable' protocol
+183 |     let metadata:SchoolCatalogMetadata
+184 |     let available:Bool
+
+/Users/runner/work/MINER/MINER/v5/macos/SchoolCommunity.swift:276:52: warning: capture of 'self' with non-Sendable type 'SchoolCommunityModel' in a '@Sendable' closure [#SendableClosureCaptures]
+ 55 | }
+ 56 | 
+ 57 | final class SchoolCommunityModel:ObservableObject {
+    |             `- note: class 'SchoolCommunityModel' does not conform to the 'Sendable' protocol
+ 58 |     @Published var metadata = SchoolCatalogMetadata.missing
+ 59 |     @Published var ready = false
+    :
+274 |                         let status = try JSONDecoder().decode(SchoolSubmission.self,from:response)
+275 |                         guard status.id == report.payload.id,["pending","approved","rejected","revoked"].contains(status.status) else { throw schoolError("invalid_submission_response") }
+276 |                         DispatchQueue.main.async { self.notice = "submitted_for_review";self.syncing = false }
+    |                                                    `- warning: capture of 'self' with non-Sendable type 'SchoolCommunityModel' in a '@Sendable' closure [#SendableClosureCaptures]
+277 |                     } catch { DispatchQueue.main.async { self.error = error.localizedDescription;self.syncing = false } }
+278 |                 }
+
+/Users/runner/work/MINER/MINER/v5/macos/SchoolCommunity.swift:277:58: warning: capture of 'self' with non-Sendable type 'SchoolCommunityModel' in a '@Sendable' closure [#SendableClosureCaptures]
+ 55 | }
+ 56 | 
+ 57 | final class SchoolCommunityModel:ObservableObject {
+    |             `- note: class 'SchoolCommunityModel' does not conform to the 'Sendable' protocol
+ 58 |     @Published var metadata = SchoolCatalogMetadata.missing
+ 59 |     @Published var ready = false
+    :
+275 |                         guard status.id == report.payload.id,["pending","approved","rejected","revoked"].contains(status.status) else { throw schoolError("invalid_submission_response") }
+276 |                         DispatchQueue.main.async { self.notice = "submitted_for_review";self.syncing = false }
+277 |                     } catch { DispatchQueue.main.async { self.error = error.localizedDescription;self.syncing = false } }
+    |                                                          `- warning: capture of 'self' with non-Sendable type 'SchoolCommunityModel' in a '@Sendable' closure [#SendableClosureCaptures]
+278 |                 }
+279 |             } catch { DispatchQueue.main.async { self.error = error.localizedDescription;self.syncing = false } }
+
+[#SendableClosureCaptures]: <https://docs.swift.org/compiler/documentation/diagnostics/sendable-closure-captures>
+/Users/runner/work/MINER/MINER/v5/build/macos-arm64/developer-avatar-source
+  /Users/runner/work/MINER/MINER/v5/build/macos-arm64/dmg-root/MINER.app/Contents/Resources/UIAssets/developer-avatar.png
+/Users/runner/work/MINER/MINER/v5/build/macos-arm64/dmg-root/MINER.app/Contents/Resources/UIAssets/AppIcon.png
+  /Users/runner/work/MINER/MINER/v5/build/macos-arm64/AppIcon.iconset/icon_16x16.png
+/Users/runner/work/MINER/MINER/v5/build/macos-arm64/dmg-root/MINER.app/Contents/Resources/UIAssets/AppIcon.png
+  /Users/runner/work/MINER/MINER/v5/build/macos-arm64/AppIcon.iconset/icon_16x16@2x.png
+/Users/runner/work/MINER/MINER/v5/build/macos-arm64/dmg-root/MINER.app/Contents/Resources/UIAssets/AppIcon.png
+  /Users/runner/work/MINER/MINER/v5/build/macos-arm64/AppIcon.iconset/icon_32x32.png
+/Users/runner/work/MINER/MINER/v5/build/macos-arm64/dmg-root/MINER.app/Contents/Resources/UIAssets/AppIcon.png
+  /Users/runner/work/MINER/MINER/v5/build/macos-arm64/AppIcon.iconset/icon_32x32@2x.png
+/Users/runner/work/MINER/MINER/v5/build/macos-arm64/dmg-root/MINER.app/Contents/Resources/UIAssets/AppIcon.png
+  /Users/runner/work/MINER/MINER/v5/build/macos-arm64/AppIcon.iconset/icon_128x128.png
+/Users/runner/work/MINER/MINER/v5/build/macos-arm64/dmg-root/MINER.app/Contents/Resources/UIAssets/AppIcon.png
+  /Users/runner/work/MINER/MINER/v5/build/macos-arm64/AppIcon.iconset/icon_128x128@2x.png
+/Users/runner/work/MINER/MINER/v5/build/macos-arm64/dmg-root/MINER.app/Contents/Resources/UIAssets/AppIcon.png
+  /Users/runner/work/MINER/MINER/v5/build/macos-arm64/AppIcon.iconset/icon_256x256.png
+/Users/runner/work/MINER/MINER/v5/build/macos-arm64/dmg-root/MINER.app/Contents/Resources/UIAssets/AppIcon.png
+  /Users/runner/work/MINER/MINER/v5/build/macos-arm64/AppIcon.iconset/icon_256x256@2x.png
+/Users/runner/work/MINER/MINER/v5/build/macos-arm64/dmg-root/MINER.app/Contents/Resources/UIAssets/AppIcon.png
+  /Users/runner/work/MINER/MINER/v5/build/macos-arm64/AppIcon.iconset/icon_512x512.png
+/Users/runner/work/MINER/MINER/v5/build/macos-arm64/dmg-root/MINER.app/Contents/Resources/UIAssets/AppIcon.png
+  /Users/runner/work/MINER/MINER/v5/build/macos-arm64/AppIcon.iconset/icon_512x512@2x.png
+/Users/runner/work/MINER/MINER/v5/build/macos-arm64/dmg-root/MINER.app: replacing existing signature
+5.0.0-beta.2
+usage: schoolnet-cli [-h] [--version]
+                     {init,render,doctor,run,benchmark,warp,desktop,community-diagnose}
+                     ...
+
+SchoolNet v5 alpha: Riot TCP via WARP, game direct
+
+positional arguments:
+  {init,render,doctor,run,benchmark,warp,desktop,community-diagnose}
+    init                write a new profile; does not change network settings
+    render              regenerate engine config after editing profile.json
+    benchmark           compare TCP connection times, not game ping
+    warp                configure or inspect the installed WARP Local Proxy
+    desktop             macOS app service management
+    community-diagnose  read-only school report diagnostics; no routing
+                        changes
+
+options:
+  -h, --help            show this help message and exit
+  --version             show program's version number and exit
+{"running": false, "pid": null, "log": "/Library/Application Support/SchoolNet v5 Alpha/engine.log"}
+Created /Users/runner/work/MINER/MINER/v5/build/macos-arm64/schema-smoke; no network settings changed
+MINER native UI smoke passed: 41 checks
+Installed verified sing-box 1.12.0: /Users/runner/work/MINER/MINER/v5/build/macos-arm64/dmg-root/MINER.app/Contents/Resources/bin/sing-box
+Native validation completed; no distribution DMG requested
