@@ -1,0 +1,53 @@
+{
+  "locale": "ko-KR",
+  "brand": {
+    "name": "MINER",
+    "expansion": "Makes Internet Not Eternally Restricted",
+    "slogan": "Dig your way out."
+  },
+  "systemStatus": {
+    "idle": { "title": "탈옥 준비", "detail": "시작하면 연결 경로를 점검합니다." },
+    "cli_check": { "title": "곡괭이 챙기는 중...", "detail": "WARP CLI와 명령 지원 여부 확인" },
+    "proxy_connect": { "title": "40000번 굴 입구 확보 중...", "detail": "WARP Local Proxy 연결 확인" },
+    "tls_verify": { "title": "가짜 출구인지 확인 중...", "detail": "TLS 인증 및 warp=on 검증" },
+    "admin_auth": { "title": "관리자님, 땅 좀 파겠습니다...", "detail": "macOS 관리자 인증 대기" },
+    "routing": { "title": "클라는 땅굴로, 게임은 정문으로.", "detail": "클라이언트/WARP · 게임/직접 경로 분리" },
+    "warp_ready": { "title": "WARP 준비 완료", "detail": "WARP 검증 완료 · 분리 라우팅 미시작" },
+    "running": { "title": "연결 완료", "detail": "분리 라우팅 엔진 실행 중" },
+    "stopped": { "title": "오늘은 모범생 모드.", "detail": "MINER 엔진 중지 · WARP 상태는 별도 표시" },
+    "error": { "title": "돌덩이 억까 실화냐.", "detail": "구체적 오류 원인을 여기에 표시" }
+  },
+  "lolParodies": [
+    { "id": "yi-meditation", "champion": "마스터 이", "text": "쉿, 굴착 중이오...", "states": ["cli_check", "proxy_connect", "tls_verify", "routing"], "source": "https://seore.org/w/마스터%20이/대사" },
+    { "id": "yi-wuju", "champion": "마스터 이", "text": "우회로는 내 안에 살아 있소.", "states": ["proxy_connect", "routing"], "source": "https://seore.org/w/마스터%20이/대사" },
+    { "id": "yi-monkey", "champion": "마스터 이", "text": "방화벽 같은 장난은 그만하지!", "states": ["error"], "source": "https://seore.org/w/마스터%20이/대사" },
+    { "id": "yi-one-dig", "champion": "마스터 이", "text": "일굴 필살!", "states": ["proxy_connect", "routing"], "sourceType": "skill-name-parody", "source": "https://wildrift.leagueoflegends.com/ko-kr/champions/master-yi/" },
+    { "id": "teemo", "champion": "티모", "text": "굴착 다녀오겠습니다!", "states": ["cli_check"], "source": "https://www.leagueoflegends.com/ko-kr/news/merch/20220127-kr-store/" },
+    { "id": "blitz", "champion": "블리츠크랭크", "text": "곡괭이 가동. 탈옥 준비 완료.", "states": ["cli_check", "running"], "source": "https://d.namu.moe/w/블리츠크랭크/대사" },
+    { "id": "jax", "champion": "잭스", "text": "진정한 곡괭이를 가졌다면 어땠을까...", "states": ["proxy_connect", "routing"], "sourceType": "classic-pre-rework-line", "source": "https://wiki.gamess.co.kr/wiki/잭스(LEAGUEOFLEGENDS)" },
+    { "id": "yasuo", "champion": "야스오", "text": "차단은 바람과 같지. 늘 내 곁에 있으니.", "states": ["proxy_connect", "tls_verify"], "source": "https://www.gamechosun.co.kr/webzine/article/view.php?no=153585" },
+    { "id": "malphite", "champion": "말파이트", "text": "바위처럼 단단하네... 억까 실화냐.", "states": ["error"], "source": "https://dark.namu.moe/w/말파이트" },
+    { "id": "khazix", "champion": "카직스", "text": "우회란 좋은 거야.", "states": ["routing", "running"], "source": "https://www.leagueoflegends.com/ko-kr/news/game-updates/patch-11-22-notes/" },
+    { "id": "lux", "champion": "럭스", "text": "땅굴 속에도 빛이 있답니다.", "states": ["running"], "source": "https://m.namu.moe/w/럭스(리그%20오브%20레전드)/대사" },
+    { "id": "vi", "champion": "바이", "text": "곡괭이는 하나인데 벽은 왜 이렇게 많냐.", "states": ["proxy_connect", "error"], "source": "https://tcatmon.com/wiki/바이(리그_오브_레전드)" }
+  ],
+  "originalJokes": [
+    "검열의 제왕과 숨바꼭질 중...",
+    "흙먹 중... 쌀먹 아님.",
+    "오늘의 수행평가: 땅굴 파기",
+    "굴착 원툴 출동.",
+    "이건 우회가 아니라 지질조사입니다.",
+    "학교에서 배운 건데요. 탈출 방법.",
+    "이 정도면 창의적 체험활동 아님?"
+  ],
+  "displayRules": {
+    "systemStatusAlwaysVisible": true,
+    "jokesOnlyDuringWait": true,
+    "minimumSecondsBetweenJokes": 5,
+    "maximumJokeWidthCharacters": 36,
+    "disableJokesDuringAuthorization": true,
+    "disableJokesDuringUnresolvedError": true,
+    "errorDetailNeverReplacedByJoke": true,
+    "parodyCreditsVisibleInNormalUI": false
+  }
+}

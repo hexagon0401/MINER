@@ -1,5 +1,6 @@
 """Control the separately installed WARP client; never implement its tunnel."""
 import http.client
+import json
 from pathlib import Path
 import platform
 import re
@@ -10,7 +11,11 @@ import subprocess
 import sys
 import time
 
-from .probe import socks_connect
+from .probe import socks_connect, proxy_ready
+
+
+def progress(phase, completed):
+    print(json.dumps({"event": "progress", "phase": phase, "completed": completed}), flush=True)
 
 
 def resolve_cli(value=None):
@@ -68,7 +73,9 @@ def verify_trace(port=40000, timeout=5.0):
             "tls_verified": True, "direct_fallback": False}
 
 
-def activate(port=40000, warp_cli=None, wait_seconds=30):
+def activate(port=40000, warp_cli=None, wait_seconds=30, notify=None):
+    emit = notify or (lambda *args: None)
+    emit("cli_check", 0)
     if type(port) is not int or not 1024 <= port <= 65535:
         raise ValueError("proxy port must be 1024..65535")
     if not 1 <= wait_seconds <= 60:
@@ -79,12 +86,17 @@ def activate(port=40000, warp_cli=None, wait_seconds=30):
     proxy_help = command(cli, "proxy", "--help")
     if not re.search(r"\bproxy\b", mode_help) or not re.search(r"\bport\b", proxy_help):
         raise ValueError("installed WARP CLI does not advertise mode proxy / proxy port; no connection settings changed")
+    emit("proxy_connect", 1)
     settings = command(cli, "settings")
     current_status = command(cli, "status")
     changed = not proxy_mode(settings, port)
     if not changed and connected(current_status):
         # Repeated clicks must not tear down healthy client TCP sessions.
-        return {**verify_trace(port), "mode": "WarpProxy", "reconfigured": False}
+        proxy_ready(port)
+        emit("tls_verify", 2)
+        result = verify_trace(port)
+        emit("warp_ready", 3)
+        return {**result, "mode": "WarpProxy", "reconfigured": False}
     try:
         if changed:
             command(cli, "disconnect")
@@ -98,7 +110,11 @@ def activate(port=40000, warp_cli=None, wait_seconds=30):
                 if not proxy_mode(command(cli, "settings", timeout=5), port):
                     raise ValueError("WARP did not apply the requested Local Proxy mode/port")
                 try:
-                    return {**verify_trace(port), "mode": "WarpProxy", "reconfigured": changed}
+                    proxy_ready(port)
+                    emit("tls_verify", 2)
+                    result = verify_trace(port)
+                    emit("warp_ready", 3)
+                    return {**result, "mode": "WarpProxy", "reconfigured": changed}
                 except (OSError, ValueError, http.client.HTTPException) as exc:
                     last_error = type(exc).__name__ + ": WARP trace verification failed"
             time.sleep(.5)
@@ -130,3 +146,23 @@ def deactivate(warp_cli=None):
         raise ValueError("WARP did not confirm Disconnected after disconnect")
     return {"connected": False, "mode_restored_to_full_tunnel": False,
             "note": "WARP disconnected; Local Proxy mode is retained. No direct fallback was configured."}
+
+
+def restore(warp_cli=None, wait_seconds=30):
+    """Explicit user-requested return to Traffic and DNS (UDP), never a failure fallback."""
+    cli = resolve_cli(warp_cli)
+    help_text = command(cli, "mode", "--help")
+    if not re.search(r"(?<![\w+\-])warp(?![\w+\-])", help_text):
+        raise ValueError("installed WARP CLI does not advertise UDP mode warp; restoration was not attempted")
+    command(cli, "disconnect")
+    command(cli, "mode", "warp")
+    command(cli, "connect")
+    deadline = time.monotonic() + wait_seconds
+    while time.monotonic() < deadline:
+        if connected(command(cli, "status", timeout=5)):
+            settings = command(cli, "settings", timeout=5)
+            if re.search(r"^\s*(?:\([^\n)]*\)\s*)?Mode:\s*Warp\s*$", settings, re.MULTILINE):
+                return {"connected": True, "mode": "Warp", "dns_transport": "UDP", "restored": True}
+            raise ValueError("WARP did not confirm UDP Traffic and DNS mode; inspect warp-cli settings")
+        time.sleep(.5)
+    raise ValueError("WARP UDP restoration timed out; inspect warp-cli status/settings")

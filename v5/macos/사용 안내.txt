@@ -12,9 +12,9 @@ SchoolNet v5 Alpha — macOS 테스트 배포
 5. 클라이언트 TCP는 WARP, 게임 데이터는 직접 연결하는 구성입니다.
    '로그 열기'에서 클라이언트 outbound/socks[warp], 게임 outbound/direct[direct]를 확인하세요.
    실제 학교 접속 성공·게임 핑·macOS 27.1.1 호환성은 사용자 테스트가 필요합니다.
-6. 사용 후 '중지'를 누르세요. 앱 종료 시에도 실행 중이면 중지를 안내합니다.
+6. 사용 후 '중지'를 누르세요. 엔진 중지 후 WARP를 UDP Traffic and DNS로 복귀합니다. 앱 종료 시에도 실행 중이면 중지를 안내합니다.
    앱을 강제 종료한 경우 다시 열어 '중지'를 눌러주세요.
-   '중지'는 WARP 프록시를 유지합니다. 'WARP 끄기'는 v5 중지 후 WARP를 끕니다.
+   앱 종료도 엔진 중지와 WARP UDP 복귀를 확인합니다. 복귀 실패 시 오류를 표시합니다.
    프록시 연결 실패 시 일반 네트워크로 자동 재시도하지 않습니다.
 7. alpha.4는 Riot/League의 웹 Helper 경로도 터널 대상으로 포함합니다.
    영상이 계속 비면 로그에서 Helper의 실제 경로와 warp 매칭을 확인하세요.
@@ -44,3 +44,7 @@ launchd 작업: org.schoolnet.v5.alpha (로그인/부팅 자동 시작 항목은
 - DNS는 WARP 경유 DoH를 사용합니다. WARP가 끊기면 새 DNS 조회도 실패할 수 있습니다.
 - Apple Silicon과 Intel DMG를 구분해 다운로드하세요.
 - Windows는 CLI 설정 생성만 제공하며 이 DMG는 macOS용입니다.
+
+MINER 디자인 UI: 시작/중지와 실제 다섯 단계 상태를 표시합니다.
+⌘, 또는 도구 → 설정에서 한국어/English를 바꿀 수 있습니다.
+상태·로그는 별도 진단 화면에서 확인합니다.

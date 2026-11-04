@@ -1,4 +1,5 @@
 import AppKit
+import SwiftUI
 
 let applicationName = "SchoolNet v5 Alpha"
 let identifier = "org.schoolnet.v5.alpha"
@@ -14,9 +15,11 @@ func appleString(_ value: String) -> String {
 
 final class AppDelegate: NSObject, NSApplicationDelegate {
     var window: NSWindow!
-    var output: NSTextView!
+    let model = MinerModel()
+    var settingsWindow: NSWindow?
+    var managedWarp = false
     var buttons: [NSButton] = []
-    var running = false
+    var running = false { didSet { model.engine = running } }
     var busy = false
     let resources = Bundle.main.resourceURL!
     let dataDirectory = FileManager.default.homeDirectoryForCurrentUser
@@ -25,47 +28,21 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     var engine: String { resources.appendingPathComponent("bin/sing-box").path }
 
     func applicationDidFinishLaunching(_ notification: Notification) {
-        window = NSWindow(contentRect: NSRect(x: 0, y: 0, width: 660, height: 560),
-                          styleMask: [.titled, .closable, .miniaturizable], backing: .buffered, defer: false)
-        window.title = applicationName
-        window.center()
+        window = NSWindow(contentRect: NSRect(x:0,y:0,width:540,height:528), styleMask:[.titled,.closable,.miniaturizable,.resizable], backing:.buffered, defer:false)
+        window.title = "MINER"
+        window.minSize = NSSize(width:500,height:470)
+        window.collectionBehavior = [.fullScreenNone]
         window.isReleasedWhenClosed = false
-        let content = window.contentView!
-        let heading = NSTextField(labelWithString: "SchoolNet v5 · Alpha")
-        heading.font = .boldSystemFont(ofSize: 24)
-        heading.frame = NSRect(x: 24, y: 500, width: 600, height: 34)
-        content.addSubview(heading)
-        let description = NSTextField(wrappingLabelWithString:
-            "‘시작’ 또는 ‘WARP 자동 연결’로 Local Proxy를 설정·검증합니다.\n클라이언트와 웹 콘텐츠는 WARP, 게임 데이터는 직접 연결합니다. 최초 전환은 게임 밖에서 진행하세요.")
-        description.frame = NSRect(x: 24, y: 430, width: 610, height: 60)
-        content.addSubview(description)
-        let specs: [(String, Selector)] = [
-            ("WARP 자동 연결", #selector(connectWarp)), ("사전 점검", #selector(check)),
-            ("시작", #selector(start)), ("중지", #selector(stop)),
-            ("상태 확인", #selector(refresh)), ("로그 열기", #selector(openLog)),
-            ("사용 안내", #selector(openGuide)), ("제거", #selector(uninstall)),
-            ("WARP 연결 확인", #selector(checkWarp)), ("WARP 끄기", #selector(disconnectWarp))
-        ]
-        for (index, spec) in specs.enumerated() {
-            let button = NSButton(title: spec.0, target: self, action: spec.1)
-            button.frame = NSRect(x: 24 + (index % 4) * 154, y: 385 - (index / 4) * 40, width: 144, height: 32)
-            button.bezelStyle = .rounded
-            buttons.append(button)
-            content.addSubview(button)
-        }
-        let scroll = NSScrollView(frame: NSRect(x: 24, y: 24, width: 612, height: 242))
-        scroll.hasVerticalScroller = true
-        scroll.borderType = .bezelBorder
-        output = NSTextView(frame: scroll.bounds)
-        output.isEditable = false
-        output.font = .monospacedSystemFont(ofSize: 12, weight: .regular)
-        scroll.documentView = output
-        content.addSubview(scroll)
+        window.contentView = NSHostingView(rootView: MinerRoot(model:model,controller:self))
+        window.center()
         let menu = NSMenu()
         let item = NSMenuItem()
         menu.addItem(item)
         let submenu = NSMenu()
-        submenu.addItem(withTitle: "종료", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q")
+        let settingsItem = submenu.addItem(withTitle: "설정 / Settings…", action: #selector(showSettings), keyEquivalent: ",")
+        settingsItem.target = self
+        submenu.addItem(.separator())
+        submenu.addItem(withTitle: "종료 / Quit", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q")
         item.submenu = submenu
         NSApp.mainMenu = menu
         window.makeKeyAndOrderFront(nil)
@@ -75,16 +52,19 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     func append(_ text: String) {
-        output.string += text + "\n"
-        output.scrollToEndOfDocument(nil)
+        model.logs += model.redact(text) + "\n"
+        if model.logs.count > 64000 { model.logs = String(model.logs.suffix(64000)) }
     }
 
     func setBusy(_ value: Bool) {
         busy = value
-        buttons.forEach { $0.isEnabled = !value }
+        model.busy = value
     }
 
     func execute(_ arguments: [String], administrator: Bool = false) throws -> String {
+        if administrator && arguments.prefix(2).elementsEqual(["desktop", "start"]) {
+            DispatchQueue.main.async { self.model.phase = "admin_auth"; self.model.completed = 3 }
+        }
         let process = Process()
         if administrator {
             let command = ([cli] + arguments).map(shellQuote).joined(separator: " ")
@@ -98,9 +78,20 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         process.standardOutput = pipe
         process.standardError = pipe
         try process.run()
-        let data = pipe.fileHandleForReading.readDataToEndOfFile()
+        var collected = Data()
+        var pending = Data()
+        while true {
+            let chunk = pipe.fileHandleForReading.availableData
+            if chunk.isEmpty { break }
+            collected.append(chunk); pending.append(chunk)
+            while let index = pending.firstIndex(of: 10) {
+                let line = String(data: pending.prefix(upTo:index), encoding:.utf8) ?? ""
+                self.model.accept(line)
+                pending.removeSubrange(...index)
+            }
+        }
         process.waitUntilExit()
-        let text = String(data: data, encoding: .utf8) ?? ""
+        let text = String(data: collected, encoding: .utf8) ?? ""
         guard process.terminationStatus == 0 else {
             throw NSError(domain: identifier, code: Int(process.terminationStatus),
                           userInfo: [NSLocalizedDescriptionKey: text])
@@ -138,7 +129,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                 self.setBusy(false)
                 switch result {
                 case .success(let text): self.append(text); completion?()
-                case .failure(let error): self.append("실패: " + error.localizedDescription)
+                case .failure(let error): self.model.phase = "error"; self.model.error = self.model.redact(error.localizedDescription); self.append(error.localizedDescription); self.window.makeKeyAndOrderFront(nil)
                 }
             }
         }
@@ -152,20 +143,38 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         let data = try Data(contentsOf: dataDirectory.appendingPathComponent("profile.json"))
         let profile = try JSONSerialization.jsonObject(with: data) as? [String: Any]
         let port = profile?["proxy_port"] as? Int ?? 40000
-        return ["warp", operation, "--proxy-port", String(port)]
+        return ["warp", operation, "--proxy-port", String(port), "--progress"]
     }
     @objc func connectWarp() {
-        operation { try self.execute(self.warpArguments("connect")) }
+        guard !busy && !running else { return }
+        managedWarp = true; model.phase = "cli_check"; model.completed = 0; model.error = ""
+        operation({ try self.execute(self.warpArguments("connect")) }, completion: { self.model.phase = "warp_ready"; self.model.warp = true; self.model.completed = 3 })
+    }
+    @objc func showSettings() {
+        if settingsWindow == nil {
+            let settings = NSWindow(contentRect:NSRect(x:0,y:0,width:420,height:200),styleMask:[.titled,.closable],backing:.buffered,defer:false)
+            settings.title = "MINER Settings"
+            settings.isReleasedWhenClosed = false
+            settings.contentView = NSHostingView(rootView:MinerSettings(model:model,controller:self))
+            settings.center(); settingsWindow = settings
+        }
+        settingsWindow?.makeKeyAndOrderFront(nil)
+    }
+    @objc func showDiagnostics() {
+        let log = URL(fileURLWithPath:"/Library/Application Support/SchoolNet v5 Alpha/engine.log")
+        if let data = try? Data(contentsOf:log), let text = String(data:data.suffix(32000),encoding:.utf8) { append(text) }
+        model.diagnostics = true
+        refresh()
     }
     @objc func checkWarp() {
         operation { try self.execute(self.warpArguments("status")) }
     }
     @objc func disconnectWarp() {
         let alert = NSAlert()
-        alert.messageText = "v5를 중지하고 WARP 연결을 끌까요?"
-        alert.informativeText = "클라이언트 연결이 끊길 수 있습니다. 전체 터널이나 직접 연결로 자동 전환하지 않습니다."
-        alert.addButton(withTitle: "중지하고 끄기")
-        alert.addButton(withTitle: "취소")
+        alert.messageText = model.tr("v5를 중지하고 WARP 연결을 끌까요?", "Stop v5 and disconnect WARP?")
+        alert.informativeText = model.tr("클라이언트 연결이 끊길 수 있습니다. 전체 터널이나 직접 연결로 자동 전환하지 않습니다.", "Client sessions may disconnect. No automatic full-tunnel or direct fallback.")
+        alert.addButton(withTitle: model.tr("중지하고 끄기", "Stop and disconnect"))
+        alert.addButton(withTitle: model.tr("취소", "Cancel"))
         guard alert.runModal() == .alertFirstButtonReturn else { return }
         operation({
             _ = try self.execute(["desktop", "stop"], administrator: true)
@@ -189,6 +198,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         }
     }
     @objc func start() {
+        guard !busy && !running else { return }
+        managedWarp = true; model.phase = "cli_check"; model.completed = 0; model.error = ""
         guard Bundle.main.bundleURL.path == "/Applications/SchoolNet v5 Alpha.app" else {
             append("DMG에서 앱을 Applications로 복사한 뒤 그 앱을 실행하세요."); return
         }
@@ -197,31 +208,37 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             _ = try self.execute(self.warpArguments("connect"))
             return try self.execute(["desktop", "start", "--resources", self.resources.path,
                                      "--profile", self.dataDirectory.path], administrator: true)
-        }, completion: { self.running = true; self.append("실행 프로세스가 시작됐습니다. 로그에서 클라이언트 warp / 게임 direct를 확인하세요.") })
+        }, completion: { self.running = true; self.model.phase = "running"; self.model.completed = 5; self.model.warp = true })
     }
     @objc func stop() {
-        operation({ try self.execute(["desktop", "stop"], administrator: true) },
-                  completion: { self.running = false })
+        guard !busy else { return }
+        model.phase = "stopping"
+        operation({
+            if self.running { _ = try self.execute(["desktop", "stop"], administrator:true) }
+            DispatchQueue.main.async { self.running = false }
+            return try self.execute(["warp", "restore"])
+        }, completion: { self.running = false; self.model.phase = "stopped"; self.model.completed = 0; self.model.warp = true; self.model.restored = true; self.managedWarp = false })
     }
     @objc func refresh() {
         operation {
             let text = try self.execute(["desktop", "status"])
             if let data = text.data(using: .utf8),
                let info = try JSONSerialization.jsonObject(with: data) as? [String: Any] {
-                DispatchQueue.main.async { self.running = info["running"] as? Bool ?? false }
+                DispatchQueue.main.async { self.running = info["running"] as? Bool ?? false; if self.running { self.model.phase = "running"; self.model.completed = 5; self.managedWarp = true } }
             }
             return text
         }
     }
     @objc func uninstall() {
         let alert = NSAlert()
-        alert.messageText = "SchoolNet v5 Alpha를 제거할까요?"
-        alert.informativeText = "실행을 중지하고 v5의 서비스·설정·로그를 제거한 뒤 앱을 휴지통으로 옮깁니다. WARP와 기존 v1~v4는 유지합니다."
-        alert.addButton(withTitle: "제거")
-        alert.addButton(withTitle: "취소")
+        alert.messageText = model.tr("MINER를 제거할까요?", "Uninstall MINER?")
+        alert.informativeText = model.tr("실행을 중지하고 v5의 서비스·설정·로그를 제거한 뒤 앱을 휴지통으로 옮깁니다. WARP와 기존 v1~v4는 유지합니다.", "Stop MINER, remove its service, settings and logs, then move the app to Trash. WARP and v1–v4 are kept.")
+        alert.addButton(withTitle: model.tr("제거", "Uninstall"))
+        alert.addButton(withTitle: model.tr("취소", "Cancel"))
         guard alert.runModal() == .alertFirstButtonReturn else { return }
         operation({
             let result = try self.execute(["desktop", "uninstall"], administrator: true)
+            if self.managedWarp || self.running { _ = try self.execute(["warp", "restore"]) }
             let marker = self.dataDirectory.appendingPathComponent(".managed.json")
             if let data = try? Data(contentsOf: marker),
                let owner = try? JSONSerialization.jsonObject(with: data) as? [String: String], owner["id"] == identifier {
@@ -229,7 +246,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             }
             return result
         }, completion: {
-            self.running = false
+            self.running = false; self.managedWarp = false
             guard Bundle.main.bundleURL.path == "/Applications/SchoolNet v5 Alpha.app" else { return }
             NSWorkspace.shared.recycle([Bundle.main.bundleURL]) { _, error in
                 DispatchQueue.main.async {
@@ -242,27 +259,28 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool { true }
     func applicationShouldTerminate(_ sender: NSApplication) -> NSApplication.TerminateReply {
         if busy { return .terminateCancel }
-        guard running else { return .terminateNow }
-        let alert = NSAlert()
-        alert.messageText = "연결을 중지하고 종료할까요?"
-        alert.addButton(withTitle: "중지 후 종료")
-        alert.addButton(withTitle: "취소")
-        guard alert.runModal() == .alertFirstButtonReturn else { return .terminateCancel }
-        setBusy(true)
+        guard running || managedWarp else { return .terminateNow }
+        model.phase = "stopping"; setBusy(true)
         DispatchQueue.global().async {
             do {
-                _ = try self.execute(["desktop", "stop"], administrator: true)
-                DispatchQueue.main.async { self.running = false; NSApp.reply(toApplicationShouldTerminate: true) }
+                if self.running { _ = try self.execute(["desktop", "stop"],administrator:true) }
+                DispatchQueue.main.async { self.running = false }
+                _ = try self.execute(["warp", "restore"])
+                DispatchQueue.main.async { self.managedWarp = false; self.model.restored = true; NSApp.reply(toApplicationShouldTerminate:true) }
             } catch {
-                DispatchQueue.main.async { self.setBusy(false); self.append(error.localizedDescription); NSApp.reply(toApplicationShouldTerminate: false) }
+                DispatchQueue.main.async { self.setBusy(false); self.model.phase = "error"; self.model.error = self.model.redact(error.localizedDescription); self.append(error.localizedDescription); self.window.makeKeyAndOrderFront(nil); NSApp.reply(toApplicationShouldTerminate:false) }
             }
         }
         return .terminateLater
     }
 }
 
-let app = NSApplication.shared
-let delegate = AppDelegate()
-app.delegate = delegate
-app.setActivationPolicy(.regular)
-app.run()
+@main struct MinerApplication {
+    @MainActor static func main() {
+        let app = NSApplication.shared
+        let delegate = AppDelegate()
+        app.delegate = delegate
+        app.setActivationPolicy(.regular)
+        app.run()
+    }
+}

@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 160" role="img" aria-label="Minimal SchoolNet building">
+  <path d="M0 130H320" stroke="#78818C" stroke-width="4"/>
+  <path d="M69 130V63H251V130Z" fill="#AAB6BE"/>
+  <path d="M60 65L160 28L260 65Z" fill="#CCD5DC"/>
+  <rect x="116" y="44" width="88" height="22" rx="5" fill="#E9EDF0"/>
+  <text x="160" y="59" fill="#303D48" font-family="-apple-system,BlinkMacSystemFont,sans-serif" font-size="12" font-weight="700" text-anchor="middle">SCHOOLNET</text>
+  <rect x="89" y="79" width="30" height="34" rx="4" fill="#33424F"/>
+  <rect x="145" y="79" width="30" height="34" rx="4" fill="#33424F"/>
+  <rect x="201" y="79" width="30" height="34" rx="4" fill="#33424F"/>
+  <path d="M99 79V113M109 79V113M89 96H119M155 79V113M165 79V113M145 96H175M211 79V113M221 79V113M201 96H231" stroke="#AAB6BE" stroke-width="3"/>
+  <rect x="136" y="114" width="48" height="16" rx="3" fill="#46596A"/>
+</svg>

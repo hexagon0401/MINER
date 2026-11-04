@@ -144,6 +144,8 @@ def manage(operation, resources=None, profile=None):
         raise ValueError("macOS administrator authorization is required")
     owned_base()
     if operation == "start":
+        from .warp import progress
+        progress("routing", 4)
         if status()["running"]:
             raise ValueError("SchoolNet v5 Alpha is already running")
         stop()
@@ -158,6 +160,7 @@ def manage(operation, resources=None, profile=None):
         result = status()
         if not result["running"]:
             raise ValueError(f"engine exited during startup; inspect {base / 'engine.log'}")
+        progress("running", 5)
         print(json.dumps(result))
     elif operation == "stop":
         print(json.dumps(stop()))

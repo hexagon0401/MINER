@@ -1,0 +1,50 @@
+{
+  "fill" : "automatic",
+  "groups" : [
+    {
+      "layers" : [
+        {
+          "image-name" : "Empty Trash Icon.png",
+          "name" : "Empty Trash Icon",
+          "opacity" : 1,
+          "position" : {
+            "scale" : 1,
+            "translation-in-points" : [
+              0,
+              -15
+            ]
+          }
+        },
+        {
+          "blend-mode" : "multiply",
+          "glass" : false,
+          "hidden" : false,
+          "image-name" : "yrBapybUwxaWf-p8G-ORrNEu-3_0cgNju_9ZrtNHtr-QE21eB7_KEmdRCcE6Wk1YyvonYsCSBQCZ1RK7TUYsJg.svg",
+          "name" : "yrBapybUwxaWf-p8G-ORrNEu-3_0cgNju_9ZrtNHtr-QE21eB7_KEmdRCcE6Wk1YyvonYsCSBQCZ1RK7TUYsJg",
+          "opacity" : 0.7,
+          "position" : {
+            "scale" : 1,
+            "translation-in-points" : [
+              0.004118119999930059,
+              4.064361729999973
+            ]
+          }
+        }
+      ],
+      "shadow" : {
+        "kind" : "neutral",
+        "opacity" : 0.5
+      },
+      "translucency" : {
+        "enabled" : true,
+        "value" : 0.3
+      }
+    }
+  ],
+  "supported-platforms" : {
+    "circles" : [
+      "watchOS"
+    ],
+    "squares" : "shared"
+  }
+}

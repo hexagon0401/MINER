@@ -9,6 +9,37 @@ TRACE = {"warp": "on", "via": "socks5h", "direct_fallback": False}
 
 
 class WarpTests(unittest.TestCase):
+    def setUp(self):
+        patcher = patch.object(warp, "proxy_ready")
+        patcher.start()
+        self.addCleanup(patcher.stop)
+
+    def test_restore_explicit_udp_mode_and_validate(self):
+        calls = []
+        def call(cli, *args, **kwargs):
+            calls.append(args)
+            return {("mode", "--help"): "warp warp+doh proxy", ("status",): "Connected", ("settings",): "Mode: Warp\n"}.get(args, "Success")
+        with patch.object(warp, "resolve_cli", return_value="warp-cli"), patch.object(warp, "command", side_effect=call):
+            self.assertTrue(warp.restore()["restored"])
+        self.assertEqual(calls[1:4], [("disconnect",), ("mode", "warp"), ("connect",)])
+
+    def test_progress_follows_real_checks(self):
+        calls, call = self.cli_fixture()
+        events = []
+        with patch.object(warp, "resolve_cli", return_value="warp-cli"), patch.object(warp, "command", side_effect=call), patch.object(warp, "verify_trace", return_value=TRACE):
+            warp.activate(notify=lambda phase, count: events.append((phase, count)))
+        self.assertEqual(events, [("cli_check", 0), ("proxy_connect", 1), ("tls_verify", 2), ("warp_ready", 3)])
+
+    def test_restore_unsupported_mode_does_not_disconnect(self):
+        with patch.object(warp, "resolve_cli", return_value="warp-cli"), patch.object(warp, "command", return_value="proxy warp+doh") as call, self.assertRaises(ValueError):
+            warp.restore()
+        self.assertEqual(call.call_count, 1)
+
+    def test_restore_wrong_dns_mode_is_not_success(self):
+        def call(cli, *args, **kwargs):
+            return {("mode", "--help"): "warp proxy", ("status",): "Connected", ("settings",): "Mode: WarpWithDnsOverHttps\n"}.get(args, "Success")
+        with patch.object(warp, "resolve_cli", return_value="warp-cli"), patch.object(warp, "command", side_effect=call), self.assertRaisesRegex(ValueError, "did not confirm UDP"):
+            warp.restore()
     def cli_fixture(self, mode="full", status="Disconnected", supported=True):
         calls = []
         def call(cli, *args, **kwargs):

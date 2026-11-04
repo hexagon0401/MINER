@@ -1,6 +1,6 @@
 # SchoolNet v5 — 분리 연결 실험판
 
-**macOS 우선의 `5.0.0-alpha.4`입니다.** 개인용 WARP의 Local proxy와 sing-box TUN을 연결해, Riot/LoL **클라이언트·웹 Helper의 TCP는 WARP**, **게임 실행 파일과 나머지 트래픽은 직접 경로**로 보냅니다. 게임 시작/종료 때 WARP를 전환하지 않습니다. DMG 앱은 자동 연결·실행·제거를 위한 작은 관리 창을 제공합니다.
+**macOS 우선의 `5.0.0-alpha.5`입니다.** 개인용 WARP의 Local proxy와 sing-box TUN을 연결해, Riot/LoL **클라이언트·웹 Helper의 TCP는 WARP**, **게임 실행 파일과 나머지 트래픽은 직접 경로**로 보냅니다. 게임 시작/종료 때 WARP를 전환하지 않습니다. DMG 앱은 제공된 MINER 디자인·캐릭터를 사용하며 `⌘,` 설정 창에서 한국어/English를 선택할 수 있습니다.
 
 사용자가 제공한 환경은 **개인용 WARP / macOS 27.1.1**입니다. 개발·자동 검증 환경은 Linux이므로 해당 macOS 버전의 실제 호환성, 학교에서의 연결 성공, 게임 핑 개선은 **아직 검증되지 않았습니다**. Windows용 설정도 생성하지만 Windows 네이티브 동작은 미검증입니다. 기존 v1~v4는 변경하지 않습니다.
 
@@ -8,7 +8,7 @@
 
 GitHub의 `v5.0.0-alpha.*` **사전 릴리스**에서 Apple Silicon 또는 Intel DMG를 선택합니다. 앱을 **Applications로 드래그**한 뒤 실행하면 됩니다. Python과 엔진이 포함되어 있습니다. 개인용 WARP는 별도로 설치·등록해두세요.
 
-앱의 **시작**은 WARP CLI로 Local Proxy·기본 포트 40000 연결과 검증을 수행한 뒤 v5를 실행합니다. **WARP 자동 연결**은 WARP 설정·검증만 실행하고, **WARP 연결 확인**은 설정을 바꾸지 않습니다. **중지**는 v5만 중지하고 프록시는 유지합니다. **WARP 끄기**는 v5를 먼저 중지한 뒤 WARP 연결을 해제합니다. 최초 전체 터널 → 프록시 전환은 게임 밖에서 진행하세요.
+앱의 **시작**은 WARP CLI로 Local Proxy·기본 포트 40000 연결과 검증을 수행한 뒤 v5를 실행합니다. **WARP 자동 연결**은 WARP 설정·검증만 실행하고, **WARP 연결 확인**은 설정을 바꾸지 않습니다. **중지·앱 종료**는 엔진을 먼저 중지하고 `warp-cli mode warp`로 UDP Traffic and DNS에 복귀합니다. 설정·연결 확인에 실패하면 오류를 표시하며, 종료 복귀 실패 시 앱을 유지합니다. **WARP 끄기**는 v5를 먼저 중지한 뒤 WARP 연결을 해제합니다. 최초 전체 터널 → 프록시 전환은 게임 밖에서 진행하세요.
 
 시작·중지·제거 때 macOS 관리자 인증을 사용합니다. **제거** 버튼은 실행을 중지하고 v5 지원 파일·사용자 설정·로그를 삭제한 뒤 앱을 휴지통으로 옮깁니다. WARP와 기존 v1~v4는 유지합니다. 새 alpha는 관리 중인 런타임을 검증 후 교체하며 사용자 프로필과 로그를 유지합니다. 제거 전에 필요한 로그를 복사하세요. 부팅 자동 시작 항목은 설치하지 않습니다.
 
@@ -80,7 +80,7 @@ DNS를 WARP로 보내는 이유는 macOS의 `mDNSResponder` 때문에 원래 앱
 
    CLI의 `run`은 이미 연결된 프록시를 사용하며, 앱의 `시작`은 그 전에 `warp connect`를 자동 실행합니다. 게임 시작/종료에 따른 WARP 전환은 없습니다. 엔진 로그에서 Riot/League 클라이언트와 웹 Helper는 `outbound/socks[warp]`, 게임은 `outbound/direct[direct]`인지 확인합니다. 프로세스 이름과 클라이언트 번들 경로 모두 매칭되지 않으면 기본 직접 경로로 갑니다.
 
-5. 종료는 **Ctrl+C**입니다. v5는 자신이 실행한 엔진만 종료하고 WARP Local proxy는 유지합니다. sing-box가 자신의 임시 라우트를 정리하도록 정상 종료를 전달하며, 10초 내 종료되지 않으면 강제 종료 후 경로 점검을 안내합니다. **macOS 27.1.1의 실제 복구 결과는 실기 확인이 필요합니다.** 강제 종료·전원 차단 후 자동 복구까지 검증된 제품은 아닙니다.
+5. 종료는 **Ctrl+C**입니다. CLI의 `run`을 Ctrl+C로 종료하면 엔진만 중지합니다. GUI의 중지·종료는 추가로 `warp restore`를 호출해 WARP UDP 모드에 복귀합니다. sing-box가 자신의 임시 라우트를 정리하도록 정상 종료를 전달하며, 10초 내 종료되지 않으면 강제 종료 후 경로 점검을 안내합니다. **macOS 27.1.1의 실제 복구 결과는 실기 확인이 필요합니다.** 강제 종료·전원 차단 후 자동 복구까지 검증된 제품은 아닙니다.
 
    ```bash
    route -n get default
@@ -143,3 +143,13 @@ python3 main.py benchmark --host example.com --port 443 --samples 5
 Python과 개인용 WARP 설치 후 `python install_engine.py`, `python main.py init --directory local/windows --platform windows`를 실행합니다. `doctor`에 `--engine`으로 `local/bin/sing-box.exe`를 지정하고, 관리자 터미널에서 `run`을 실행합니다. macOS와 같은 Local proxy 구성이 필요합니다. 이는 설정·CLI 지원이며 **Windows 실행 검증 완료를 의미하지 않습니다**.
 
 sing-box는 별도 설치되는 GPL-3.0 프로젝트입니다. upstream의 라이선스와 릴리스 조건은 [공식 저장소](https://github.com/SagerNet/sing-box)를 따릅니다. 이 저장소에는 엔진 바이너리를 포함하지 않습니다.
+
+## MINER UI (alpha.5)
+
+원본 계획서와 확정 자산은 `macos/design/DESIGN_SPEC.md`, `macos/design/README.md`, `macos/design/assets/`에 보존했습니다. `preview/index.html`의 가상 연결 타이머는 사용하지 않습니다. UI의 다섯 노드는 실제 CLI 지원 확인·프록시 준비·TLS 확인·관리자 승인·엔진 프로세스 실행 결과로만 진행합니다. 엔진 실행은 실제 게임 접속 성공을 뜻하지 않습니다.
+
+macOS 창은 작은 기본 크기(540×528 content pt), 최소 500×470이며 화면 높이에 따라 장면 높이를 조정합니다. 확정 PNG 광부를 변경하지 않고 사용하며, 동작은 cutout 회전/이동과 최대 네 개의 흙 입자로 제한합니다. 앱 비활성화와 동작 줄이기를 반영합니다. 별도 진단 시트에서 로그·실제 오류를 확인하고 복사할 수 있습니다.
+
+제공된 MINER.icon의 원본 레이어/위치와 원본 프로젝트를 보존하고, 호환 ICNS용 합성 PNG를 빌드에 사용합니다. 개발 컨테이너에서는 네이티브 macOS 화면/접근성/Swift 컴파일을 실행하지 못했으며, macOS CI와 실기 확인이 필요합니다.
+
+명시적인 UDP 복귀 명령: `python3 main.py warp restore`. 설치된 CLI가 `mode warp`를 지원하고 실제 settings가 `Mode: Warp`, status가 Connected인 경우에만 복귀 성공으로 표시합니다. 다른 이름을 쓰는 WARP 버전은 설정을 확인해야 합니다. 기존 앱 설치 경로는 구버전 호환성을 위해 유지합니다.

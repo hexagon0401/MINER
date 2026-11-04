@@ -1,0 +1,288 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>MINER — Dig your way out. / UI Prototype</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --navy:#0E131F; --dark:#080D15; --frost:#E6E8E6; --green:#0EFB2E;
+      --apple-green:#29C85E; --soil:#D0A579; --error:#FF5A61;
+      --ink:#F3F6FB; --muted:#95A1B4;
+      font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","Apple SD Gothic Neo",sans-serif;
+    }
+    *{box-sizing:border-box}
+    body{
+      min-height:100vh; margin:0; display:flex; flex-direction:column; align-items:center;
+      justify-content:center; gap:20px; padding:32px 12px;
+      background:radial-gradient(ellipse at 20% 10%,#26384b 0%,transparent 42%),
+                 radial-gradient(ellipse at 85% 100%,#243b31 0%,transparent 37%),#10151E;
+    }
+    .prototype-notice{font-size:11px; letter-spacing:.12em;color:#8997AA;text-transform:uppercase}
+    .window{
+      width:540px; max-width:100%; overflow:hidden; color:var(--ink);
+      border:1px solid rgba(255,255,255,.17); border-radius:20px;
+      background:linear-gradient(130deg,rgba(255,255,255,.16),rgba(255,255,255,.035) 33%,rgba(225,230,238,.08) 100%),rgba(25,31,43,.62);
+      -webkit-backdrop-filter:blur(34px) saturate(145%);backdrop-filter:blur(34px) saturate(145%);
+      box-shadow:0 30px 90px #02040caa,0 0 0 1px #ffffff0c inset;
+    }
+    .titlebar{height:35px;position:relative;display:flex;align-items:center;justify-content:center;
+      border-bottom:1px solid #ffffff12;background:linear-gradient(#ffffff0e,#ffffff00)}
+    .traffic{position:absolute;left:14px;display:flex;gap:8px;align-items:center}
+    .traffic span{width:12px;height:12px;border-radius:50%;border:1px solid #00000028}
+    .traffic span:nth-child(1){background:#ff5f57}.traffic span:nth-child(2){background:#febc2e}.traffic span:nth-child(3){background:#28c840}
+    .titlebar label{font-size:12px;font-weight:600;color:#d9e0e7af}
+    .content{padding:18px 24px 16px}
+    .header{display:flex;justify-content:space-between;align-items:center;height:47px;margin-bottom:13px}
+    .brand{font-size:24px;line-height:1;letter-spacing:-.05em;font-weight:750}
+    .tagline{color:#B5C0CF;font-size:11px;font-weight:550;letter-spacing:.035em;margin-top:6px}
+    .status-pill{background:#ffffff14;border:1px solid #ffffff1b;border-radius:999px;
+      display:flex;align-items:center;gap:7px;padding:7px 11px;font-size:11px;font-weight:650;color:#CBD6E1;white-space:nowrap}
+    .dot{width:7px;height:7px;background:#8794A6;border-radius:50%;box-shadow:0 0 0 3px #ffffff08}
+    .status-pill.busy .dot{background:#F6C84A}.status-pill.live .dot{background:var(--apple-green)}
+    .status-pill.error .dot{background:var(--error)}
+    .scene{
+      position:relative;width:100%;height:184px;overflow:hidden;border-radius:24px;
+      background:linear-gradient(180deg,#141c2b 0%,#080d15 90%);
+      border:1px solid #ffffff22;isolation:isolate;
+    }
+    .scene::after{content:"";pointer-events:none;position:absolute;inset:0;
+      box-shadow:0 12px 28px #0008 inset,0 -4px 15px #ffffff05 inset;border-radius:24px;z-index:12}
+    .floor{position:absolute;left:14px;right:14px;bottom:24px;height:1px;background:#83929B38}
+    .school{position:absolute;width:200px;height:100px;object-fit:contain;left:calc(50% - 100px);top:8px;
+      opacity:1;transform:translateY(0) scale(.92);transition:transform .60s ease,opacity .48s ease;z-index:3}
+    .school-shaft{position:absolute;left:50%;top:104px;width:11px;height:0;background:#111823;
+      border-left:2px solid #997957;border-right:2px solid #997957;transition:height .6s ease;z-index:2}
+    .tunnel{position:absolute;inset:4px 7px 5px;width:calc(100% - 14px);height:calc(100% - 9px);
+      opacity:0;transform:translateY(22px);transition:opacity .46s ease,transform .6s ease;z-index:1}
+    .carved{position:absolute;left:27px;top:46px;width:var(--carved,15%);height:93px;
+      background:#070b12;border-radius:48px 6px 6px 48px;opacity:0;transition:width .55s ease,opacity .3s ease;z-index:2;
+      box-shadow:0 0 14px #0203074d inset}
+    .wall{position:absolute;left:var(--wall,25%);top:51px;width:8px;height:86px;
+      border-radius:2px;background:linear-gradient(90deg,#B68B63,#705543);
+      opacity:0;transition:left .55s ease,opacity .3s ease;z-index:3}
+    .mascot{position:absolute;width:145px;height:145px;object-fit:contain;
+      left:var(--mascot-x,68%);bottom:0px;transform-origin:48% 72%;
+      filter:drop-shadow(0 5px 5px #03040a55);transition:left .55s ease,opacity .26s ease;
+      z-index:5;will-change:transform}
+    .idle .mascot{left:calc(50% + 53px);width:117px;height:117px;bottom:5px}
+    .active .school,.done .school,.failure .school{opacity:0;transform:translateY(-45px) scale(.45)}
+    .active .school-shaft,.done .school-shaft,.failure .school-shaft{height:48px}
+    .active .tunnel,.done .tunnel,.failure .tunnel{opacity:1;transform:translateY(0)}
+    .active .carved,.active .wall,.done .carved,.failure .carved,.failure .wall{opacity:1}
+    .digging .mascot{animation:toy-dig 570ms ease-in-out infinite alternate}
+    .digging.jolt .tunnel{animation:small-jolt 95ms linear 1}
+    @keyframes toy-dig{0%{transform:rotate(-4deg) translateY(0)}65%{transform:rotate(6deg) translateY(1px)}100%{transform:rotate(-1deg) translateY(0)}}
+    @keyframes small-jolt{0%{transform:translateX(0)}40%{transform:translateX(-2px)}80%{transform:translateX(1px)}100%{transform:translateX(0)}}
+    .beam{position:absolute;z-index:4;width:140px;height:151px;top:-9px;left:calc(var(--mascot-x,68%) + 8px);
+      opacity:0;transform:translateY(-12px);transition:opacity .55s ease,transform .55s ease;pointer-events:none}
+    .success-check{position:absolute;z-index:8;top:20px;left:calc(var(--mascot-x,68%) + 50px);
+      width:43px;height:43px;opacity:0;transform:scale(.82);transition:opacity .55s,transform .55s;
+      filter:drop-shadow(0 5px 18px #28c84046)}
+    .done .beam,.done .success-check{opacity:1;transform:translateY(0) scale(1)}
+    .done .mascot{transform:rotate(-8deg) translateY(2px)}
+    .rock{position:absolute;z-index:7;left:calc(var(--mascot-x,68%) + 117px);width:65px;bottom:22px;opacity:0;transform:translateX(15px);transition:.3s ease}
+    .failure .rock{opacity:1;transform:translateX(0)}
+    .failure .mascot{transform:rotate(-8deg) translateX(-5px)}
+    .pixel{width:5px;height:5px;background:var(--soil);position:absolute;z-index:6;pointer-events:none;
+      animation:fall var(--duration,550ms) cubic-bezier(.2,.6,.6,1) forwards;image-rendering:pixelated}
+    @keyframes fall{from{opacity:1;transform:translate(0,0) rotate(0)}to{opacity:0;transform:translate(var(--dx,10px),var(--dy,30px)) rotate(90deg)}}
+    .status-area{height:100px;padding-top:15px;position:relative}
+    .status-top{display:flex;align-items:baseline;justify-content:space-between;gap:12px}
+    .phase-title{font-size:16px;font-weight:740;letter-spacing:-.035em;line-height:1.3}
+    .step-count{color:#AAB7C7;font-size:11px;font-weight:600;white-space:nowrap;font-variant-numeric:tabular-nums}
+    .detail{color:#BBC4CF;font-size:11px;white-space:nowrap;text-overflow:ellipsis;overflow:hidden;margin-top:5px;min-height:15px}
+    .joke{color:#8F9CAF;font-size:11.5px;margin-top:5px;height:16px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;transition:opacity .2s}
+    .milestones{display:grid;grid-template-columns:repeat(5,1fr);gap:5px;position:absolute;bottom:3px;left:0;right:0}
+    .milestones i{display:block;height:4px;background:#7B889A55;border-radius:9px;transition:background .2s,box-shadow .2s}
+    .milestones i.done-step{background:#0EFB2E;box-shadow:0 0 7px #0EFB2E22}
+    .main-actions{display:flex;gap:10px;padding-top:8px}
+    button{font:inherit;cursor:pointer}
+    .main-actions button{height:44px;border-radius:12px;border:1px solid #ffffff25;
+      font-weight:700;font-size:14px;transition:filter .2s,opacity .2s}
+    .main-actions button:hover:not(:disabled),.footer button:hover,.demo button:hover{filter:brightness(1.09)}
+    .main-actions button:disabled{opacity:.39;cursor:not-allowed}
+    .start{flex:1;color:#031007;background:#0EFB2E;box-shadow:0 7px 21px #0EFB2E1c}
+    .stop{width:122px;color:#DFE7EF;background:#ffffff16}
+    .footer{height:43px;display:flex;align-items:flex-end;justify-content:space-between;gap:10px}
+    .footer button{font-size:11px;font-weight:650;color:#C1D0DD;background:#ffffff11;
+      border:1px solid #ffffff12;border-radius:10px;padding:8px 11px}
+    .warpstate{font-size:10px;color:#8B98A8;text-align:left;padding:7px 1px 0}
+    .footer-right{display:flex;gap:8px}
+    .more-menu{position:relative}
+    .menu{position:absolute;z-index:15;bottom:37px;right:0;width:188px;background:#293243ed;border:1px solid #ffffff38;
+      backdrop-filter:blur(22px);border-radius:11px;box-shadow:0 12px 35px #0008;padding:5px;display:none}
+    .menu.open{display:block}.menu button{display:block;width:100%;text-align:left;background:transparent;border:0;padding:9px;border-radius:7px}
+    .menu button:hover{background:#ffffff1a}
+    .demo{width:540px;max-width:100%;border:1px solid #ffffff16;border-radius:13px;background:#101927b9;padding:13px;color:#AFC0D2}
+    .demo .heading{font-size:11px;letter-spacing:.02em;margin:0 0 9px;line-height:1.4}
+    .demo .buttons{display:flex;flex-wrap:wrap;gap:7px}
+    .demo button{background:#ffffff16;color:#E2EBF4;border:1px solid #ffffff1a;border-radius:8px;padding:8px 10px;font-size:11px}
+    .demo small{display:block;margin-top:9px;font-size:10px;color:#7D8CA2;line-height:1.5}
+    dialog{border:1px solid #ffffff29;border-radius:16px;padding:21px;width:min(400px,90vw);
+      background:#253144;color:#E8EEF5;box-shadow:0 20px 60px #0009}
+    dialog::backdrop{background:#0008;backdrop-filter:blur(3px)}
+    dialog h2{margin:0 0 10px;font-size:17px}dialog p{font-size:13px;line-height:1.6;color:#C5D1DD}
+    dialog button{background:#0EFB2E;color:#0A1A0C;border:0;padding:9px 15px;border-radius:9px;font-weight:700}
+    @media(max-width:550px){body{padding:13px 8px}.content{padding:16px}.scene{height:170px}.window{border-radius:16px}.status-area{height:104px}}
+    @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}.pixel{display:none!important}}
+  </style>
+</head>
+<body>
+  <div class="prototype-notice">MINER / UI concept · Offline simulation</div>
+  <main class="window" aria-label="MINER 앱 디자인 미리보기">
+    <div class="titlebar" aria-hidden="true"><div class="traffic"><span></span><span></span><span></span></div><label>MINER</label></div>
+    <div class="content">
+      <div class="header">
+        <div><div class="brand">MINER<span style="color:#0EFB2E">.</span></div><div class="tagline">Dig your way out.</div></div>
+        <div id="chip" class="status-pill"><span class="dot"></span><span id="chip-label">대기</span></div>
+      </div>
+      <section id="scene" class="scene idle" style="--carved:15%;--wall:21%;--mascot-x:60%" aria-label="학교에서 땅굴을 파는 광부 애니메이션">
+        <div class="floor"></div>
+        <img class="school" src="../assets/school.svg" alt="간단한 SCHOOLNET 학교" />
+        <div class="school-shaft"></div>
+        <img class="tunnel" src="../assets/tunnel.svg" alt="" aria-hidden="true" />
+        <div class="carved"></div><div class="wall"></div>
+        <img class="beam" src="../assets/spotlight.svg" alt="" aria-hidden="true" />
+        <img id="mascot" class="mascot" src="../assets/mascot-runtime-256.png" alt="노란 안전모와 곡괭이를 든 승인된 MINER 광부 캐릭터" />
+        <img class="rock" src="../assets/rock.svg" alt="" aria-hidden="true" />
+        <img class="success-check" src="../assets/check-fallback.svg" alt="연결 완료" />
+      </section>
+      <section class="status-area" aria-live="polite" aria-atomic="true">
+        <div class="status-top"><div class="phase-title" id="phase-title">탈옥 준비</div><div class="step-count" id="counter">0 / 5</div></div>
+        <div class="detail" id="detail">시작하면 연결 경로를 점검합니다.</div>
+        <div class="joke" id="joke">오늘의 수행평가: 땅굴 파기</div>
+        <div id="milestones" class="milestones"><i></i><i></i><i></i><i></i><i></i></div>
+      </section>
+      <div class="main-actions"><button id="start" class="start">⛏ 시작</button><button id="stop" class="stop" disabled>중지</button></div>
+      <div class="footer">
+        <div><button id="warp">WARP 자동 연결</button><div class="warpstate" id="warp-label">WARP · 미확인</div></div>
+        <div class="footer-right"><button id="precheck">사전 점검</button>
+          <div class="more-menu"><button id="more" aria-haspopup="true" aria-expanded="false">⋯ 도구</button>
+            <div class="menu" id="menu" role="menu">
+              <button data-dialog="diag">상태 · 로그</button><button data-dialog="help">사용 안내</button>
+              <button data-dialog="open-warp">WARP 열기</button><button data-dialog="remove">설정 · 제거 (확인 필요)</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+  <aside class="demo" aria-label="미리보기 전용 시뮬레이터">
+    <p class="heading">미리보기 전용 제어 · 실제 연결 기능 없음</p>
+    <div class="buttons"><button id="demo-next">다음 단계 ⟶</button><button id="demo-success">연결 완료</button><button id="demo-failure">오류 연출</button><button id="demo-warp">WARP만 완료</button><button id="demo-idle">처음 상태</button></div>
+    <small>실제 버전에서는 백엔드가 확인한 각 단계의 성공 신호에만 로딩 진행률이 반응해야 합니다. 이 화면의 자동 진행은 디자인 검수용 시뮬레이션입니다.</small>
+  </aside>
+  <dialog id="info"><h2 id="dialog-title"></h2><p id="dialog-body"></p><button id="dialog-close">확인</button></dialog>
+  <script>
+    // Offline UI simulator ONLY. Absolutely no calls to WARP, system APIs, networks, or routing.
+    const statuses={
+      idle:['탈옥 준비','시작하면 연결 경로를 점검합니다.'],
+      cli_check:['곡괭이 챙기는 중...','WARP CLI와 명령 지원 여부 확인'],
+      proxy_connect:['40000번 굴 입구 확보 중...','WARP Local Proxy 연결 확인'],
+      tls_verify:['가짜 출구인지 확인 중...','TLS 인증 및 warp=on 검증'],
+      admin_auth:['관리자님, 땅 좀 파겠습니다...','macOS 관리자 인증 대기'],
+      routing:['클라는 땅굴로, 게임은 정문으로.','클라이언트/WARP · 게임/직접 경로 분리'],
+      running:['연결 완료','분리 라우팅 엔진 실행 중'],
+      warp_ready:['WARP 준비 완료','WARP 검증 완료 · 분리 라우팅 미시작'],
+      error:['돌덩이 억까 실화냐.','시뮬레이션 오류: TLS/warp=on 검증에 실패했습니다.'],
+      stopped:['오늘은 모범생 모드.','MINER 엔진 중지 · WARP 상태는 별도 표시']
+    };
+    const jokes=[
+      '쉿, 굴착 중이오...', '우회로는 내 안에 살아 있소.', '방화벽 같은 장난은 그만하지!', '일굴 필살!',
+      '굴착 다녀오겠습니다!', '곡괭이 가동. 탈옥 준비 완료.', '진정한 곡괭이를 가졌다면 어땠을까...',
+      '차단은 바람과 같지. 늘 내 곁에 있으니.', '바위처럼 단단하네... 억까 실화냐.',
+      '우회란 좋은 거야.', '땅굴 속에도 빛이 있답니다.', '곡괭이는 하나인데 벽은 왜 이렇게 많냐.',
+      '검열의 제왕과 숨바꼭질 중...', '흙먹 중... 쌀먹 아님.', '오늘의 수행평가: 땅굴 파기'
+    ];
+    const eligibleJokes={
+      cli_check:[0,4,5,12,14],
+      proxy_connect:[0,1,3,6,7,11,12,13],
+      tls_verify:[0,7,12,13],
+      routing:[0,1,3,6,9,12,13]
+    };
+    function chooseJoke(){const eligible=eligibleJokes[state]||[0];jokeIndex=(jokeIndex+1)%eligible.length;return jokes[eligible[jokeIndex]]}
+    const phases=['cli_check','proxy_connect','tls_verify','admin_auth','routing'];
+    const scene=document.getElementById('scene'),title=document.getElementById('phase-title');
+    const details=document.getElementById('detail'),joke=document.getElementById('joke');
+    let state='idle',completed=0,warpReady=false,mode='full',autoTimers=[],particleTimer=null,jokeTimer=null,jokeIndex=0;
+    const reduced=window.matchMedia('(prefers-reduced-motion: reduce)');
+    function clearTimers(){autoTimers.forEach(clearTimeout);autoTimers=[];clearInterval(particleTimer);particleTimer=null;clearInterval(jokeTimer);jokeTimer=null;scene.querySelectorAll('.pixel').forEach(x=>x.remove());}
+    function schedule(callback,ms){autoTimers.push(setTimeout(callback,ms));}
+    function particles(){
+      if(reduced.matches||!scene.classList.contains('digging'))return;
+      const baseX=scene.clientWidth*(.44+completed*.07),count=3+Math.floor(Math.random()*3);
+      scene.classList.remove('jolt');void scene.offsetWidth;scene.classList.add('jolt');
+      for(let i=0;i<count;i++){
+        const p=document.createElement('span');p.className='pixel';
+        p.style.left=(baseX-5+Math.random()*13)+'px';p.style.top=(75+Math.random()*19)+'px';
+        p.style.width=p.style.height=(3+Math.floor(Math.random()*4))+'px';
+        p.style.setProperty('--dx',(-13+Math.random()*35)+'px');p.style.setProperty('--dy',(17+Math.random()*34)+'px');
+        p.style.setProperty('--duration',(420+Math.random()*300)+'ms');
+        scene.appendChild(p);p.addEventListener('animationend',()=>p.remove(),{once:true});
+        setTimeout(()=>p.remove(),850);
+      }
+    }
+    function paint(next){
+      state=next;const active=phases.includes(next),done=next==='running',failed=next==='error';
+      const waiting=active&&next!=='admin_auth';
+      scene.className='scene '+(next==='idle'||next==='stopped'?'idle':active?'active':done?'done':failed?'failure':'active')+(waiting?' digging':'');
+      scene.style.setProperty('--carved',(40+completed*7)+'%');
+      scene.style.setProperty('--wall',(44+completed*7)+'%');
+      scene.style.setProperty('--mascot-x',(21+completed*7)+'%');
+      const [heading,desc]=statuses[next];title.textContent=heading;details.textContent=desc;
+      const chip=document.getElementById('chip');chip.className='status-pill '+(active?'busy':done||next==='warp_ready'?'live':failed?'error':'');
+      document.getElementById('chip-label').textContent=active?'연결 중':done?'실행 중':next==='warp_ready'?'WARP 준비':failed?'오류':next==='stopped'?'중지':'대기';
+      document.getElementById('counter').textContent=completed+' / 5';
+      document.querySelectorAll('#milestones i').forEach((el,i)=>el.classList.toggle('done-step',i<completed));
+      document.getElementById('start').disabled=active||done;
+      document.getElementById('stop').disabled=!active&&!done;
+      document.getElementById('warp').disabled=active;
+      document.getElementById('warp-label').textContent='WARP · '+(warpReady?'검증 완료':active?'검증 중':'미확인');
+      clearInterval(particleTimer);particleTimer=null;clearInterval(jokeTimer);jokeTimer=null;
+      joke.style.opacity=(waiting||done||next==='idle')?'1':'0';
+      if(waiting){joke.textContent=chooseJoke();particleTimer=setInterval(particles,570);jokeTimer=setInterval(()=>{joke.style.opacity='0';setTimeout(()=>{if(phases.includes(state)){joke.textContent=chooseJoke();joke.style.opacity='1'}},200)},5000)}
+      else if(done){joke.textContent='땅굴 속에도 빛이 있답니다.'}
+      else if(next==='idle'){joke.textContent='오늘의 수행평가: 땅굴 파기'}
+    }
+    function reset(){clearTimers();completed=0;mode='full';warpReady=false;paint('idle')}
+    function run(warpOnly=false){
+      reset();mode=warpOnly?'warp':'full';
+      const steps=warpOnly?phases.slice(0,3):phases;
+      steps.forEach((step,index)=>schedule(()=>{completed=index;if(index>=3)warpReady=true;paint(step)},220+index*1800));
+      schedule(()=>{completed=steps.length;warpReady=true;paint(warpOnly?'warp_ready':'running')},220+steps.length*1800);
+    }
+    function next(){clearTimers();let index=phases.indexOf(state);if(index===-1){completed=0;paint('cli_check');return}completed=Math.min(5,index+1);if(completed>=3)warpReady=true;if(completed>=5){paint('running')}else paint(phases[completed])}
+    function fail(){clearTimers();if(completed===0)completed=2;paint('error')}
+    function stop(){clearTimers();warpReady=warpReady||completed>=3;completed=0;paint('stopped')}
+    document.getElementById('start').onclick=()=>run(false);
+    document.getElementById('stop').onclick=stop;
+    document.getElementById('warp').onclick=()=>run(true);
+    document.getElementById('demo-idle').onclick=reset;
+    document.getElementById('demo-next').onclick=next;
+    document.getElementById('demo-success').onclick=()=>{clearTimers();completed=5;warpReady=true;paint('running')};
+    document.getElementById('demo-failure').onclick=fail;
+    document.getElementById('demo-warp').onclick=()=>{clearTimers();completed=3;warpReady=true;paint('warp_ready')};
+    const dialog=document.getElementById('info');
+    function openInfo(name){
+      const copy={
+        diag:['상태 · 로그','UI 시뮬레이션입니다. 현재 상태: '+statuses[state][0]+' / 완료된 단계 '+completed+'개. 실제 앱에서는 진단 이벤트와 오류 로그를 읽기 전용으로 표시합니다.'],
+        help:['작동 방식','클라이언트와 웹 Helper는 WARP 경로, 게임 데이터는 직접 경로로 분리하는 기존 앱의 동작을 설명하는 공간입니다. 실제 구성은 연결 진단으로 확인해야 합니다.'],
+        'open-warp':['WARP 열기','실제 앱에서는 설치된 WARP 앱을 여는 기능을 제공합니다. 이 미리보기에서는 실행하지 않습니다.'],
+        remove:['제거','실제 앱에서는 설정의 위험 작업 섹션에서 영향 받는 구성 요소와 로그 보존 여부를 먼저 보여주고 명시적 확인을 받습니다. 이 미리보기에서는 삭제하지 않습니다.'],
+        precheck:['사전 점검','실제 앱에서는 WARP CLI/포트/인증 상태 등을 점검합니다. 이 미리보기는 시스템을 검사하지 않습니다.']
+      };
+      document.getElementById('dialog-title').textContent=copy[name][0];
+      document.getElementById('dialog-body').textContent=copy[name][1];
+      dialog.showModal();
+    }
+    document.getElementById('precheck').onclick=()=>openInfo('precheck');
+    const menu=document.getElementById('menu'),more=document.getElementById('more');
+    more.onclick=()=>{let open=menu.classList.toggle('open');more.setAttribute('aria-expanded',String(open))};
+    document.querySelectorAll('[data-dialog]').forEach(button=>button.onclick=()=>{menu.classList.remove('open');more.setAttribute('aria-expanded','false');openInfo(button.dataset.dialog)});
+    document.getElementById('dialog-close').onclick=()=>dialog.close();
+    reset();
+  </script>
+</body>
+</html>

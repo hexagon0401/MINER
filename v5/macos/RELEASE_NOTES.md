@@ -1,4 +1,13 @@
-macOS 우선의 **SchoolNet v5 Alpha** 테스트 배포입니다.
+macOS 우선의 **MINER v5 Alpha** 테스트 배포입니다.
+
+alpha.5:
+- 제공된 디자인 계획서·확정 광부·앱 아이콘을 적용한 작은 SwiftUI 창입니다.
+- 실제 백엔드 단계 이벤트로 진행 상태를 표시하며 WARP-only와 엔진 실행 성공을 구분합니다.
+- 중지·종료 시 엔진을 먼저 중지하고 WARP UDP Traffic and DNS 복귀를 확인합니다. 실패하면 오류를 표시합니다.
+- ⌘, 설정 창에서 한국어/English를 선택하고 저장합니다.
+- 로그는 진단 시트로 이동하며 줄인 동작·비활성화 상태를 반영합니다.
+- macOS 실기·접근성·종료 복귀는 해당 시스템에서 추가 확인이 필요합니다.
+
 
 alpha.4:
 - 'WARP 자동 연결'과 '시작'이 warp-cli로 Local Proxy/포트 40000을 설정하고 SOCKS5 원격 DNS·TLS·warp=on을 검증합니다.

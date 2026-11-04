@@ -61,11 +61,23 @@ def build(expected_arch, signing="adhoc", identity=None, notary_profile=None):
     if signed:
         packager += ["--codesign-identity", identity]
     execute(*packager, ROOT / "main.py")
-    execute("xcrun", "swiftc", "-swift-version", "5", "-O", "-framework", "AppKit",
+    execute("xcrun", "swiftc", "-swift-version", "5", "-parse-as-library", "-O", "-framework", "AppKit", "-framework", "SwiftUI",
             "-target", f"{arch}-apple-macosx13.0", ROOT / "macos" / "App.swift",
-            "-o", contents / "MacOS" / "SchoolNet")
+            ROOT / "macos" / "MinerUI.swift", "-o", contents / "MacOS" / "SchoolNet")
+    ui_assets = resources / "UIAssets"
+    ui_assets.mkdir()
+    for source in (ROOT / "macos/design/assets").iterdir():
+        if source.suffix in {".png", ".json"} and source.name not in {"app-icon-ministry.png", "app-icon-ministry-sejong.png", "storyboard-reference.png"}:
+            shutil.copy2(source, ui_assets / source.name)
+    iconset = work / "AppIcon.iconset"
+    iconset.mkdir()
+    for size in [16,32,128,256,512]:
+        for scale in [1,2]:
+            suffix = "@2x" if scale == 2 else ""
+            execute("sips", "-z", size*scale, size*scale, ui_assets / "AppIcon.png", "--out", iconset / f"icon_{size}x{size}{suffix}.png")
+    execute("iconutil", "-c", "icns", iconset, "-o", resources / "AppIcon.icns")
     info = {
-        "CFBundleName": "SchoolNet v5 Alpha", "CFBundleDisplayName": "SchoolNet v5 Alpha",
+        "CFBundleName": "MINER", "CFBundleDisplayName": "MINER", "CFBundleIconFile": "AppIcon",
         "CFBundleIdentifier": "org.schoolnet.v5.alpha", "CFBundleExecutable": "SchoolNet",
         "CFBundlePackageType": "APPL", "CFBundleShortVersionString": "5.0.0",
         "CFBundleVersion": f"500{int(__version__.rsplit('.', 1)[1]):03d}", "SchoolNetReleaseVersion": __version__,
