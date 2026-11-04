@@ -11,7 +11,7 @@ permissions:
   contents: read
 
 concurrency:
-  group: schoolnet-v5-alpha-macos
+  group: schoolnet-v5-alpha-macos-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:

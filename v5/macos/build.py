@@ -49,7 +49,7 @@ def build(expected_arch):
         "CFBundleName": "SchoolNet v5 Alpha", "CFBundleDisplayName": "SchoolNet v5 Alpha",
         "CFBundleIdentifier": "org.schoolnet.v5.alpha", "CFBundleExecutable": "SchoolNet",
         "CFBundlePackageType": "APPL", "CFBundleShortVersionString": "5.0.0",
-        "CFBundleVersion": "500001", "SchoolNetReleaseVersion": __version__,
+        "CFBundleVersion": f"500{int(__version__.rsplit('.', 1)[1]):03d}", "SchoolNetReleaseVersion": __version__,
         "LSMinimumSystemVersion": "13.0", "NSHighResolutionCapable": True,
     }
     (contents / "Info.plist").write_bytes(plistlib.dumps(info))
