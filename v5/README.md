@@ -1,6 +1,6 @@
 # SchoolNet v5 — 분리 연결 실험판
 
-**macOS 우선의 `5.0.0-alpha.2`입니다.** 개인용 WARP의 Local proxy와 sing-box TUN을 연결해, Riot/LoL **클라이언트 TCP는 WARP**, **게임 실행 파일과 나머지 트래픽은 직접 경로**로 보냅니다. 게임 시작/종료 때 WARP를 전환하지 않습니다. DMG 앱은 설치·실행·제거를 위한 작은 관리 창을 제공합니다.
+**macOS 우선의 `5.0.0-alpha.3`입니다.** 개인용 WARP의 Local proxy와 sing-box TUN을 연결해, Riot/LoL **클라이언트 TCP는 WARP**, **게임 실행 파일과 나머지 트래픽은 직접 경로**로 보냅니다. 게임 시작/종료 때 WARP를 전환하지 않습니다. DMG 앱은 설치·실행·제거를 위한 작은 관리 창을 제공합니다.
 
 사용자가 제공한 환경은 **개인용 WARP / macOS 27.1.1**입니다. 개발·자동 검증 환경은 Linux이므로 해당 macOS 버전의 실제 호환성, 학교에서의 연결 성공, 게임 핑 개선은 **아직 검증되지 않았습니다**. Windows용 설정도 생성하지만 Windows 네이티브 동작은 미검증입니다. 기존 v1~v4는 변경하지 않습니다.
 
@@ -10,7 +10,9 @@ GitHub의 `v5.0.0-alpha.*` **사전 릴리스**에서 Apple Silicon 또는 Intel
 
 앱의 **사전 점검 → 시작**으로 실행하고 **중지**로 종료합니다. 시작·중지·제거 때 macOS 관리자 인증을 사용합니다. **제거** 버튼은 실행을 중지하고 v5 지원 파일·사용자 설정·로그를 삭제한 뒤 앱을 휴지통으로 옮깁니다. WARP와 기존 v1~v4는 유지합니다. 제거 전에 필요한 로그를 복사하세요. 부팅 자동 시작 항목은 설치하지 않습니다.
 
-이 alpha 앱은 **ad-hoc 서명이고 Apple Developer ID 서명·공증은 없습니다**. macOS가 실행을 제한할 수 있으며, 출처를 확인한 뒤 시스템 설정의 해당 앱 열기 절차가 필요할 수 있습니다. Gatekeeper를 전역 해제하는 절차는 사용하지 않습니다.
+인증서를 설정하지 않은 빌드는 **ad-hoc 서명이며 Apple 공증이 없습니다**. macOS가 실행을 제한할 수 있습니다. Developer ID 자격 증명을 설정하면 별도 서명·공증 검증을 거치며, 실제 상태는 DMG 옆의 `.verification.json`에 기록합니다. [인증서 발급·서명 설정 안내](docs/SIGNING.md)를 참고하세요. Gatekeeper를 전역 해제하는 절차는 사용하지 않습니다.
+
+alpha.3은 한글 안내 파일명이 정규화되며 `a sealed resource is missing or invalid`가 발생한 문제를 수정합니다. 앱 내부 파일명을 ASCII로 제한하고 DMG에서 복사한 뒤의 서명까지 검사합니다. 이 패키징 수정과 Developer ID 공증은 별개의 검증입니다.
 
 [앱 사용 안내](macos/사용%20안내.txt) · [릴리스 안내](macos/RELEASE_NOTES.md)
 

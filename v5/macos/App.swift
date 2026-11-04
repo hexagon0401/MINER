@@ -144,7 +144,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         NSWorkspace.shared.open(URL(fileURLWithPath: "/Applications/Cloudflare WARP.app"))
     }
     @objc func openGuide() {
-        NSWorkspace.shared.open(resources.appendingPathComponent("사용 안내.txt"))
+        NSWorkspace.shared.open(resources.appendingPathComponent("UserGuide.txt"))
     }
     @objc func openLog() {
         let path = "/Library/Application Support/SchoolNet v5 Alpha/engine.log"

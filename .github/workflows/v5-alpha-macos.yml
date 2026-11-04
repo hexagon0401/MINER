@@ -25,7 +25,7 @@ jobs:
           - runner: macos-15-intel
             arch: x86_64
     runs-on: ${{ matrix.runner }}
-    timeout-minutes: 25
+    timeout-minutes: 60
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -41,9 +41,35 @@ jobs:
         run: |
           export SCHOOLNET_TEST_ENGINE="$PWD/local/bin/sing-box"
           python -m unittest discover -s tests -v
+      - name: Import Developer ID if configured
+        id: signing
+        working-directory: v5
+        env:
+          APPLE_CERTIFICATE_P12_BASE64: ${{ secrets.APPLE_CERTIFICATE_P12_BASE64 }}
+          APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          NOTARY_CONFIGURED: ${{ secrets.APPLE_NOTARY_KEY_P8_BASE64 != '' || secrets.APPLE_NOTARY_KEY_ID != '' || secrets.APPLE_NOTARY_ISSUER_ID != '' }}
+        run: python macos/signing_credentials.py
       - name: Build app and verify mounted DMG
         working-directory: v5
-        run: python macos/build.py --arch '${{ matrix.arch }}'
+        env:
+          SIGNING_ENABLED: ${{ steps.signing.outputs.enabled }}
+          CODE_SIGN_IDENTITY: ${{ steps.signing.outputs.identity }}
+          APPLE_NOTARY_KEY_P8_BASE64: ${{ secrets.APPLE_NOTARY_KEY_P8_BASE64 }}
+          APPLE_NOTARY_KEY_ID: ${{ secrets.APPLE_NOTARY_KEY_ID }}
+          APPLE_NOTARY_ISSUER_ID: ${{ secrets.APPLE_NOTARY_ISSUER_ID }}
+        run: |
+          if [ "$SIGNING_ENABLED" = true ]; then
+            python macos/build.py --arch '${{ matrix.arch }}' --signing developer-id
+          else
+            python macos/build.py --arch '${{ matrix.arch }}' --signing adhoc
+          fi
+      - name: Remove temporary signing keychain
+        if: always() && steps.signing.outputs.keychain != ''
+        working-directory: v5
+        env:
+          SIGNING_KEYCHAIN: ${{ steps.signing.outputs.keychain }}
+        run: python macos/signing_credentials.py --cleanup "$SIGNING_KEYCHAIN"
       - uses: actions/upload-artifact@v4
         with:
           name: schoolnet-macos-${{ matrix.arch }}
