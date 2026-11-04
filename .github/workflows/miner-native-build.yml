@@ -1,0 +1,148 @@
+name: MINER immutable native build
+run-name: MINER native ${{ inputs.release_tag }} (${{ inputs.runner }})
+on:
+  workflow_dispatch:
+    inputs:
+      release_tag:
+        description: Existing immutable release tag
+        required: true
+        default: v5.0.0-beta.1
+      runner:
+        type: choice
+        options: [macos-26, macos-15]
+        default: macos-26
+permissions:
+  contents: read
+concurrency:
+  group: miner-native-${{ inputs.release_tag }}
+  cancel-in-progress: false
+jobs:
+  source:
+    runs-on: ubuntu-latest
+    outputs:
+      sha: ${{ steps.pin.outputs.sha }}
+    steps:
+      - uses: actions/checkout@v4
+      - id: pin
+        env:
+          RELEASE_TAG: ${{ inputs.release_tag }}
+        run: |
+          python3 - <<'PY'
+          import os,re,subprocess
+          tag=os.environ['RELEASE_TAG']
+          if not re.fullmatch(r'v5\.0\.0-beta\.[12]',tag): raise SystemExit('Unsupported release tag')
+          subprocess.run(['git','fetch','origin','refs/tags/'+tag],check=True)
+          sha=subprocess.check_output(['git','rev-parse','FETCH_HEAD^{commit}'],text=True).strip()
+          if tag=='v5.0.0-beta.1' and sha!='8cc4f8f880b2d438b297941af038f743aca18af4': raise SystemExit('Beta 1 source moved')
+          with open(os.environ['GITHUB_OUTPUT'],'a') as f: f.write('sha='+sha+'\n')
+          PY
+  build:
+    needs: source
+    runs-on: ${{ inputs.runner }}
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.source.outputs.sha }}
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install native dependencies
+        working-directory: v5
+        run: python -m pip install 'pyinstaller==6.22.3' 'certifi==2026.10.23' 'dmgbuild==1.6.7'
+      - name: Install verified engine
+        working-directory: v5
+        run: python install_engine.py
+      - name: Native regression checks
+        working-directory: v5
+        run: |
+          export SCHOOLNET_TEST_ENGINE="$PWD/local/bin/sing-box"
+          python -m unittest discover -s tests -v > "$RUNNER_TEMP/miner-tests-arm64.log" 2>&1
+      - name: Import signing identity if configured
+        id: signing
+        working-directory: v5
+        env:
+          APPLE_CERTIFICATE_P12_BASE64: ${{ secrets.APPLE_CERTIFICATE_P12_BASE64 }}
+          APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          NOTARY_CONFIGURED: ${{ secrets.APPLE_NOTARY_KEY_P8_BASE64 != '' || secrets.APPLE_NOTARY_KEY_ID != '' || secrets.APPLE_NOTARY_ISSUER_ID != '' }}
+        run: python macos/signing_credentials.py
+      - name: Compile and verify DMG
+        working-directory: v5
+        env:
+          SIGNING_ENABLED: ${{ steps.signing.outputs.enabled }}
+          CODE_SIGN_IDENTITY: ${{ steps.signing.outputs.identity }}
+          APPLE_NOTARY_KEY_P8_BASE64: ${{ secrets.APPLE_NOTARY_KEY_P8_BASE64 }}
+          APPLE_NOTARY_KEY_ID: ${{ secrets.APPLE_NOTARY_KEY_ID }}
+          APPLE_NOTARY_ISSUER_ID: ${{ secrets.APPLE_NOTARY_ISSUER_ID }}
+        run: |
+          if [ "$SIGNING_ENABLED" = true ]; then
+            python macos/build.py --arch arm64 --signing developer-id > "$RUNNER_TEMP/miner-build-arm64.log" 2>&1
+          else
+            python macos/build.py --arch arm64 > "$RUNNER_TEMP/miner-build-arm64.log" 2>&1
+          fi
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: native-diagnostics
+          path: ${{ runner.temp }}/miner-*
+      - name: Remove ephemeral signing keychain
+        if: always() && steps.signing.outputs.keychain != ''
+        working-directory: v5
+        env:
+          SIGNING_KEYCHAIN: ${{ steps.signing.outputs.keychain }}
+        run: python macos/signing_credentials.py --cleanup "$SIGNING_KEYCHAIN"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: verified-dmg
+          path: v5/dist/*
+          if-no-files-found: error
+  publish:
+    needs: [source, build]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: verified-dmg
+          path: native-assets
+      - name: Validate provenance and attach immutable assets
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ inputs.release_tag }}
+          SOURCE_SHA: ${{ needs.source.outputs.sha }}
+        run: python3 v5/macos/publish_native.py native-assets
+  report:
+    if: always()
+    needs: [source, build, publish]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      actions: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        continue-on-error: true
+        with:
+          name: native-diagnostics
+          path: ${{ runner.temp }}/native-report
+      - name: Record exact native result
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ inputs.release_tag }}
+          REPORT_DIR: ${{ runner.temp }}/native-report
+          BUILD_RESULT: ${{ needs.build.result }}
+          RELEASE_RESULT: ${{ needs.publish.result }}
+          SOURCE_SHA: ${{ needs.source.outputs.sha }}
+        run: |
+          python3 v5/macos/ci_report.py
+          ref="miner-build-status/${RELEASE_TAG}-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
+          git switch --orphan "$ref"
+          cp "$REPORT_DIR"/* .
+          git config user.name 'MINER Build Reports'
+          git config user.email 'github-actions[bot]@users.noreply.github.com'
+          git add --all
+          git commit -m 'Record immutable native build outcome'
+          git push origin "HEAD:refs/heads/$ref"

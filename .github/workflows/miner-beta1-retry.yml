@@ -1,0 +1,23 @@
+name: MINER beta 1 persistent retry
+on:
+  schedule:
+    - cron: '17,47 * * * *'
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths: ['.github/workflows/miner-beta1-retry.yml', '.github/workflows/miner-native-build.yml', 'v5/macos/retry_release.py']
+permissions:
+  contents: write
+  actions: write
+concurrency:
+  group: miner-beta1-coordinator
+  cancel-in-progress: false
+jobs:
+  retry:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Retry beta 1 only until a verified DMG exists
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python3 v5/macos/retry_release.py

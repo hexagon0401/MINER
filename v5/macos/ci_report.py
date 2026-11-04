@@ -18,7 +18,7 @@ def main():
     output = Path(os.environ["REPORT_DIR"])
     output.mkdir(parents=True, exist_ok=True)
     jobs = json.loads(gh("api", f"repos/{repo}/actions/runs/{run}/jobs?per_page=100"))["jobs"]
-    report = {"tag": tag, "source_sha": os.environ["GITHUB_SHA"],
+    report = {"tag": tag, "source_sha": os.environ.get("SOURCE_SHA") or os.environ["GITHUB_SHA"],
               "run_url": f"https://github.com/{repo}/actions/runs/{run}",
               "build": os.environ["BUILD_RESULT"], "publication": os.environ["RELEASE_RESULT"],
               "jobs": [{"name": j["name"], "status": j["status"], "conclusion": j["conclusion"],
