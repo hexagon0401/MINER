@@ -1,0 +1,214 @@
+{
+  "tag": "v5.0.0-beta.1",
+  "source_sha": "8cc4f8f880b2d438b297941af038f743aca18af4",
+  "run_url": "https://github.com/hexagon0401/MINER/actions/runs/41873976741",
+  "build": "success",
+  "publication": "cancelled",
+  "jobs": [
+    {
+      "name": "prerelease",
+      "status": "completed",
+      "conclusion": "success",
+      "started_at": "2026-11-04T17:04:51Z",
+      "completed_at": "2026-11-04T17:05:00Z",
+      "runner_name": "GitHub Actions 1000000094",
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/checkout@v4",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Publish source prerelease while macOS builds",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Post Run actions/checkout@v4",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success"
+        }
+      ],
+      "failed_steps": []
+    },
+    {
+      "name": "build (macos-26, arm64)",
+      "status": "completed",
+      "conclusion": "success",
+      "started_at": "2026-11-04T17:15:04Z",
+      "completed_at": "2026-11-04T17:16:49Z",
+      "runner_name": "GitHub Actions 1000000098",
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/checkout@v4",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/setup-python@v5",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Install packager and checksum-verified engine",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run portable and native engine checks (no TUN activation)",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Import Developer ID if configured",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Build app and verify mounted DMG",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Retain native test/build diagnostics",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Remove temporary signing keychain",
+          "status": "completed",
+          "conclusion": "skipped"
+        },
+        {
+          "name": "Run actions/upload-artifact@v4",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Post Run actions/setup-python@v5",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Post Run actions/checkout@v4",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success"
+        }
+      ],
+      "failed_steps": []
+    },
+    {
+      "name": "queue_guard",
+      "status": "completed",
+      "conclusion": "cancelled",
+      "started_at": "2026-11-04T17:05:03Z",
+      "completed_at": "2026-11-04T17:07:24Z",
+      "runner_name": "GitHub Actions 1000000096",
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/checkout@v4",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Bound unassigned macOS queue wait",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Post Run actions/checkout@v4",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success"
+        }
+      ],
+      "failed_steps": []
+    },
+    {
+      "name": "report",
+      "status": "in_progress",
+      "conclusion": null,
+      "started_at": "2026-11-04T17:16:51Z",
+      "completed_at": null,
+      "runner_name": "GitHub Actions 1000000099",
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/checkout@v4",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/download-artifact@v4",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Collect native build and release evidence",
+          "status": "in_progress",
+          "conclusion": null
+        },
+        {
+          "name": "Save small report on an isolated Git branch",
+          "status": "pending",
+          "conclusion": null
+        },
+        {
+          "name": "Post Run actions/checkout@v4",
+          "status": "pending",
+          "conclusion": null
+        }
+      ],
+      "failed_steps": []
+    },
+    {
+      "name": "release",
+      "status": "completed",
+      "conclusion": "cancelled",
+      "started_at": "2026-11-04T17:16:49Z",
+      "completed_at": "2026-11-04T17:16:49Z",
+      "runner_name": null,
+      "steps": [],
+      "failed_steps": []
+    }
+  ],
+  "release": {
+    "assets": [],
+    "isPrerelease": true,
+    "name": "MINER BETA",
+    "url": "https://github.com/hexagon0401/MINER/releases/tag/v5.0.0-beta.1"
+  }
+}
