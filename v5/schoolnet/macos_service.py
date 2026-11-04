@@ -10,6 +10,7 @@ import platform
 import re
 import shutil
 import subprocess
+import tempfile
 import time
 
 from . import __version__
@@ -68,6 +69,38 @@ def stop():
     return {"running": False, "message": "Stopped. WARP remains installed and enabled as a local proxy."}
 
 
+def install_runtime(base, resources, profile):
+    """Stage an alpha upgrade before replacing only our managed runtime files."""
+    stage = Path(tempfile.mkdtemp(prefix=".upgrade-", dir=base))
+    replaced = []
+    backups = {}
+    try:
+        shutil.copytree(resources / "runtime" / "schoolnet-cli", stage / "runtime", symlinks=False)
+        (stage / "bin").mkdir()
+        shutil.copy2(resources / "bin" / "sing-box", stage / "bin" / "sing-box")
+        write_json(stage / "check.json", build_config(profile))
+        check_engine(str(stage / "bin" / "sing-box"), stage / "check.json")
+        for name in ["runtime", "bin"]:
+            destination = base / name
+            if destination.is_symlink():
+                raise ValueError("managed runtime path must not be a symlink")
+            if destination.exists():
+                backup = stage / (name + ".previous")
+                os.replace(destination, backup)
+                backups[name] = backup
+            os.replace(stage / name, destination)
+            replaced.append(name)
+        write_json(base / MARKER, {"id": LABEL, "version": __version__})
+    except Exception:
+        for name in reversed(replaced):
+            shutil.rmtree(base / name)
+        for name, backup in backups.items():
+            os.replace(backup, base / name)
+        raise
+    finally:
+        shutil.rmtree(stage)
+
+
 def prepare(resources, profile_dir):
     if resources is None or resources.resolve() != APP_RESOURCES:
         raise ValueError("Install SchoolNet v5 Alpha.app in /Applications before starting")
@@ -83,14 +116,10 @@ def prepare(resources, profile_dir):
         base.mkdir(mode=0o755)
         write_json(base / MARKER, {"id": LABEL, "version": __version__})
     marker = json.loads((base / MARKER).read_text(encoding="utf-8"))
-    if marker["version"] != __version__:
-        raise ValueError("another alpha service version is installed; uninstall it from the app first")
     runtime = base / "runtime"
     # Copy bundled runtime to root-owned state. Never execute a user-selected binary.
-    if not runtime.exists():
-        shutil.copytree(resources / "runtime" / "schoolnet-cli", runtime, symlinks=False)
-        (base / "bin").mkdir(exist_ok=True)
-        shutil.copy2(engine, base / "bin" / "sing-box")
+    if marker["version"] != __version__ or not runtime.exists() or not (base / "bin" / "sing-box").exists():
+        install_runtime(base, resources, profile)
     root_profile = base / "profile"
     root_profile.mkdir(exist_ok=True)
     write_json(root_profile / "profile.json", profile.to_dict())

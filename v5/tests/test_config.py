@@ -1,6 +1,7 @@
 import unittest
+import re
 
-from schoolnet.config import GAMES, Profile, build_config
+from schoolnet.config import CLIENT_PATHS, GAMES, Profile, build_config
 
 
 class ProfileTests(unittest.TestCase):
@@ -9,11 +10,32 @@ class ProfileTests(unittest.TestCase):
         route = config["route"]
         self.assertEqual(route["final"], "direct")
         proxy_rules = [r for r in route["rules"] if r.get("outbound") == "warp"]
-        self.assertEqual(len(proxy_rules), 1)
-        self.assertEqual(proxy_rules[0]["network"], "tcp")
+        self.assertEqual(len(proxy_rules), 2)
+        self.assertTrue(all(r["network"] == "tcp" for r in proxy_rules))
         self.assertIn("LeagueClient", proxy_rules[0]["process_name"])
         self.assertNotIn("LeagueofLegends", proxy_rules[0]["process_name"])
         self.assertNotIn("port_range", proxy_rules[0])
+
+    def test_embedded_web_helpers_match_without_tunneling_safari_or_game_bundle(self):
+        expressions = CLIENT_PATHS["macos"]
+        for path in [
+            "/Applications/Riot Client.app/Contents/Frameworks/Riot Client Helper (Renderer).app/Contents/MacOS/Riot Client Helper (Renderer)",
+            "/Applications/League of Legends.app/Contents/LoL/LeagueClientUx.app/Contents/Frameworks/Network Helper.app/Contents/MacOS/Network Helper",
+        ]:
+            self.assertTrue(any(re.search(pattern, path) for pattern in expressions), path)
+        for path in ["/Applications/Safari.app/Contents/MacOS/Safari",
+                     "/Applications/League of Legends.app/Contents/LoL/Game/LeagueofLegends.app/Contents/MacOS/LeagueofLegends"]:
+            self.assertFalse(any(re.search(pattern, path) for pattern in expressions), path)
+        self.assertIn("Riot Client Helper (Renderer)", Profile().clients)
+
+    def test_every_client_selector_has_tcp_proxy_and_explicit_quic_rejection(self):
+        rules = build_config(Profile())["route"]["rules"]
+        for selector in ["process_name", "process_path_regex"]:
+            tcp = next(r for r in rules if selector in r and r.get("outbound") == "warp")
+            udp = next(r for r in rules if selector in r and r.get("action") == "reject")
+            self.assertEqual(tcp[selector], udp[selector])
+            self.assertEqual(udp["method"], "default")
+            self.assertTrue(udp["no_drop"])
 
     def test_game_has_explicit_priority_on_both_platforms(self):
         for platform in ["macos", "windows"]:

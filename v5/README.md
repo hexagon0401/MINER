@@ -1,14 +1,16 @@
 # SchoolNet v5 — 분리 연결 실험판
 
-**macOS 우선의 `5.0.0-alpha.3`입니다.** 개인용 WARP의 Local proxy와 sing-box TUN을 연결해, Riot/LoL **클라이언트 TCP는 WARP**, **게임 실행 파일과 나머지 트래픽은 직접 경로**로 보냅니다. 게임 시작/종료 때 WARP를 전환하지 않습니다. DMG 앱은 설치·실행·제거를 위한 작은 관리 창을 제공합니다.
+**macOS 우선의 `5.0.0-alpha.4`입니다.** 개인용 WARP의 Local proxy와 sing-box TUN을 연결해, Riot/LoL **클라이언트·웹 Helper의 TCP는 WARP**, **게임 실행 파일과 나머지 트래픽은 직접 경로**로 보냅니다. 게임 시작/종료 때 WARP를 전환하지 않습니다. DMG 앱은 자동 연결·실행·제거를 위한 작은 관리 창을 제공합니다.
 
 사용자가 제공한 환경은 **개인용 WARP / macOS 27.1.1**입니다. 개발·자동 검증 환경은 Linux이므로 해당 macOS 버전의 실제 호환성, 학교에서의 연결 성공, 게임 핑 개선은 **아직 검증되지 않았습니다**. Windows용 설정도 생성하지만 Windows 네이티브 동작은 미검증입니다. 기존 v1~v4는 변경하지 않습니다.
 
 ## DMG 앱 설치·제거
 
-GitHub의 `v5.0.0-alpha.*` **사전 릴리스**에서 Apple Silicon 또는 Intel DMG를 선택합니다. 앱을 **Applications로 드래그**한 뒤 실행하면 됩니다. Python과 엔진이 포함되어 있습니다. 개인용 WARP는 별도로 설치하고 Local proxy·포트 40000으로 연결하세요.
+GitHub의 `v5.0.0-alpha.*` **사전 릴리스**에서 Apple Silicon 또는 Intel DMG를 선택합니다. 앱을 **Applications로 드래그**한 뒤 실행하면 됩니다. Python과 엔진이 포함되어 있습니다. 개인용 WARP는 별도로 설치·등록해두세요.
 
-앱의 **사전 점검 → 시작**으로 실행하고 **중지**로 종료합니다. 시작·중지·제거 때 macOS 관리자 인증을 사용합니다. **제거** 버튼은 실행을 중지하고 v5 지원 파일·사용자 설정·로그를 삭제한 뒤 앱을 휴지통으로 옮깁니다. WARP와 기존 v1~v4는 유지합니다. 제거 전에 필요한 로그를 복사하세요. 부팅 자동 시작 항목은 설치하지 않습니다.
+앱의 **시작**은 WARP CLI로 Local Proxy·기본 포트 40000 연결과 검증을 수행한 뒤 v5를 실행합니다. **WARP 자동 연결**은 WARP 설정·검증만 실행하고, **WARP 연결 확인**은 설정을 바꾸지 않습니다. **중지**는 v5만 중지하고 프록시는 유지합니다. **WARP 끄기**는 v5를 먼저 중지한 뒤 WARP 연결을 해제합니다. 최초 전체 터널 → 프록시 전환은 게임 밖에서 진행하세요.
+
+시작·중지·제거 때 macOS 관리자 인증을 사용합니다. **제거** 버튼은 실행을 중지하고 v5 지원 파일·사용자 설정·로그를 삭제한 뒤 앱을 휴지통으로 옮깁니다. WARP와 기존 v1~v4는 유지합니다. 새 alpha는 관리 중인 런타임을 검증 후 교체하며 사용자 프로필과 로그를 유지합니다. 제거 전에 필요한 로그를 복사하세요. 부팅 자동 시작 항목은 설치하지 않습니다.
 
 인증서를 설정하지 않은 빌드는 **ad-hoc 서명이며 Apple 공증이 없습니다**. macOS가 실행을 제한할 수 있습니다. Developer ID 자격 증명을 설정하면 별도 서명·공증 검증을 거치며, 실제 상태는 DMG 옆의 `.verification.json`에 기록합니다. [인증서 발급·서명 설정 안내](docs/SIGNING.md)를 참고하세요. Gatekeeper를 전역 해제하는 절차는 사용하지 않습니다.
 
@@ -49,7 +51,16 @@ DNS를 WARP로 보내는 이유는 macOS의 `mDNSResponder` 때문에 원래 앱
 
    설치기는 CPU 아키텍처를 감지하고 공식 GitHub 릴리스의 SHA-256을 확인합니다. 엔진은 `local/bin/sing-box`에 설치되며 재실행해도 다른 기존 바이너리를 덮어쓰지 않습니다. Homebrew 등으로 설치한 **다른 엔진 버전은 이 alpha의 검증 대상이 아닙니다**.
 
-2. WARP 앱의 **Preferences → Advanced → Configure Proxy**에서 포트를 **40000**으로 정하고 **Local proxy** 모드로 연결합니다. Cloudflare 문서상 데스크톱 지원 기능입니다. 실제 설치 버전에서 메뉴가 없거나 CLI가 다르면 그 상태를 먼저 확인해야 합니다. 일반 **Traffic and DNS 전체 터널 모드와 함께 실행하지 않습니다**. 이 초기 전환 뒤 클라이언트는 한 번 새로 시작해야 합니다.
+2. WARP의 최신 GUI에서 Configure Proxy 메뉴가 없어도 CLI로 연결할 수 있습니다.
+
+   ```bash
+   python3 main.py warp connect --proxy-port 40000
+   python3 main.py warp status --proxy-port 40000
+   ```
+
+   버전과 `mode --help` / `proxy --help`로 지원 여부를 먼저 확인하고, 필요한 경우 `disconnect → mode proxy → proxy port 40000 → connect`를 실행합니다. 이미 같은 프록시로 연결되고 HTTPS 검증을 통과하면 연결을 끊지 않습니다. 전체 터널과 동시 사용하지 않습니다. 최초 전환 뒤 기존 클라이언트는 한 번 새로 시작해야 할 수 있습니다.
+
+   검증은 `www.cloudflare.com/cdn-cgi/trace`에 **SOCKS5 원격 DNS → TLS 검증 → warp=on/plus** 순서로 진행합니다. 검증 실패 시 오류를 반환하고 직접 연결로 재시도하지 않습니다. 실제 학교에서의 CLI 동작은 해당 WARP 버전으로 확인해야 합니다.
 
 3. 사전 검사를 실행합니다.
 
@@ -57,7 +68,7 @@ DNS를 WARP로 보내는 이유는 macOS의 `mDNSResponder` 때문에 원래 앱
    python3 main.py doctor --directory local/mac --engine "$PWD/local/bin/sing-box"
    ```
 
-   `warp-cli`를 못 찾으면 `--warp-cli /실제/warp-cli/경로`를 추가합니다. macOS 앱 내부의 일반 경로와 PATH를 자동으로 확인합니다. 검사는 엔진 버전·설정, OS, CLI의 `Mode: WarpProxy`, SOCKS5 응답을 확인합니다. **사전 검사 성공은 학교 접속 성공이나 게임 직접 연결의 증명이 아닙니다.** 알 수 없는 CLI 출력은 통과시키지 않습니다.
+   `warp-cli`를 못 찾으면 `--warp-cli /실제/warp-cli/경로`를 추가합니다. macOS 앱 내부의 일반 경로와 PATH를 자동으로 확인합니다. 검사는 엔진 버전·설정, OS, CLI의 `Mode: WarpProxy`, SOCKS5 응답과 WARP HTTPS를 확인합니다. **사전 검사 성공은 Riot 영상 재생이나 게임 직접 연결의 증명이 아닙니다.** 알 수 없는 CLI 출력은 통과시키지 않습니다.
 
 4. 관리자 권한으로 전경 실행합니다. CLI를 실행한 터미널은 유지합니다.
 
@@ -67,7 +78,7 @@ DNS를 WARP로 보내는 이유는 macOS의 `mDNSResponder` 때문에 원래 앱
      --engine "$PWD/local/bin/sing-box"
    ```
 
-   WARP를 켜고 끄는 자동화는 없습니다. 엔진 로그에서 Riot/League 클라이언트 연결은 `outbound/socks[warp]`, 게임 연결은 `outbound/direct[direct]`인지 확인한 뒤 연습 모드에서 시험합니다. 프로세스 이름이 매칭되지 않으면 기본 직접 경로로 갑니다. 접속 실패를 무조건 DPI 차단으로 해석하지 마세요.
+   CLI의 `run`은 이미 연결된 프록시를 사용하며, 앱의 `시작`은 그 전에 `warp connect`를 자동 실행합니다. 게임 시작/종료에 따른 WARP 전환은 없습니다. 엔진 로그에서 Riot/League 클라이언트와 웹 Helper는 `outbound/socks[warp]`, 게임은 `outbound/direct[direct]`인지 확인합니다. 프로세스 이름과 클라이언트 번들 경로 모두 매칭되지 않으면 기본 직접 경로로 갑니다.
 
 5. 종료는 **Ctrl+C**입니다. v5는 자신이 실행한 엔진만 종료하고 WARP Local proxy는 유지합니다. sing-box가 자신의 임시 라우트를 정리하도록 정상 종료를 전달하며, 10초 내 종료되지 않으면 강제 종료 후 경로 점검을 안내합니다. **macOS 27.1.1의 실제 복구 결과는 실기 확인이 필요합니다.** 강제 종료·전원 차단 후 자동 복구까지 검증된 제품은 아닙니다.
 
@@ -101,6 +112,8 @@ python3 main.py doctor --directory local/mac --engine "$PWD/local/bin/sing-box"
 `game_cidrs`는 선택 기능입니다. 정확한 게임 IP가 확인됐을 때 그 목적지는 TUN 자체에서 제외할 수 있습니다. **고정 Riot IP나 포트 표로 서버 주소를 만들어 넣지 않습니다.** 해당 IP를 클라이언트와 공유하면 클라이언트 연결도 직접 경로가 되므로, 기본값을 유지하는 편이 낫습니다. 새 게임의 서버 IP가 달라지면 기존 제외 항목은 그 서버에 적용되지 않습니다. CIDR 허용 예시의 주소는 실제 Riot 서버 목록이 아닙니다.
 
 ## 제한 사항
+
+alpha.4는 빈 클라이언트 홈/영상의 원인 후보인 **누락된 CEF Helper 경로**를 추가했습니다. 클라이언트 번들의 웹/렌더러/네트워크 Helper TCP를 WARP로 보내고, 해당 Helper의 QUIC/UDP는 즉시 거부해 HTTPS/TCP 폴백을 유도합니다. Safari 등 일반 브라우저는 일괄 터널링하지 않습니다. 콘텐츠가 여전히 비면 로그의 Helper 실제 경로와 `warp` 매칭을 확인해야 하며, CDN·코덱·DRM 등 다른 원인은 별도 진단이 필요합니다. Linux 테스트로 실제 Riot 영상 재생 성공을 확인한 것은 아닙니다.
 
 - WARP SOCKS의 UDP 지원을 가정하지 않습니다. 지정된 **클라이언트의 UDP는 명시적으로 거부**합니다. QUIC은 TCP로 폴백할 수 있지만 보장할 수 없고, 음성 등 UDP 기능은 동작하지 않을 수 있습니다. 게임 실행 파일의 UDP에는 이 규칙이 적용되지 않습니다.
 - 게임이 직접 연결에서도 막히는 학교라면 이 구조로 게임 접속을 해결할 수 없습니다. 전체 터널로 자동 전환해서 숨기지 않습니다.

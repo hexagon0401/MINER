@@ -6,9 +6,44 @@ import unittest
 from unittest.mock import patch
 
 from schoolnet import macos_service as service
+from schoolnet.config import Profile
 
 
 class ServiceTests(unittest.TestCase):
+    def test_managed_upgrade_preserves_profile_and_logs(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            base, resources = root / "managed", root / "resources"
+            (base / "runtime").mkdir(parents=True)
+            (base / "runtime/old").write_text("old")
+            (base / "bin").mkdir()
+            (base / "bin/sing-box").write_text("old-engine")
+            (base / service.MARKER).write_text(json.dumps({"id": service.LABEL, "version": "old"}))
+            (base / "engine.log").write_text("keep log")
+            (resources / "runtime/schoolnet-cli").mkdir(parents=True)
+            (resources / "runtime/schoolnet-cli/schoolnet-cli").write_text("new-runtime")
+            (resources / "bin").mkdir()
+            (resources / "bin/sing-box").write_text("new-engine")
+            with patch.object(service, "check_engine"):
+                service.install_runtime(base, resources, Profile())
+            self.assertEqual((base / "runtime/schoolnet-cli").read_text(), "new-runtime")
+            self.assertEqual((base / "engine.log").read_text(), "keep log")
+            self.assertEqual(json.loads((base / service.MARKER).read_text())["version"], service.__version__)
+
+    def test_bad_upgrade_does_not_replace_existing_runtime(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            base, resources = root / "managed", root / "resources"
+            (base / "runtime").mkdir(parents=True)
+            (base / "runtime/old").write_text("preserve")
+            (resources / "runtime/schoolnet-cli").mkdir(parents=True)
+            (resources / "runtime/schoolnet-cli/schoolnet-cli").write_text("new")
+            (resources / "bin").mkdir()
+            (resources / "bin/sing-box").write_text("bad-engine")
+            with patch.object(service, "check_engine", side_effect=ValueError("schema failed")), self.assertRaises(ValueError):
+                service.install_runtime(base, resources, Profile())
+            self.assertEqual((base / "runtime/old").read_text(), "preserve")
+
     def test_preserves_unmanaged_directory(self):
         with tempfile.TemporaryDirectory() as directory:
             path = Path(directory)

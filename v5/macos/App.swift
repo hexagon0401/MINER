@@ -25,7 +25,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     var engine: String { resources.appendingPathComponent("bin/sing-box").path }
 
     func applicationDidFinishLaunching(_ notification: Notification) {
-        window = NSWindow(contentRect: NSRect(x: 0, y: 0, width: 660, height: 500),
+        window = NSWindow(contentRect: NSRect(x: 0, y: 0, width: 660, height: 560),
                           styleMask: [.titled, .closable, .miniaturizable], backing: .buffered, defer: false)
         window.title = applicationName
         window.center()
@@ -33,21 +33,22 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         let content = window.contentView!
         let heading = NSTextField(labelWithString: "SchoolNet v5 · Alpha")
         heading.font = .boldSystemFont(ofSize: 24)
-        heading.frame = NSRect(x: 24, y: 440, width: 600, height: 34)
+        heading.frame = NSRect(x: 24, y: 500, width: 600, height: 34)
         content.addSubview(heading)
         let description = NSTextField(wrappingLabelWithString:
-            "먼저 WARP를 Local proxy · 포트 40000으로 연결하세요.\n클라이언트 TCP는 WARP, 게임 데이터는 직접 연결합니다. 실제 연결과 핑은 로그와 게임에서 확인하세요.")
-        description.frame = NSRect(x: 24, y: 370, width: 610, height: 60)
+            "‘시작’ 또는 ‘WARP 자동 연결’로 Local Proxy를 설정·검증합니다.\n클라이언트와 웹 콘텐츠는 WARP, 게임 데이터는 직접 연결합니다. 최초 전환은 게임 밖에서 진행하세요.")
+        description.frame = NSRect(x: 24, y: 430, width: 610, height: 60)
         content.addSubview(description)
         let specs: [(String, Selector)] = [
-            ("WARP 열기", #selector(openWarp)), ("사전 점검", #selector(check)),
+            ("WARP 자동 연결", #selector(connectWarp)), ("사전 점검", #selector(check)),
             ("시작", #selector(start)), ("중지", #selector(stop)),
             ("상태 확인", #selector(refresh)), ("로그 열기", #selector(openLog)),
-            ("사용 안내", #selector(openGuide)), ("제거", #selector(uninstall))
+            ("사용 안내", #selector(openGuide)), ("제거", #selector(uninstall)),
+            ("WARP 연결 확인", #selector(checkWarp)), ("WARP 끄기", #selector(disconnectWarp))
         ]
         for (index, spec) in specs.enumerated() {
             let button = NSButton(title: spec.0, target: self, action: spec.1)
-            button.frame = NSRect(x: 24 + (index % 4) * 154, y: 325 - (index / 4) * 40, width: 144, height: 32)
+            button.frame = NSRect(x: 24 + (index % 4) * 154, y: 385 - (index / 4) * 40, width: 144, height: 32)
             button.bezelStyle = .rounded
             buttons.append(button)
             content.addSubview(button)
@@ -122,6 +123,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         }
         if !manager.fileExists(atPath: dataDirectory.appendingPathComponent("profile.json").path) {
             _ = try execute(["init", "--directory", dataDirectory.path, "--platform", "macos"])
+        } else {
+            // Rebuild old alpha route rules without discarding profile settings.
+            _ = try execute(["render", "--directory", dataDirectory.path])
         }
     }
 
@@ -142,6 +146,32 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     @objc func openWarp() {
         NSWorkspace.shared.open(URL(fileURLWithPath: "/Applications/Cloudflare WARP.app"))
+    }
+    func warpArguments(_ operation: String) throws -> [String] {
+        try ensureProfile()
+        let data = try Data(contentsOf: dataDirectory.appendingPathComponent("profile.json"))
+        let profile = try JSONSerialization.jsonObject(with: data) as? [String: Any]
+        let port = profile?["proxy_port"] as? Int ?? 40000
+        return ["warp", operation, "--proxy-port", String(port)]
+    }
+    @objc func connectWarp() {
+        operation { try self.execute(self.warpArguments("connect")) }
+    }
+    @objc func checkWarp() {
+        operation { try self.execute(self.warpArguments("status")) }
+    }
+    @objc func disconnectWarp() {
+        let alert = NSAlert()
+        alert.messageText = "v5를 중지하고 WARP 연결을 끌까요?"
+        alert.informativeText = "클라이언트 연결이 끊길 수 있습니다. 전체 터널이나 직접 연결로 자동 전환하지 않습니다."
+        alert.addButton(withTitle: "중지하고 끄기")
+        alert.addButton(withTitle: "취소")
+        guard alert.runModal() == .alertFirstButtonReturn else { return }
+        operation({
+            _ = try self.execute(["desktop", "stop"], administrator: true)
+            DispatchQueue.main.async { self.running = false }
+            return try self.execute(self.warpArguments("disconnect"))
+        }, completion: { self.running = false })
     }
     @objc func openGuide() {
         NSWorkspace.shared.open(resources.appendingPathComponent("UserGuide.txt"))
@@ -164,6 +194,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         }
         operation({
             try self.ensureProfile()
+            _ = try self.execute(self.warpArguments("connect"))
             return try self.execute(["desktop", "start", "--resources", self.resources.path,
                                      "--profile", self.dataDirectory.path], administrator: true)
         }, completion: { self.running = true; self.append("실행 프로세스가 시작됐습니다. 로그에서 클라이언트 warp / 게임 direct를 확인하세요.") })

@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """SchoolNet v5 CLI. Python 3.10+; standard library only."""
 import argparse
+import http.client
 import json
 from pathlib import Path
 import subprocess
@@ -34,6 +35,10 @@ def main(argv=None):
     probe.add_argument("--samples", type=int, default=5)
     probe.add_argument("--proxy-port", type=int, default=40000)
     probe.add_argument("--timeout", type=float, default=3)
+    warp = commands.add_parser("warp", help="configure or inspect the installed WARP Local Proxy")
+    warp.add_argument("operation", choices=["connect", "status", "disconnect"])
+    warp.add_argument("--proxy-port", type=int, default=40000)
+    warp.add_argument("--warp-cli")
     desktop = commands.add_parser("desktop", help="macOS app service management")
     desktop.add_argument("operation", choices=["start", "stop", "status", "uninstall"])
     desktop.add_argument("--resources", type=Path)
@@ -67,11 +72,20 @@ def main(argv=None):
         elif args.command == "desktop":
             from schoolnet.macos_service import manage
             return manage(args.operation, args.resources, args.profile)
+        elif args.command == "warp":
+            from schoolnet.warp import activate, deactivate, inspect
+            if args.operation == "connect":
+                result = activate(args.proxy_port, args.warp_cli)
+            elif args.operation == "status":
+                result = inspect(args.proxy_port, args.warp_cli)
+            else:
+                result = deactivate(args.warp_cli)
+            print(json.dumps(result, indent=2))
     except subprocess.CalledProcessError as exc:
         # Engine check diagnostics contain config paths, not app auth arguments.
         print(f"Command failed: {exc.stderr or exc}", file=sys.stderr)
         return 1
-    except (OSError, ValueError, TypeError, subprocess.TimeoutExpired) as exc:
+    except (OSError, ValueError, TypeError, subprocess.TimeoutExpired, http.client.HTTPException) as exc:
         print(f"Error: {exc}", file=sys.stderr)
         return 1
     return 0

@@ -37,6 +37,7 @@ def build(expected_arch, signing="adhoc", identity=None, notary_profile=None):
     arch = platform.machine()
     if arch != expected_arch:
         raise ValueError(f"runner architecture is {arch}, expected {expected_arch}")
+    import certifi
     signed = signing == "developer-id"
     if signed:
         import os
@@ -55,7 +56,8 @@ def build(expected_arch, signing="adhoc", identity=None, notary_profile=None):
     engine = install(resources / "bin")
     packager = [sys.executable, "-m", "PyInstaller", "--noconfirm", "--clean", "--onedir",
             "--name", "schoolnet-cli", "--distpath", resources / "runtime",
-            "--workpath", work / "pyinstaller", "--specpath", work]
+            "--workpath", work / "pyinstaller", "--specpath", work,
+            "--add-data", f"{certifi.where()}:."]
     if signed:
         packager += ["--codesign-identity", identity]
     execute(*packager, ROOT / "main.py")
@@ -88,6 +90,8 @@ def build(expected_arch, signing="adhoc", identity=None, notary_profile=None):
         "https://github.com/SagerNet/sing-box/archive/refs/tags/v1.12.0.tar.gz\n"
         "Python: https://docs.python.org/3/license.html\n"
         "PyInstaller bootloader exception: https://pyinstaller.org/en/stable/license.html\n", encoding="utf-8")
+    with (notices / "SOURCE.txt").open("a", encoding="utf-8") as stream:
+        stream.write("certifi 2026.10.23 / Mozilla CA bundle (MPL-2.0): https://github.com/certifi/python-certifi\n")
     build_info = {"version": __version__, "architecture": arch, "build_os": platform.mac_ver()[0],
                   "python": platform.python_version(), "signed": "developer-id" if signed else "ad-hoc",
                   "notarization_required": signed}

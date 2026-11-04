@@ -13,6 +13,7 @@ import time
 
 from .config import ENGINE_VERSION, Profile, build_config
 from .probe import proxy_ready
+from .warp import resolve_cli, verify_trace
 
 
 def load_profile(directory):
@@ -52,11 +53,7 @@ def check_engine(engine, config_path):
 
 
 def warp_mode(warp_cli, expected_port=None):
-    candidate = warp_cli or shutil.which("warp-cli")
-    if not candidate and platform.system() == "Darwin":
-        candidate = "/Applications/Cloudflare WARP.app/Contents/Resources/warp-cli"
-    if not candidate or not Path(candidate).is_file():
-        raise ValueError("warp-cli unavailable; pass --warp-cli with its installed path")
+    candidate = resolve_cli(warp_cli)
     result = subprocess.run([candidate, "settings"], capture_output=True, text=True, timeout=10, check=True)
     # Fail closed on unknown/localized CLI output; never infer mode from an open port.
     match = re.search(r"^\s*(?:\([^\n)]*\)\s*)?Mode:\s*([^\r\n]+)", result.stdout, re.MULTILINE)
@@ -84,8 +81,10 @@ def doctor(directory, engine="sing-box", warp_cli=None):
     checks["warp_local_proxy_mode"] = True
     proxy_ready(profile.proxy_port)
     checks["socks5_greeting"] = True
+    trace = verify_trace(profile.proxy_port)
+    checks["warp_trace"] = trace["warp"] in {"on", "plus"}
     return {"preflight_ok": all(checks.values()), "checks": checks, "engine": resolved,
-            "note": "Preflight does not establish school access, process matching, game RTT, or restoration."}
+            "proxy": trace, "note": "WARP HTTPS was verified; this does not establish Riot media access, process matching, game RTT, or restoration."}
 
 
 def is_admin():

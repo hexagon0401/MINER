@@ -1,5 +1,11 @@
 macOS 우선의 **SchoolNet v5 Alpha** 테스트 배포입니다.
 
+alpha.4:
+- 'WARP 자동 연결'과 '시작'이 warp-cli로 Local Proxy/포트 40000을 설정하고 SOCKS5 원격 DNS·TLS·warp=on을 검증합니다.
+- 정상 프록시에는 재연결하지 않으며, 오류 시 직접 연결로 재시도하지 않습니다. 'WARP 끄기'는 v5를 먼저 중지합니다.
+- 빈 웹/영상의 원인 후보인 Riot/League CEF Helper 경로를 추가하고 QUIC 거부로 HTTPS/TCP 폴백을 유도합니다. 실제 Riot 영상 재생은 사용자 환경에서 확인해야 합니다.
+- 관리 중인 구버전 런타임은 검증 후 교체하며 사용자 설정과 로그를 보존합니다.
+
 alpha.3: 앱 내부 한글 안내 파일을 `UserGuide.txt`로 바꿔 파일명 정규화에 따른 resource seal 오류를 방지합니다. DMG 마운트뿐 아니라 다른 폴더로 앱을 복사한 뒤에도 서명을 검사합니다.
 
 - Apple Silicon / Intel DMG를 각각 제공합니다. 앱을 Applications로 드래그해 설치합니다.

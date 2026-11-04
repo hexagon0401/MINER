@@ -77,7 +77,7 @@ Apple ID와 앱 전용 암호를 **로컬 키체인에** 저장할 수 있습니
 ```bash
 xcrun notarytool store-credentials SchoolNetNotary
 cd /path/to/MINER/v5
-python3 -m pip install 'pyinstaller==6.22.3'
+python3 -m pip install 'pyinstaller==6.22.3' 'certifi==2026.10.23'
 python3 macos/build.py --arch arm64 --signing developer-id \
   --identity 'Developer ID Application: 인증서의 실제 이름 (TEAMID)' \
   --notary-profile SchoolNetNotary

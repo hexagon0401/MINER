@@ -11,6 +11,18 @@ CLIENTS = {
     "windows": ["RiotClientServices.exe", "RiotClientUx.exe", "RiotClientUxRender.exe",
                 "LeagueClient.exe", "LeagueClientUx.exe", "LeagueClientUxRender.exe"],
 }
+# CEF/Chromium helper processes make the embedded web/video requests separately.
+# Match the client bundle path as well as basenames; never tunnel every browser.
+CLIENT_PATHS = {
+    "macos": [r"(?i)/(?:Riot Client|RiotClient(?:Services|Ux|UxRender)|LeagueClient(?:Ux)?)(?: Helper(?: \([^/]+\))?)?\.app/Contents/"],
+    "windows": [],
+}
+CLIENTS["macos"] += [
+    "Riot Client", "Riot Client Helper", "Riot Client Helper (Renderer)",
+    "Riot Client Helper (GPU)", "Riot Client Helper (Plugin)",
+    "RiotClientUx Helper", "RiotClientUx Helper (Renderer)", "RiotClientUx Helper (GPU)",
+    "RiotClientUxRender Helper", "LeagueClientUx Helper (Plugin)",
+]
 GAMES = {
     "macos": ["LeagueofLegends", "League of Legends"],
     "windows": ["League of Legends.exe"],
@@ -77,11 +89,16 @@ def build_config(profile: Profile) -> dict:
         {"port": 53, "action": "hijack-dns"},
         {"process_name": GAMES[p.platform], "action": "route", "outbound": "direct"},
         {"ip_is_private": True, "action": "route", "outbound": "direct"},
-        {"process_name": p.clients, "network": "tcp", "action": "route", "outbound": "warp"},
-        # WARP local proxy UDP support is not assumed. QUIC may fall back to TCP;
-        # other client UDP features can fail. Never mislabel a direct leak as tunnelled.
-        {"process_name": p.clients, "network": "udp", "action": "reject", "no_drop": True},
     ]
+    selectors = [{"process_name": p.clients}]
+    if CLIENT_PATHS[p.platform]:
+        selectors.append({"process_path_regex": CLIENT_PATHS[p.platform]})
+    for selector in selectors:
+        rules.append({**selector, "network": "tcp", "action": "route", "outbound": "warp"})
+    for selector in selectors:
+        # Explicit ICMP rejection lets Chromium abandon QUIC promptly and retry
+        # HTTPS/TCP through WARP. Voice/other UDP support is still not assumed.
+        rules.append({**selector, "network": "udp", "action": "reject", "method": "default", "no_drop": True})
     route = {"rules": rules, "final": "direct", "default_domain_resolver": "warp-dns"}
     if p.physical_interface:
         route["default_interface"] = p.physical_interface

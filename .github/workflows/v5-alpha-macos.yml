@@ -2,7 +2,7 @@ name: SchoolNet v5 Alpha macOS DMG
 
 on:
   push:
-    branches: [v5-alpha]
+    branches: [main, v5-alpha]
     tags: ['v5.0.0-alpha.*']
     paths: ['v5/**', '.github/workflows/v5-alpha-macos.yml']
   workflow_dispatch:
@@ -34,7 +34,7 @@ jobs:
       - name: Install packager and checksum-verified engine
         working-directory: v5
         run: |
-          python -m pip install 'pyinstaller==6.22.3'
+          python -m pip install 'pyinstaller==6.22.3' 'certifi==2026.10.23'
           python install_engine.py
       - name: Run portable and native engine checks (no TUN activation)
         working-directory: v5
