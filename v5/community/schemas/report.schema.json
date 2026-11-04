@@ -1,0 +1,175 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/hexagon0401/MINER/schemas/report-v1",
+  "title": "MINER SignedSchoolReport v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "payload",
+    "publicKey",
+    "signature"
+  ],
+  "properties": {
+    "payload": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "id",
+        "schoolId",
+        "catalogVersion",
+        "diagnosedAt",
+        "appVersion",
+        "osMajor",
+        "checks",
+        "schoolNetworkConfirmed",
+        "clientConfirmed",
+        "game",
+        "video",
+        "clientReturn",
+        "outcome",
+        "failureCode",
+        "challenge"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "const": 1
+        },
+        "id": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$"
+        },
+        "schoolId": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9_-]+:[A-Za-z0-9_-]+$",
+          "maxLength": 99
+        },
+        "catalogVersion": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "diagnosedAt": {
+          "type": "string",
+          "pattern": "^\\d{4}-\\d\\d-\\d\\dT\\d\\d:\\d\\d:\\d\\dZ$"
+        },
+        "appVersion": {
+          "type": "string",
+          "pattern": "^5\\.\\d+\\.\\d+(?:-[A-Za-z0-9.]+)?$"
+        },
+        "osMajor": {
+          "type": "integer",
+          "minimum": 13,
+          "maximum": 99
+        },
+        "checks": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "engine_running",
+            "native_platform",
+            "engine_schema",
+            "warp_local_proxy_mode",
+            "socks5_greeting",
+            "warp_trace"
+          ],
+          "properties": {
+            "engine_running": {
+              "type": "boolean"
+            },
+            "native_platform": {
+              "type": "boolean"
+            },
+            "engine_schema": {
+              "type": "boolean"
+            },
+            "warp_local_proxy_mode": {
+              "type": "boolean"
+            },
+            "socks5_greeting": {
+              "type": "boolean"
+            },
+            "warp_trace": {
+              "type": "boolean"
+            }
+          }
+        },
+        "schoolNetworkConfirmed": {
+          "type": "boolean"
+        },
+        "clientConfirmed": {
+          "type": "boolean"
+        },
+        "game": {
+          "enum": [
+            "pass",
+            "fail",
+            "not_tested"
+          ]
+        },
+        "video": {
+          "enum": [
+            "pass",
+            "fail",
+            "not_tested"
+          ]
+        },
+        "clientReturn": {
+          "enum": [
+            "pass",
+            "fail",
+            "not_tested"
+          ]
+        },
+        "outcome": {
+          "enum": [
+            "success",
+            "failure"
+          ]
+        },
+        "failureCode": {
+          "enum": [
+            null,
+            "engine_not_running",
+            "diagnostic_failed",
+            "timeout",
+            "network_changed"
+          ]
+        },
+        "challenge": {
+          "oneOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "id",
+                "nonce"
+              ],
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "pattern": "^[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$"
+                },
+                "nonce": {
+                  "type": "string",
+                  "pattern": "^[A-Za-z0-9_-]{43}$"
+                }
+              }
+            }
+          ]
+        }
+      }
+    },
+    "publicKey": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9_-]{87}$"
+    },
+    "signature": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9_-]{86}$"
+    }
+  },
+  "$comment": "Server additionally validates success logic, signature, known school/catalog, freshness, nonce and quotas. Signatures are not school-location attestation."
+}

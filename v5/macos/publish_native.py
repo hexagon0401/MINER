@@ -7,6 +7,15 @@ import subprocess
 import sys
 
 
+def validate_receipt(receipt, tag, digest):
+    if receipt.get('version') != tag[1:] or receipt.get('sha256') != digest or receipt.get('architecture') != 'arm64' or receipt.get('dmg_to_disk_signature_verified') is not True or receipt.get('finder_background_layout_verified') is not True or receipt.get('native_ui_smoke', {}).get('ok') is not True:
+        raise ValueError('Native verification/provenance mismatch')
+    if tag != 'v5.0.0-beta.1':
+        catalog = receipt.get('school_catalog', {})
+        if catalog.get('complete') is not True or catalog.get('fixture') is not False or receipt.get('development_only'):
+            raise ValueError('Complete official catalog required; development DMGs cannot be published')
+
+
 def main(directory):
     root, tag, sha, repo = Path(directory), os.environ['RELEASE_TAG'], os.environ['SOURCE_SHA'], os.environ['GITHUB_REPOSITORY']
     dmgs = list(root.glob('*.dmg'))
@@ -15,8 +24,13 @@ def main(directory):
     receipt_path = dmg.with_suffix('.dmg.verification.json')
     receipt = json.loads(receipt_path.read_text())
     digest = hashlib.sha256(dmg.read_bytes()).hexdigest()
-    if receipt['version'] != tag[1:] or receipt['sha256'] != digest or receipt.get('dmg_to_disk_signature_verified') is not True or receipt.get('native_ui_smoke', {}).get('ok') is not True:
-        raise ValueError('Native verification/provenance mismatch')
+    validate_receipt(receipt, tag, digest)
+    expected = f'MINER-{tag}-macOS-AppleSilicon.dmg'
+    if dmg.name != expected or dmg.with_suffix('.dmg.sha256').read_text().strip() != f'{digest}  {expected}':
+        raise ValueError('DMG name or checksum sidecar mismatch')
+    allowed = {expected, expected+'.sha256', expected+'.verification.json'}
+    if {p.name for p in root.iterdir() if p.is_file()} != allowed:
+        raise ValueError('Unexpected release asset; refusing bulk upload')
     receipt['source_sha'] = sha
     receipt_path.write_text(json.dumps(receipt, indent=2))
     receipt['run_url'] = f'https://github.com/{repo}/actions/runs/{os.environ["GITHUB_RUN_ID"]}'

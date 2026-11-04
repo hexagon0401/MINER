@@ -18,7 +18,7 @@ enum SchoolSmoke {
         let directory = output.appendingPathComponent("school-fixture-" + UUID().uuidString)
         let local = try SchoolRepository.ownedURL(directory)
         let repo = try SchoolRepository(catalogURL:fixture,localURL:local,allowFixtures:true)
-        try expect(repo.metadata.fixture && repo.available && repo.metadata.counts["high"] == 2,"School fixture is explicitly marked and has known official-ID counts")
+        try expect(repo.metadata.fixture && repo.available && repo.metadata.counts["high"] == 2,"School fixture is explicitly marked and has stable IDs and expected counts")
         let duplicate = try repo.search(name:"테스트한빛",region:"",level:"")
         try expect(duplicate.count == 2 && duplicate[0].id != duplicate[1].id,"Duplicate names remain distinct schools")
         try expect(try repo.search(name:"테스트한빛".decomposedStringWithCanonicalMapping,region:"테스트서울",level:"high").count == 1,"Korean normalization and region/level filters")

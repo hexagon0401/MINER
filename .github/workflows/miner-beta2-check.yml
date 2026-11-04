@@ -3,7 +3,7 @@ on:
   workflow_dispatch:
   push:
     branches: [main]
-    paths: ['v5/macos/*.swift', 'v5/macos/build.py', 'v5/community/**', 'v5/tests/**', 'v5/main.py', '.github/workflows/miner-beta2-check.yml']
+    paths: ['v5/macos/*.swift', 'v5/macos/build.py', 'v5/community/**', 'v5/tests/**', 'v5/main.py', 'packaging/homebrew/**', '.github/workflows/miner-beta2-check.yml']
 permissions:
   contents: read
 concurrency:
@@ -54,12 +54,24 @@ jobs:
           result=$?
           cat "$RUNNER_TEMP/miner-build-arm64.log"
           exit "$result"
+      - name: Homebrew cask syntax and style (no install)
+        run: |
+          set +e
+          ruby -c packaging/homebrew/Casks/miner-beta.rb > "$RUNNER_TEMP/miner-homebrew.log" 2>&1
+          result=$?
+          if [ "$result" = 0 ]; then
+            brew style --cask packaging/homebrew/Casks/miner-beta.rb >> "$RUNNER_TEMP/miner-homebrew.log" 2>&1
+            result=$?
+          fi
+          cat "$RUNNER_TEMP/miner-homebrew.log"
+          exit "$result"
       - uses: actions/upload-artifact@v4
         if: always()
         with:
           name: beta2-native-evidence
           path: |
             ${{ runner.temp }}/miner-build-arm64.log
+            ${{ runner.temp }}/miner-homebrew.log
             ${{ runner.temp }}/miner-ui-arm64*.png
             ${{ runner.temp }}/miner-ui-arm64.json
             ${{ runner.temp }}/miner-school-native-report.json
@@ -94,6 +106,6 @@ jobs:
           cp "$RUNNER_TEMP/beta2-report"/* .
           git config user.name 'MINER Build Reports'
           git config user.email 'github-actions[bot]@users.noreply.github.com'
-          git add --all
+          for item in "$RUNNER_TEMP/beta2-report"/*; do git add -- "${item##*/}"; done
           git commit -m 'Record beta 2 native and local validation'
           git push origin "HEAD:refs/heads/$ref"

@@ -1,8 +1,10 @@
-import {env as cloudEnv,applyD1Migrations} from 'cloudflare:test';
+import {env as cloudEnv,applyD1Migrations,createExecutionContext,waitOnExecutionContext} from 'cloudflare:test';
 import {beforeAll,beforeEach,describe,it,expect} from 'vitest';
 import worker,{type Env} from '../src/index';
 import {CHECKS,canonical,encode,digest,verifyReport,type ReportBody,type SignedReport} from '../src/protocol';
 import {review} from '../src/moderation';
+import vectors from '../../fixtures/protocol-vectors.json';
+import releaseConfig from '../wrangler.jsonc?raw';
 
 const env=cloudEnv as unknown as Env & {TEST_MIGRATIONS:any};
 const version='a'.repeat(64);
@@ -38,7 +40,7 @@ beforeAll(async()=>{
  open={...env,COMMUNITY_ENABLED:'true',ALLOW_FIXTURE_CATALOG:'true',SNAPSHOT_SIGNING_KEY:encode(new Uint8Array(await crypto.subtle.exportKey('pkcs8',snapshotKey.privateKey)))};
 });
 beforeEach(async()=>{
- await env.DB.batch(['DELETE FROM review_audit','DELETE FROM reports','DELETE FROM challenges','DELETE FROM schools','DELETE FROM catalog_meta',"UPDATE settings SET value=0 WHERE key='snapshot_sequence'"].map(s=>env.DB.prepare(s)));
+ await env.DB.batch(['DELETE FROM review_audit','DELETE FROM school_coverage','DELETE FROM reports','DELETE FROM challenges','DELETE FROM schools','DELETE FROM catalog_meta',"UPDATE settings SET value=0 WHERE key='snapshot_sequence'","UPDATE settings SET value=1 WHERE key='catalog_ready'"].map(s=>env.DB.prepare(s)));
  for(const [id,level] of [['TEST:H1','high'],['TEST:H2','high'],['TEST:M1','middle'],['TEST:E1','elementary']])
   await env.DB.prepare('INSERT INTO schools VALUES(?,?,?,?,?,?,?,?,1)').bind(id,'테스트학교',level,'테스트시','테스트구','예시로','테스트학교','테스트시').run();
  for(const [k,v] of Object.entries({complete:true,fixture:true,catalog_version:version,counts:{high:2,middle:1,elementary:1}}))
@@ -46,6 +48,8 @@ beforeEach(async()=>{
 });
 describe('closed by default and privacy',()=>{
  it('does not open APIs or an admin endpoint by default',async()=>{
+  expect(JSON.parse(releaseConfig).vars.COMMUNITY_ENABLED).toBe('false');
+  expect(JSON.parse(releaseConfig).workers_dev).toBe(false);
   expect((await call('/v1/snapshot',undefined,env)).status).toBe(503);
   expect((await call('/admin/reports',{})).status).toBe(404);
  });
@@ -120,5 +124,34 @@ describe('reviewed cumulative coverage',()=>{
   const snapshot=await shared();expect(snapshot.counts).toEqual({high:1,middle:0,elementary:0});
   expect(snapshot.schools[0].lastSuccessDay).toBe('2020-01-01');
   const text=JSON.stringify(snapshot);expect(text).not.toContain(publicKey);expect(text).not.toContain('fingerprint');
+ });
+});
+
+describe('shared Swift/Worker vectors',()=>{
+ it('verifies the exact native canonical contract including explicit nulls',async()=>{
+  expect(canonical(vectors.report.payload)).toBe(vectors.canonicalReport);
+  expect((await verifyReport(vectors.report)).envelope.payload.schoolId).toBe('TEST:H1');
+ });
+});
+
+describe('bounded public cache',()=>{
+ it('caches approved snapshots for ten minutes without changing fresh database results',async()=>{
+  const url='https://community.example/v1/snapshot?test='+crypto.randomUUID();
+  const context=createExecutionContext();const first=await worker.fetch(new Request(url),open,context);
+  expect(first.headers.get('cache-control')).toBe('public, max-age=600');
+  await waitOnExecutionContext(context);
+  const report=await make();await call('/v1/reports',report);await review(env.DB,report.payload.id,'approve','캐시 이후 승인 테스트','operator');
+  const next=createExecutionContext();const cached=await worker.fetch(new Request(url),open,next);await waitOnExecutionContext(next);
+  const envelope=await cached.json() as {payload:string};
+  const payload=JSON.parse(atob(envelope.payload.replaceAll('-','+').replaceAll('_','/')));
+  expect(payload.counts.high).toBe(0);expect((await shared()).counts.high).toBe(1);
+ });
+});
+
+describe('catalog maintenance gate',()=>{
+ it('does not serve incomplete imports as empty coverage',async()=>{
+  await env.DB.prepare("UPDATE settings SET value=0 WHERE key='catalog_ready'").run();
+  expect((await call('/v1/snapshot')).status).toBe(503);
+  expect((await call('/v1/challenges',{publicKey})).status).toBe(503);
  });
 });

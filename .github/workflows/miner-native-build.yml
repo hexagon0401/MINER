@@ -143,6 +143,6 @@ jobs:
           cp "$REPORT_DIR"/* .
           git config user.name 'MINER Build Reports'
           git config user.email 'github-actions[bot]@users.noreply.github.com'
-          git add --all
+          for item in "$REPORT_DIR"/*; do git add -- "${item##*/}"; done
           git commit -m 'Record immutable native build outcome'
           git push origin "HEAD:refs/heads/$ref"

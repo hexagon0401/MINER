@@ -15,12 +15,15 @@ async function body(request:Request) {
   try {return JSON.parse(new TextDecoder('utf-8',{fatal:true,ignoreBOM:false}).decode(bytes));}catch {throw new Problem(400,'invalid_json');}
 }
 async function catalog(env:Env) {
+  const ready=await env.DB.prepare("SELECT value FROM settings WHERE key='catalog_ready'").first<{value:number}>();
+  if(ready?.value!==1) throw new Problem(503,'catalog_import_incomplete');
   const result=await env.DB.prepare('SELECT key,value FROM catalog_meta').all<{key:string;value:string}>();
   const meta:Record<string,unknown>={};for(const row of result.results) meta[row.key]=JSON.parse(row.value);
   if(meta.complete!==true || (meta.fixture===true && env.ALLOW_FIXTURE_CATALOG!=='true')) throw new Problem(503,'catalog_not_ready');
   return meta;
 }
 async function challenge(request:Request,env:Env) {
+  await catalog(env);
   const input=await body(request);object(input);exact(input,['publicKey']);
   const raw=decode(input.publicKey);requireValue(raw.length===65 && raw[0]===4,'invalid_public_key');
   try {await crypto.subtle.importKey('raw',raw,{name:'ECDSA',namedCurve:'P-256'},false,['verify']);}catch {throw new Problem(400,'invalid_public_key');}
@@ -63,10 +66,8 @@ async function submit(request:Request,env:Env) {
 export async function snapshot(env:Env) {
   const meta=await catalog(env);
   if(!env.SNAPSHOT_SIGNING_KEY) throw new Problem(503,'snapshot_signer_not_configured');
-  const rows=await env.DB.prepare(`SELECT s.id AS schoolId,s.level,
-    MAX(CASE WHEN r.outcome='success' THEN substr(r.diagnosed_at,1,10) END) AS lastSuccessDay,
-    MAX(CASE WHEN r.outcome='failure' THEN substr(r.diagnosed_at,1,10) END) AS lastFailureDay
-    FROM schools s JOIN reports r ON r.school_id=s.id AND r.status='approved' WHERE s.active=1 GROUP BY s.id ORDER BY s.id`).all<{schoolId:string;level:string;lastSuccessDay:string|null;lastFailureDay:string|null}>();
+  const rows=await env.DB.prepare(`SELECT s.id AS schoolId,s.level,c.last_success_day AS lastSuccessDay,c.last_failure_day AS lastFailureDay
+    FROM schools s JOIN school_coverage c ON c.school_id=s.id WHERE s.active=1 ORDER BY s.id`).all<{schoolId:string;level:string;lastSuccessDay:string|null;lastFailureDay:string|null}>();
   const counts:Record<string,number>={high:0,middle:0,elementary:0};
   for(const row of rows.results) if(row.lastSuccessDay) counts[row.level]++;
   const seq=await env.DB.prepare("SELECT value FROM settings WHERE key='snapshot_sequence'").first<{value:number}>();
@@ -78,12 +79,19 @@ export async function snapshot(env:Env) {
   return json({payload:encode(bytes),signature:encode(signature)},200,{'Cache-Control':'public, max-age=600'});
 }
 export default {
-  async fetch(request:Request,env:Env):Promise<Response> {
+  async fetch(request:Request,env:Env,context?:ExecutionContext):Promise<Response> {
     try {
       const path=new URL(request.url).pathname;
       if(path==='/healthz') return json({service:'miner-community',enabled:env.COMMUNITY_ENABLED==='true'});
       if(env.COMMUNITY_ENABLED!=='true') throw new Problem(503,'community_not_open');
-      if(request.method==='GET' && path==='/v1/snapshot') return await snapshot(env);
+      if(request.method==='GET' && path==='/v1/snapshot') {
+        if(context) {
+          const cache=await caches.open('miner-approved-schools-v1');
+          const cached=await cache.match(request);if(cached)return cached;
+          const response=await snapshot(env);context.waitUntil(cache.put(request,response.clone()));return response;
+        }
+        return await snapshot(env);
+      }
       if(request.method==='POST' && path==='/v1/challenges') return await challenge(request,env);
       if(request.method==='POST' && path==='/v1/reports') return await submit(request,env);
       throw new Problem(404,'not_found');

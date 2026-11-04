@@ -1,0 +1,21 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "MINER signed community snapshot",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "payload",
+    "signature"
+  ],
+  "properties": {
+    "payload": {
+      "type": "string",
+      "description": "base64url of signed UTF-8 canonical snapshot JSON"
+    },
+    "signature": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9_-]{86}$"
+    }
+  },
+  "$comment": "Ed25519. Payload fields: schemaVersion=1, catalogVersion, sequence>=0, generatedAt UTC, counts {high,middle,elementary}, schools [{schoolId,lastSuccessDay,lastFailureDay}]. Client recomputes counts, rejects unknown/duplicate schools and sequence rollback."
+}

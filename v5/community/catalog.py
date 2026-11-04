@@ -71,13 +71,18 @@ def normalize_rows(rows):
 def write_catalog(rows, output, as_of, source=SOURCE, complete=True, fixture=False):
     date.fromisoformat(as_of)
     schools = normalize_rows(rows)
+    if complete and not fixture and schools:
+        offices={s['id'].split(':')[0] for s in schools}
+        required={'B10','C10','D10','E10','F10','G10','H10','I10','J10','K10','M10','N10','P10','Q10','R10','S10','T10'}
+        if len(schools)<10000 or not required.issubset(offices):
+            raise ValueError('Nationwide catalog appears partial: all 17 education offices and a full unfiltered source are required')
     if complete and not schools: raise ValueError('Empty complete school catalog')
     canonical = json.dumps(schools,ensure_ascii=False,sort_keys=True,separators=(',',':')).encode()
-    meta = {'schema_version':1,'catalog_version':hashlib.sha256(canonical).hexdigest(),'as_of':as_of,'source_url':source,
+    meta = {'schema_version':1,'catalog_version':hashlib.sha256(canonical).hexdigest(),'as_of':as_of,'source_url':'fixture://schools' if fixture else source,
             'complete':bool(complete),'fixture':bool(fixture),'record_count':len(schools),
             'counts':{k:sum(s['level']==k and s['active']==1 for s in schools) for k in ['high','middle','elementary']},
             'coverage':'Current official schoolInfo records; explicit closed/suspended records excluded',
-            'attribution':'교육부·시도교육청 / 나이스 교육정보 개방 포털 학교기본정보. 출처와 기준일을 함께 표시합니다.'}
+            'attribution':'테스트 자료 · 실제 학교 정보 아님' if fixture else '교육부·시도교육청 / 나이스 교육정보 개방 포털 학교기본정보. 출처와 기준일을 함께 표시합니다.'}
     output = Path(output); output.parent.mkdir(parents=True,exist_ok=True)
     with tempfile.NamedTemporaryFile(dir=output.parent,suffix='.sqlite3',delete=False) as f: temporary=Path(f.name)
     try:
@@ -119,6 +124,7 @@ def fetch_neis(key=None):
 def main():
     p=argparse.ArgumentParser(description=__doc__)
     p.add_argument('--csv',type=Path);p.add_argument('--fetch-neis',action='store_true');p.add_argument('--empty',action='store_true')
+    p.add_argument('--expected-total',type=int,help='Official portal total for an unfiltered CSV; required for CSV import')
     p.add_argument('--output',type=Path,required=True);p.add_argument('--as-of',default=date.today().isoformat())
     args=p.parse_args()
     if sum(bool(v) for v in [args.csv,args.fetch_neis,args.empty])!=1: p.error('Choose exactly one input')
@@ -129,6 +135,10 @@ def main():
         try: text=raw.decode('utf-8-sig')
         except UnicodeDecodeError: text=raw.decode('cp949')
         rows=list(csv.DictReader(io.StringIO(text)))
+        if args.expected_total is None or args.expected_total!=len(rows):
+            p.error('CSV import requires --expected-total matching the official unfiltered portal total')
+        identifiers={(value(row,'office'),value(row,'code')) for row in rows}
+        if len(identifiers)!=len(rows): p.error('Official CSV contains duplicate school identifiers')
     meta=write_catalog(rows,args.output,args.as_of,complete=not args.empty)
     print(json.dumps(meta,ensure_ascii=False))
 

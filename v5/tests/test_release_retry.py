@@ -19,3 +19,12 @@ class ReleaseRetryTests(unittest.TestCase):
         for key in ['source_sha', 'version', 'sha256']:
             bad=dict(receipt); bad[key]='invalid'
             self.assertTrue(decide(release,bad,[])['dispatch'])
+
+class ReleasePublicationTests(unittest.TestCase):
+    def test_incomplete_or_fixture_beta2_cannot_be_published(self):
+        from macos.publish_native import validate_receipt
+        receipt={'version':'5.0.0-beta.2','sha256':'a'*64,'architecture':'arm64','dmg_to_disk_signature_verified':True,'finder_background_layout_verified':True,'native_ui_smoke':{'ok':True}}
+        for catalog in [{},{'complete':False,'fixture':False},{'complete':True,'fixture':True}]:
+            with self.assertRaises(ValueError):validate_receipt(dict(receipt,school_catalog=catalog),'v5.0.0-beta.2','a'*64)
+        validate_receipt(dict(receipt,school_catalog={'complete':True,'fixture':False}),'v5.0.0-beta.2','a'*64)
+        with self.assertRaises(ValueError):validate_receipt(dict(receipt,school_catalog={'complete':True,'fixture':False},development_only=True),'v5.0.0-beta.2','a'*64)

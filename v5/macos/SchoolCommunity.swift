@@ -257,10 +257,12 @@ final class SchoolCommunityModel:ObservableObject {
                         if let pending = pending { envelope = pending }
                         else {
                             guard let at = SchoolDates.parse(report.payload.diagnosedAt),Date().timeIntervalSince(at) <= 600 else { throw schoolError("diagnose_again") }
+                            let signingKey = try SchoolCrypto.key()
+                            guard SchoolCrypto.encoded(signingKey.publicKey.x963Representation) == report.publicKey else { throw schoolError("report_key_changed_diagnose_again") }
                             let response = try await SchoolCommunityTransport.request(base:base,path:"v1/challenges",json:["publicKey":report.publicKey])
                             let challenge = try JSONDecoder().decode(SchoolChallenge.self,from:response)
                             var body = report.payload;body.challenge = challenge
-                            let signed = try SchoolCrypto.sign(body,key:SchoolCrypto.key());envelope = try SchoolCrypto.canonical(signed)
+                            let signed = try SchoolCrypto.sign(body,key:signingKey);envelope = try SchoolCrypto.canonical(signed)
                             try await withCheckedThrowingContinuation { (continuation:CheckedContinuation<Void,Error>) in
                                 self.queue.async {
                                     do { try repo.prepareUpload(report.payload.id,data:envelope);continuation.resume() }

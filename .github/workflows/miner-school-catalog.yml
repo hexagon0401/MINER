@@ -39,6 +39,7 @@ jobs:
           cp "$RUNNER_TEMP/catalog-result"/* .
           git config user.name 'MINER Catalog Imports'
           git config user.email 'github-actions[bot]@users.noreply.github.com'
-          git add --all
+          git add -- status.json
+          if [ -f schools.sqlite3 ]; then git add -- schools.sqlite3 schools.json; fi
           git commit -m 'Record full official school catalog import outcome'
           git push origin "HEAD:refs/heads/$ref"
