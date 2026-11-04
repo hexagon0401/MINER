@@ -1,0 +1,5 @@
+{
+  "ok": false,
+  "error": "NEIS returned a partial/sample page; use NEIS_API_KEY or official CSV",
+  "required": "Official NEIS CSV or NEIS_API_KEY; no sample schools published"
+}
