@@ -1,3 +1,4 @@
+from contextlib import closing
 import json
 from pathlib import Path
 import sqlite3
@@ -17,7 +18,7 @@ class CommunityCatalogTests(unittest.TestCase):
             path=Path(tmp)/'schools.sqlite3'
             meta=write_catalog(ROWS+[ROWS[0]],path,'2026-11-04',fixture=True)
             self.assertEqual(meta['counts'],{'high':2,'middle':1,'elementary':1})
-            with sqlite3.connect(path) as db:self.assertEqual(db.execute('select count(*) from schools').fetchone()[0],4)
+            with closing(sqlite3.connect(path)) as db:self.assertEqual(db.execute('select count(*) from schools').fetchone()[0],4)
     def test_conflicts_fail_without_replacing_previous_catalog(self):
         with tempfile.TemporaryDirectory() as tmp:
             path=Path(tmp)/'schools.sqlite3'

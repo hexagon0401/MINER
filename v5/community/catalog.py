@@ -1,3 +1,4 @@
+from contextlib import closing
 """Import the complete official NEIS catalog into a read-only app database."""
 import argparse
 import csv
@@ -86,7 +87,7 @@ def write_catalog(rows, output, as_of, source=SOURCE, complete=True, fixture=Fal
     output = Path(output); output.parent.mkdir(parents=True,exist_ok=True)
     with tempfile.NamedTemporaryFile(dir=output.parent,suffix='.sqlite3',delete=False) as f: temporary=Path(f.name)
     try:
-        with sqlite3.connect(temporary) as db:
+        with closing(sqlite3.connect(temporary)) as db, db:
             db.executescript(SCHEMA)
             db.executemany('INSERT INTO catalog_meta VALUES(?,?)',[(k,json.dumps(v,ensure_ascii=False)) for k,v in meta.items()])
             db.executemany('INSERT INTO schools VALUES(:id,:name,:level,:province,:district,:address,:search_name,:search_region,:active)',schools)
