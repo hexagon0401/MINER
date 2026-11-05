@@ -9,7 +9,7 @@
 클라이언트는 WARP로, 게임은 직접 연결로.
 학교 네트워크의 접속 제한과 게임 지연 문제에서 출발한 분리 라우팅 앱입니다.
 
-![Beta 1.1](https://img.shields.io/badge/STATUS-BETA_1.1-0EFB2E?style=flat-square&labelColor=0C1421)
+![Beta 1.1](https://img.shields.io/badge/STATUS-ALPHA_UNIVERSAL_BETA_1-0EFB2E?style=flat-square&labelColor=0C1421)
 ![macOS](https://img.shields.io/badge/macOS-Apple_Silicon-E6E8E6?style=flat-square&logo=apple&logoColor=white&labelColor=0C1421)
 ![Windows](https://img.shields.io/badge/Windows-x64_BETA-0078D4?style=flat-square&logo=windows&logoColor=white&labelColor=0C1421)
 ![Cloudflare WARP](https://img.shields.io/badge/Cloudflare-WARP-F38020?style=flat-square&logo=cloudflare&logoColor=white&labelColor=0C1421)
@@ -49,16 +49,22 @@ MINER는 **클라이언트 통신은 WARP로, 게임 플레이 통신은 직접 
 
 ## 다운로드
 
-[![Apple Silicon DMG 다운로드](https://img.shields.io/badge/macOS-DMG_다운로드-0EFB2E?style=for-the-badge&logo=apple&logoColor=white&labelColor=0C1421)](https://github.com/hexagon0401/MINER/releases/download/v5.0.0-beta.1.1/MINER-v5.0.0-beta.1.1-macOS-AppleSilicon.dmg)
+**MINER ALPHA universial Beta 1** · [통합 프리릴리스 보기](https://github.com/hexagon0401/MINER/releases/tag/miner-alpha-universal-beta.1)
 
-[![Windows EXE 다운로드](https://img.shields.io/badge/Windows-EXE_다운로드-0078D4?style=for-the-badge&logo=windows&logoColor=white&labelColor=0C1421)](https://github.com/hexagon0401/MINER/releases/download/v5.0.0-beta.1.1-windows.8/MINER-v5.0.0-beta.1.1-windows.8-Windows-x64-Setup.exe)
+[![Apple Silicon DMG](https://img.shields.io/badge/macOS-Apple_Silicon_DMG-0EFB2E?style=for-the-badge&logo=apple&logoColor=white&labelColor=0C1421)](https://github.com/hexagon0401/MINER/releases/download/miner-alpha-universal-beta.1/MINER-Alpha-Universal-Beta1-macOS-AppleSilicon.dmg)
+[![Intel DMG](https://img.shields.io/badge/macOS-Intel_DMG-E6E8E6?style=for-the-badge&logo=apple&logoColor=white&labelColor=0C1421)](https://github.com/hexagon0401/MINER/releases/download/miner-alpha-universal-beta.1/MINER-Alpha-Universal-Beta1-macOS-Intel.dmg)
+[![Windows EXE](https://img.shields.io/badge/Windows-x64_EXE-0078D4?style=for-the-badge&logo=windows&logoColor=white&labelColor=0C1421)](https://github.com/hexagon0401/MINER/releases/download/miner-alpha-universal-beta.1/MINER-Alpha-Universal-Beta1-Windows-x64-Setup.exe)
 
-**MINER BETA 1.1 · Apple Silicon**
-베타 1 기반의 땅굴 모양 개선 버전입니다. [릴리스 노트·검증 파일 보기](https://github.com/hexagon0401/MINER/releases/tag/v5.0.0-beta.1.1)
+| 컴퓨터 | 설치 파일 | 앱 버전 |
+| :-- | :-- | :-- |
+| Mac · Apple Silicon (M 시리즈) | [DMG 다운로드](https://github.com/hexagon0401/MINER/releases/download/miner-alpha-universal-beta.1/MINER-Alpha-Universal-Beta1-macOS-AppleSilicon.dmg) | 베타 1.1 · SwiftUI |
+| Mac · Intel | [DMG 다운로드](https://github.com/hexagon0401/MINER/releases/download/miner-alpha-universal-beta.1/MINER-Alpha-Universal-Beta1-macOS-Intel.dmg) | 베타 1.1 · SwiftUI |
+| Windows · x64 | [EXE 다운로드](https://github.com/hexagon0401/MINER/releases/download/miner-alpha-universal-beta.1/MINER-Alpha-Universal-Beta1-Windows-x64-Setup.exe) | 베타 1 · Pearl White build 8 |
+
+플랫폼별로 **별도 설치 파일**을 제공합니다. Mac과 Windows는 각각의 UI를 유지합니다. [체크섬](https://github.com/hexagon0401/MINER/releases/download/miner-alpha-universal-beta.1/SHA256SUMS.txt) · [플랫폼별 버전·출처](https://github.com/hexagon0401/MINER/releases/download/miner-alpha-universal-beta.1/release-manifest.json) · [Windows 소스](https://github.com/hexagon0401/MINER/tree/windows-beta1)
 
 | 구분 | 현재 상태 |
 | :-- | :-- |
-| Windows 베타 1 · Pearl White build 8 | [설치 EXE](https://github.com/hexagon0401/MINER/releases/download/v5.0.0-beta.1.1-windows.8/MINER-v5.0.0-beta.1.1-windows.8-Windows-x64-Setup.exe) · [릴리스·검증 파일](https://github.com/hexagon0401/MINER/releases/tag/v5.0.0-beta.1.1-windows.8) · [소스](https://github.com/hexagon0401/MINER/tree/windows-beta1) |
 | 베타 1 유지 보수 | [`beta1-maintenance`](https://github.com/hexagon0401/MINER/tree/beta1-maintenance)에서 개발 |
 | 베타 2 | 학교 현황·진단·제보 기능의 **소스만 보관**. 배포용 DMG에 미포함 |
 | 공유 제보 서버 | 미개방 |
@@ -69,7 +75,7 @@ MINER는 **클라이언트 통신은 WARP로, 게임 플레이 통신은 직접 
 ### macOS
 
 1. 개인용 [Cloudflare WARP](https://one.one.one.one/)를 설치하고 최초 등록을 마칩니다.
-2. 위의 **Apple Silicon DMG**를 다운로드해 엽니다.
+2. 위에서 Mac의 칩에 맞는 **Apple Silicon 또는 Intel DMG**를 다운로드해 엽니다.
 3. 왼쪽의 `MINER.app`을 오른쪽의 **Applications(응용 프로그램)** 폴더로 드래그합니다.
 4. 응용 프로그램 폴더에서 `MINER.app`을 실행합니다.
 
