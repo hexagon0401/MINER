@@ -1,0 +1,71 @@
+name: MINER Homebrew cask update
+
+on:
+  release:
+    types: [published, released, edited]
+  # Releases made using GITHUB_TOKEN do not trigger another workflow. Also
+  # catches assets attached after publication and retries incomplete releases.
+  schedule:
+    - cron: '23 */6 * * *'
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/miner-homebrew.yml'
+      - 'packaging/homebrew/update.py'
+      - 'packaging/homebrew/tests/**'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: miner-homebrew-cask
+  cancel-in-progress: false
+
+jobs:
+  update:
+    if: github.event_name != 'release' || (!github.event.release.draft && !github.event.release.prerelease)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # Use trusted default-branch automation, never code from a release tag.
+          ref: ${{ github.event.repository.default_branch }}
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Test release selection and checksum failure handling
+        run: python3 -m unittest discover -s packaging/homebrew/tests -v
+      - name: Verify official release downloads and update cask
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -o pipefail
+          python3 packaging/homebrew/update.py 2>&1 | tee "$RUNNER_TEMP/miner-homebrew.log"
+          git diff --check
+      - name: Commit verified cask to default branch
+        env:
+          DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
+        run: |
+          git add -- Casks/miner.rb packaging/homebrew/latest.verification.json
+          if git diff --cached --quiet; then
+            echo 'Homebrew cask already current.'
+            exit 0
+          fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git commit -m 'packaging: sync Homebrew cask with verified official release'
+          git pull --rebase origin "$DEFAULT_BRANCH"
+          git push origin "HEAD:refs/heads/$DEFAULT_BRANCH"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: homebrew-update-diagnostics
+          path: |
+            ${{ runner.temp }}/miner-homebrew.log
+            packaging/homebrew/latest.verification.json
+          if-no-files-found: ignore

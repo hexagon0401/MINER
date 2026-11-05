@@ -43,3 +43,20 @@ Apple 자격 증명은 채팅이나 cask에 넣지 않고 저장소 Secrets에 �
 MINER에서 중지한 뒤 종료하고 `brew upgrade --cask miner` 또는 `brew uninstall --cask miner`를 사용합니다. 전체 서비스·지원 파일 정리는 앱 설정의 제거 기능을 먼저 사용합니다. WARP는 cask가 설치하거나 삭제하지 않습니다. `--zap`은 사용자 설정의 선택적 정리입니다.
 
 과거 `miner-beta`를 Homebrew로 설치했다면 앱을 중지·종료하고 기존 cask를 제거한 뒤 새 `miner`를 설치합니다. 두 cask가 같은 `MINER.app`을 동시에 소유하지 않도록 충돌 설정을 둡니다.
+
+## 정식 릴리스 → cask 자동 갱신
+
+[MINER Homebrew cask update](../../.github/workflows/miner-homebrew.yml)가 GitHub의 최신 정식 릴리스를 확인하고, 두 Mac DMG를 실제로 다운로드해 SHA-256을 검사한 뒤 기본 브랜치의 cask와 `latest.verification.json`을 커밋합니다. 별도 저장소·PAT는 필요하지 않으며 GitHub Actions의 `GITHUB_TOKEN`을 사용합니다. 저장소 규칙에서 봇의 기본 브랜치 쓰기를 막으면 커밋 단계가 실패하므로 Actions 결과를 확인해야 합니다. 강제 push는 하지 않습니다.
+
+- **실행 시점:** 정식 릴리스 게시·수정, 6시간 간격 확인, Actions의 수동 실행. 자동화 파일 변경 시에도 한 번 확인합니다. GitHub 스케줄 실행은 지연될 수 있습니다.
+- **GITHUB_TOKEN으로 만든 릴리스:** 다른 워크플로의 즉시 실행을 유발하지 않으므로 정기 확인에서 반영됩니다. 바로 반영하려면 Actions에서 이 워크플로를 수동 실행합니다.
+- **지원 버전:** `miner-alpha-v2`, `miner-alpha-v2.1`과 같은 숫자 버전. ALPHA는 세대 코드명이며 프리릴리스 여부는 GitHub의 별도 표시로 판단합니다. 다른 세대 코드명이나 파일명 체계로 전환할 때는 updater도 함께 수정합니다.
+- **필수 첨부 파일:** `release-manifest.json`, `MINER-ALPHA-v<버전>-macOS-AppleSilicon.dmg`, `MINER-ALPHA-v<버전>-macOS-Intel.dmg`. 기존 ALPHA v1과 같은 manifest 구조를 유지하고 각 플랫폼의 `filename`, `architecture`, `sha256`을 기록합니다. 기존 `alpha-v1.verification.json`은 역사 기록으로 보존합니다.
+- **갱신 조건:** 최신 정식 릴리스만 처리하며 프리릴리스·초안·낮은 버전은 제외합니다. 두 DMG 중 하나라도 없거나 해시가 틀리면 기존 cask를 유지합니다. 같은 버전의 DMG 내용 교체는 거부하므로 새 버전을 발행합니다. 실패 로그는 Actions artifact에 남고 다음 확인 때 재시도합니다.
+
+이 자동화는 릴리스에 게시한 파일을 검증·연결합니다. 앱 빌드·Apple 공증·Mac 실기 검증을 대신하거나 사용자의 앱을 백그라운드에서 교체하지 않습니다. cask가 반영된 후 사용자는 MINER를 중지·종료하고 다음 명령을 실행합니다.
+
+```bash
+brew update
+brew upgrade --cask miner
+```
