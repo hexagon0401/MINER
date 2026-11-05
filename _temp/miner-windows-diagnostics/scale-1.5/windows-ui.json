@@ -1,0 +1,25 @@
+{
+  "ok": true,
+  "checks": [
+    "real Qt Quick scene renders all backend states without network actions",
+    "errors gate restart and preserve explicit restoration",
+    "Fluent settings, Korean-English copy, theme and persisted preferences",
+    "small windows keep primary Windows actions accessible",
+    "Windows reduce-motion preference prevents success transitions",
+    "scene graph, text antialiasing and language-specific Windows fonts recorded",
+    "minimizing pauses repeating effects"
+  ],
+  "network_actions": 0,
+  "state_source": "injected UI fixtures",
+  "animation_preference_overridden_for_capture": true,
+  "software_adapter_preferred": true,
+  "capture_render_loop": "basic",
+  "foreground_override_for_capture": true,
+  "ui_engine": "Qt Quick RHI",
+  "control_style": "FluentWinUI3",
+  "graphics_api": "GraphicsApi.Direct3D11",
+  "text_render_type": "QtTextRendering (high-quality distance fields)",
+  "text_render_type_value": 0,
+  "font": "Malgun Gothic",
+  "scale_factor": "1.5"
+}

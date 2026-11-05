@@ -1,0 +1,55 @@
+{
+  "test_os": "Windows-2025Server-10.0.26100-SP0",
+  "version": "5.0.0-beta.1.1-windows.7",
+  "base": "MINER Beta 1.1",
+  "architecture": "x64",
+  "authenticode_signed": false,
+  "ui": {
+    "ok": true,
+    "checks": [
+      "real Qt Quick scene renders all backend states without network actions",
+      "errors gate restart and preserve explicit restoration",
+      "Fluent settings, Korean-English copy, theme and persisted preferences",
+      "small windows keep primary Windows actions accessible",
+      "Windows reduce-motion preference prevents success transitions",
+      "scene graph, text antialiasing and language-specific Windows fonts recorded",
+      "minimizing pauses repeating effects"
+    ],
+    "network_actions": 0,
+    "state_source": "injected UI fixtures",
+    "animation_preference_overridden_for_capture": true,
+    "software_adapter_preferred": true,
+    "capture_render_loop": "basic",
+    "foreground_override_for_capture": true,
+    "ui_engine": "Qt Quick RHI",
+    "control_style": "FluentWinUI3",
+    "graphics_api": "GraphicsApi.Direct3D11",
+    "text_render_type": "QtTextRendering (high-quality distance fields)",
+    "text_render_type_value": 0,
+    "font": "Malgun Gothic",
+    "scale_factor": "system"
+  },
+  "native_tun": {
+    "adapter_created": true,
+    "graceful_stop": true,
+    "auto_route": false,
+    "job_kills_remaining_child": true
+  },
+  "installer_verified": true,
+  "upgrade_verified": true,
+  "unicode_path_verified": true,
+  "ui_engine": "Qt Quick RHI + FluentWinUI3",
+  "network_engine": "sing-box 1.12.0 Windows TUN",
+  "ui_scale_factors": [
+    1,
+    1.25,
+    1.5,
+    2
+  ],
+  "windows_11_live_tested": false,
+  "vanguard_tested": false,
+  "uninstaller_verified": true,
+  "school_network_tested": false,
+  "warp_live_tested": false,
+  "sha256": "5665ae5f1aa11eb2f8aede4c4d289dafba9d7062c44313581557466b8b889428"
+}
