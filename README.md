@@ -1,5 +1,7 @@
 # MINER
 
+<img src="docs/assets/miner-readme-banner.png" alt="MINER — Dig your way out. 땅굴을 파는 광부 캐릭터 배너" width="100%" />
+
 **Dig your way out. — 학교 네트워크의 벽을 넘어.**
 
 ## 개요
@@ -89,3 +91,38 @@ macOS 버전과 표시 언어에 따라 버튼 이름이나 화면 구성은 조
 개발자: [Punkthats*it · @hexagon0401](https://github.com/hexagon0401)
 
 이전 v1~v4는 개발 이력으로 보존합니다. v5 설치·제거는 WARP나 이전 버전을 삭제하지 않습니다.
+
+## 성능 (Performance)
+
+**첫 번째 리그 오브 레전드 인게임 벤치마크에서 MINER의 평균 핑은 WARP 단독 실행보다 83.1% 낮게 측정됐습니다.** 각각 5분간 기록한 결과, 평균 핑은 **WARP 143.90ms → MINER 24.28ms**로 **119.62ms 감소**했습니다. 수치가 낮을수록 지연시간이 짧습니다.
+
+![MINER와 WARP 인게임 핑 벤치마크](docs/assets/miner-warp-ping-benchmark.svg)
+
+| 인게임 핑 지표 | WARP 단독 | MINER | 변화 |
+| :-- | --: | --: | --: |
+| **평균** | **143.90ms** | **24.28ms** | **−83.1% (−119.62ms)** |
+| 중앙값 | 144ms | 24ms | −120ms |
+| P95 (95백분위 지연시간) | 151ms | 31ms | −120ms (−79.5%) |
+| 관측된 최대 핑 | 158ms | 42ms | −116ms |
+| 유효 OCR 표본 | 281/300 (93.7%) | 297/300 (99.0%) | — |
+
+### 측정 방법
+
+- **측정일:** 2026년 11월 5일
+- **환경:** macOS에서 실행한 리그 오브 레전드 게임 화면
+- **비교:** WARP 단독 / MINER 각각 5분, 1회씩 순차 측정
+- **수집:** 1초마다 게임 화면을 캡처해 Apple Vision OCR로 우측 상단 인게임 핑을 판독
+- **통계:** 인식된 값만으로 평균·중앙값·P95 계산. OCR 인식 실패는 `0ms`로 처리하지 않음
+
+> [!NOTE]
+> 이는 **게임 HUD에 표시된 핑**을 측정한 결과이며, 실제 서버에 직접 보낸 패킷의 RTT 측정이 아닙니다. 각 모드 1회씩 순차 측정한 **예비 결과**로, 네트워크 상태·시간·라우팅 등에 따라 달라질 수 있습니다. OCR 인식률은 패킷 손실률이 아닙니다. WARP의 최저 기록 14ms는 OCR 오인식 가능성이 있으므로 최저 핑 성능을 주장하는 근거로 사용하지 않았습니다.
+
+**Dig your way out.**
+
+## 개발자 프로필
+
+<a href="https://github.com/hexagon0401"><img src="https://avatars.githubusercontent.com/u/82876856?v=4&amp;s=256" alt="hexagon0401 GitHub 프로필 이미지" width="96" /></a>
+
+**[Punkthats*it · @hexagon0401](https://github.com/hexagon0401)**
+
+MINER를 개발하고 있습니다. 프로젝트 소식과 소스 코드는 GitHub에서 확인할 수 있습니다.
