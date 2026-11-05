@@ -59,6 +59,33 @@ private struct DeltaGlass: ViewModifier {
     }
 }
 
+// One connected contour replaces the rectangular tunnel image and capsule crop.
+// Coordinates follow the existing 560x610 scene; no new image assets or timers.
+private struct MinerTunnelContour: Shape {
+    func path(in rect:CGRect) -> Path {
+        func point(_ x:CGFloat,_ y:CGFloat) -> CGPoint { CGPoint(x:x*rect.width/560,y:y*rect.height/610) }
+        var p = Path()
+        p.move(to:point(164,306))
+        p.addCurve(to:point(226,282),control1:point(174,282),control2:point(202,278))
+        p.addCurve(to:point(235,283),control1:point(229,283),control2:point(232,283))
+        // The entrance and chamber share one outline, avoiding overlap seams.
+        p.addCurve(to:point(231,269),control1:point(232,279),control2:point(231,274))
+        p.addCurve(to:point(245,221),control1:point(234,248),control2:point(250,241))
+        p.addLine(to:point(265,221))
+        p.addCurve(to:point(254,265),control1:point(270,242),control2:point(249,248))
+        p.addCurve(to:point(262,283),control1:point(254,273),control2:point(257,279))
+        p.addCurve(to:point(330,275),control1:point(284,282),control2:point(305,273))
+        p.addCurve(to:point(433,287),control1:point(373,270),control2:point(410,272))
+        p.addCurve(to:point(451,340),control1:point(458,303),control2:point(459,325))
+        p.addCurve(to:point(393,364),control1:point(442,359),control2:point(419,365))
+        p.addCurve(to:point(253,367),control1:point(349,359),control2:point(296,373))
+        p.addCurve(to:point(167,351),control1:point(218,365),control2:point(180,370))
+        p.addCurve(to:point(164,306),control1:point(153,339),control2:point(155,321))
+        p.closeSubpath()
+        return p
+    }
+}
+
 private struct DeltaCave: View {
     @ObservedObject var model:MinerModel
     let size:CGSize
@@ -87,8 +114,8 @@ private struct DeltaCave: View {
     private func cave(_ t:Double) -> some View {
         ZStack {
             deltaArt("full-window-strata").resizable().frame(width:size.width,height:size.height)
-            school
             underground(t)
+            school
             illumination
             miner(t)
             debris(t)
@@ -100,15 +127,18 @@ private struct DeltaCave: View {
             art("school").resizable().scaledToFit().frame(width:190,height:110)
                 .scaleEffect(shaft ? 0.92 : 1).offset(y:shaft ? -8 : 0)
                 .position(x:size.width/2,y:184*sy)
-            deltaArt("shaft-reveal").resizable().scaledToFit().frame(width:110,height:100*sy)
-                .mask(Rectangle().scaleEffect(x:1,y:shaft ? 1 : 0,anchor:.top))
-                .position(x:size.width/2,y:254*sy)
         }.animation(.easeInOut(duration:reduceMotion ? 0.12 : 0.6),value:shaft)
     }
     private func underground(_ t:Double) -> some View {
         ZStack {
-            art("tunnel").resizable().scaledToFit().frame(width:min(370,size.width-100),height:114)
-                .blendMode(.multiply).clipShape(Capsule()).position(x:size.width/2+25,y:328*sy)
+            MinerTunnelContour()
+                .fill(Color(red:0.031,green:0.051,blue:0.082))
+                .overlay(MinerTunnelContour().stroke(.white.opacity(0.055),lineWidth:1))
+            Path { p in
+                let sx = size.width/560
+                p.move(to:CGPoint(x:181*sx,y:355*sy))
+                p.addCurve(to:CGPoint(x:431*sx,y:354*sy),control1:CGPoint(x:263*sx,y:373*sy),control2:CGPoint(x:349*sx,y:354*sy))
+            }.stroke(Color(red:0.70,green:0.54,blue:0.39).opacity(0.18),style:StrokeStyle(lineWidth:2,lineCap:.round))
             if model.mining {
                 deltaArt("dig-wall-cracks").resizable().scaledToFit().frame(width:36,height:66)
                     .opacity(t > 0.52 ? 0.8 : 0.2).position(x:minerX+47,y:310*sy)

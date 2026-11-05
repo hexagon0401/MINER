@@ -17,6 +17,12 @@ final class MinerModel: ObservableObject {
     }
     @Published var diagnostics = false
     @Published var settings = false
+    @Published var alwaysAllow = UserDefaults.standard.object(forKey:"miner.alwaysAllow") as? Bool ?? true {
+        didSet { UserDefaults.standard.set(alwaysAllow,forKey:"miner.alwaysAllow") }
+    }
+    @Published var updateBusy = false
+    @Published var updateMessage = ""
+    @Published var updateAvailable = false
     let copy: [String: Any] = {
         guard let url = Bundle.main.resourceURL?.appendingPathComponent("UIAssets/copy-ko.json"),
               let data = try? Data(contentsOf: url), let object = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else { return [:] }
@@ -27,7 +33,7 @@ final class MinerModel: ObservableObject {
     var title: String {
         if phase == "stopping" { return tr("중지 및 WARP 복귀 중…", "Stopping and restoring WARP…") }
         if language == "ko", let table = copy["systemStatus"] as? [String: [String: String]], let text = table[phase]?["title"] { return text }
-        return ["idle":"Ready to dig", "cli_check":"Packing the pickaxe…", "proxy_connect":"Opening tunnel 40000…", "tls_verify":"Checking the exit…", "admin_auth":"Waiting for permission…", "routing":"Client underground. Game direct.", "warp_ready":"WARP is ready", "running":"Connected", "stopped":"Back on the surface", "error":"The tunnel hit a rock"][phase] ?? "MINER"
+        return ["idle":"Ready to dig", "cli_check":"Checking WARP CLI…", "proxy_connect":"Connecting Local Proxy…", "tls_verify":"Verifying secure connection…", "admin_auth":"Approving the network helper…", "routing":"Configuring split routing…", "warp_ready":"WARP is ready", "running":"Connected", "stopped":"Connection stopped", "error":"Network connection failed"][phase] ?? "MINER"
     }
     var detail: String {
         if phase == "error" { return error }
@@ -225,23 +231,29 @@ struct MinerRoot: View {
     }
 }
 struct MinerSettings: View {
-    @ObservedObject var model:MinerModel
-    let controller:AppDelegate
-    var body:some View {
+    @ObservedObject var model: MinerModel
+    let controller: AppDelegate
+    var body: some View {
         ScrollView {
-            VStack(alignment:.leading,spacing:16) {
-                Text(model.tr("MINER 설정","MINER Settings")).font(.title2)
-                Picker(model.tr("언어","Language"),selection:$model.language) {
-                    Text("한국어").tag("ko");Text("English").tag("en")
-                }.pickerStyle(.segmented)
-                Text(model.tr("중지·종료 시 WARP를 UDP Traffic and DNS로 복귀합니다.","Stopping or quitting restores WARP to UDP Traffic and DNS.")).font(.caption).foregroundStyle(.secondary)
-                Divider()
-                SchoolSummaryView(community:controller.community,model:model,controller:controller)
-                Divider()
-                MinerAbout(model:model)
-                Divider()
-                Button(role:.destructive) { controller.uninstall() } label: { Text(model.tr("MINER 제거…","Uninstall MINER…")) }.disabled(model.busy)
-            }.padding(24).frame(maxWidth:.infinity,alignment:.leading)
+          VStack(alignment:.leading,spacing:14) {
+            Text(model.tr("MINER 설정","MINER Settings")).font(.title2)
+            Picker(model.tr("언어","Language"),selection:$model.language) { Text("한국어").tag("ko"); Text("English").tag("en") }.pickerStyle(.segmented)
+            Text(model.tr("중지·종료 시 WARP를 UDP Traffic and DNS로 복귀합니다.","Stopping or quitting restores WARP to UDP Traffic and DNS.")).font(.caption).foregroundStyle(.secondary)
+            Toggle(model.tr("관리자 승인 항상 허용 · 도우미 재사용","Remember approval · reuse helper"),isOn:$model.alwaysAllow).disabled(model.busy || model.engine)
+            Text(model.tr("최초 설치·도우미 업데이트 시 한 번 승인합니다. 비밀번호를 저장하지 않으며 재부팅해도 자동 연결하지 않습니다. 해제하면 연결할 때마다 인증하며, 도우미는 앱 제거 시 함께 삭제됩니다.","Approve once when installing or updating the helper. No password is stored and no tunnel starts at login. Disable to authorize each session; uninstalling MINER removes the helper.")).font(.caption).foregroundStyle(.secondary)
+            Divider()
+            Text(model.tr("앱 업데이트","App updates")).font(.headline)
+            Button(model.tr("업데이트 확인","Check for updates")) { controller.checkUpdate() }.disabled(model.updateBusy || model.busy)
+            if model.updateAvailable {
+                Button(model.tr("업데이트 설치","Install update")) { controller.installUpdate() }.disabled(model.updateBusy || model.busy || model.engine)
+            }
+            if model.updateBusy { ProgressView().controlSize(.small) }
+            Text(model.updateMessage).font(.caption).textSelection(.enabled)
+            Divider()
+            MinerAbout(model:model)
+            Divider()
+            Button(role:.destructive) { controller.uninstall() } label: { Text(model.tr("MINER 제거…","Uninstall MINER…")) }.disabled(model.busy || model.updateBusy)
+          }.padding(24)
         }.frame(minWidth:440,minHeight:520)
     }
 }

@@ -62,6 +62,19 @@ class ProfileTests(unittest.TestCase):
         self.assertTrue(server["tls"]["enabled"])
         self.assertNotIn("insecure", server["tls"])
 
+    def test_normal_browser_dns_and_tcp_are_independent_of_warp(self):
+        for platform in ("macos", "windows"):
+            config = build_config(Profile(platform=platform))
+            self.assertFalse(config["inbounds"][0]["strict_route"])
+            self.assertEqual("direct-dns", config["dns"]["final"])
+            self.assertEqual("direct-dns", config["route"]["default_domain_resolver"])
+            direct = next(s for s in config["dns"]["servers"] if s["tag"] == "direct-dns")
+            self.assertNotIn("detour", direct)
+            self.assertEqual("local", direct["type"])
+            self.assertTrue(config["dns"]["independent_cache"])
+            self.assertFalse(any("Arc" in rule.get("process_name", []) for rule in config["dns"]["rules"]))
+            self.assertTrue(all("process_name" in r or "process_path_regex" in r for r in config["route"]["rules"] if r.get("action") == "reject"))
+
     def test_optional_kernel_exclusion_only_exact_observed_hosts(self):
         profile = Profile(game_cidrs=["8.8.8.8/32", "2606:4700:4700::1001/128"])
         self.assertEqual(build_config(profile)["inbounds"][0]["route_exclude_address"], profile.game_cidrs)

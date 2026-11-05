@@ -238,6 +238,13 @@ ApplicationWindow {
                     CopyText { text: s.text.layout; color: win.muted }
                     ComboBox { objectName: "layoutCombo"; Layout.fillWidth: true; model: [s.text.rounded,s.text.flush]; currentIndex: win.flush ? 1 : 0; onActivated: backend.setLayout(currentIndex===0 ? "rounded" : "flush") }
                     CheckBox { text: s.text.reduce; checked: s.reduced; enabled: !s.systemReduced; onToggled: backend.setReduced(checked) }
+                    CopyText { text: s.text.updates; color: win.muted }
+                    RowLayout {
+                        Button { objectName: "checkUpdateButton"; text: s.text.update_check; enabled: !s.updateBusy; onClicked: backend.checkUpdate() }
+                        Button { objectName: "installUpdateButton"; text: s.text.update_install; visible: s.updateAvailable; enabled: !s.updateBusy && !s.canStop; onClicked: backend.installUpdate() }
+                    }
+                    BusyIndicator { running: s.updateBusy; visible: running; Layout.preferredWidth: 28; Layout.preferredHeight: 28 }
+                    CopyText { text: s.updateMessage; wrapMode: Text.Wrap; Layout.fillWidth: true; font.pixelSize: 11 }
                     CopyText { text: s.text.about; color: win.muted }
                     RowLayout {
                         Image { source: s.art+"developer-avatar.png"; Layout.preferredWidth: 60; Layout.preferredHeight: 60; smooth: true; mipmap: true }

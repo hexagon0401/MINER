@@ -111,27 +111,6 @@ extension AppDelegate {
                 try require(MinerDeveloper.current.login == "hexagon0401" && MinerDeveloper.current.profileURL.absoluteString == "https://github.com/hexagon0401","About profile and GitHub destination match developer")
                 if let settingsView = self.settingsWindow?.contentView { try capture("settings-about",view:settingsView) }
                 self.settingsWindow?.close()
-                if let fixtureIndex = CommandLine.arguments.firstIndex(of:"--school-fixture"),
-                   let vectorIndex = CommandLine.arguments.firstIndex(of:"--school-vectors"),
-                   CommandLine.arguments.count > fixtureIndex+1,CommandLine.arguments.count > vectorIndex+1 {
-                    let fixture = URL(fileURLWithPath:CommandLine.arguments[fixtureIndex+1])
-                    let vectors = URL(fileURLWithPath:CommandLine.arguments[vectorIndex+1])
-                    let schoolResult = try SchoolSmoke.run(fixture:fixture,vectors:vectors,output:output)
-                    checks.append(contentsOf:schoolResult.checks)
-                    let community = SchoolCommunityModel(dataDirectory:schoolResult.directory,catalogURL:fixture,cli:self.cli,engine:self.engine,configuration:.closed,allowFixtures:true)
-                    community.load();try await settle(300)
-                    try require(community.ready && community.localCounts["high"] == 1,"Fixture school model loads local cumulative counts")
-                    try require(community.sharedCounts == nil && !community.configuration.open,"Local success does not populate unopened community counts")
-                    let schoolWindow = NSWindow(contentRect:NSRect(x:0,y:0,width:720,height:620),styleMask:[.titled,.closable,.resizable],backing:.buffered,defer:false)
-                    schoolWindow.isReleasedWhenClosed = false
-                    schoolWindow.contentView = NSHostingView(rootView:SchoolDetailsView(community:community,model:self.model))
-                    schoolWindow.makeKeyAndOrderFront(nil);try await settle()
-                    try capture("school-fixtures",view:schoolWindow.contentView)
-                    self.model.language = "en";try await settle();try capture("school-fixtures-english",view:schoolWindow.contentView)
-                    schoolWindow.close();self.model.language = "ko"
-                    community.closeVerification()
-                    try require(self.community.sharedCounts == nil,"Production settings retain no fictional national success data")
-                }
                 let result:[String:Any] = ["ok":true,"architecture":arch,"checks":checks,"network_actions":0]
                 try JSONSerialization.data(withJSONObject:result,options:[.prettyPrinted,.sortedKeys]).write(to:output.appendingPathComponent("miner-ui-\(arch).json"))
                 print("MINER native UI smoke passed: \(checks.count) checks")

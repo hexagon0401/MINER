@@ -1,8 +1,4 @@
-"""macOS launchd session, installed only when the user clicks Start.
-
-No login item, persistent launch plist, WARP uninstall, or global firewall reset.
-The native app obtains administrator authorization through macOS, never passwords.
-"""
+"""macOS engine session; optional persistent control helper never starts a tunnel at boot."""
 import json
 import os
 from pathlib import Path
@@ -166,6 +162,8 @@ def manage(operation, resources=None, profile=None):
         print(json.dumps(stop()))
     elif operation == "uninstall":
         stop()
+        from .macos_helper import remove
+        remove()
         base = owned_base()
         if base.exists():
             shutil.rmtree(base)

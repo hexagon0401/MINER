@@ -28,7 +28,9 @@ def main():
     if os.environ.get('GITHUB_REF_TYPE') == 'tag' and os.environ.get('GITHUB_REF_NAME') != TAG:
         raise ValueError('Git tag and packaged Windows version disagree')
     work=BASE/'windows/work'; work.mkdir(parents=True,exist_ok=True)
-    art=work/'art'; shutil.copytree(BASE/'macos/design/assets',art,dirs_exist_ok=True)
+    art=work/'art'; art.mkdir(exist_ok=True)
+    for name in ('AppIcon.png','developer-profile.json'):
+        shutil.copyfile(BASE/'macos/design/assets'/name,art/name)
     profile=json.loads((art/'developer-profile.json').read_text())
     with urllib.request.urlopen(profile['avatarURL'],timeout=30) as response:
         image=response.read(4*1024*1024+1)
@@ -39,8 +41,6 @@ def main():
     with Image.open(art/'AppIcon.png') as icon:
         icon.save(work/'MINER.ico',sizes=[(16,16),(32,32),(48,48),(64,64),(128,128),(256,256)])
     shutil.copytree(BASE/'windows/pearl',art/'pearl',dirs_exist_ok=True)
-    for asset in ('full-window-strata.png','skylight-beam.png'):
-        shutil.copyfile(BASE/'macos/delta/assets'/asset,art/asset)
     engine=install(work/'engine','windows-amd64')
     config=work/'check.json'; config.write_text(json.dumps(build_config(Profile(platform='windows'))))
     execute(engine,'check','-c',config)
@@ -53,6 +53,9 @@ def main():
         '--name','MINER','--icon',work/'MINER.ico','--distpath',BASE/'dist-windows',
         '--workpath',work/'pyinstaller','--specpath',work,
         '--paths',BASE,'--hidden-import','windows.smoke',
+        '--exclude-module','PySide6.QtWebEngineCore','--exclude-module','PySide6.QtWebEngineQuick',
+        '--exclude-module','PySide6.QtWebEngineWidgets','--exclude-module','PySide6.QtQuick3D',
+        '--exclude-module','PySide6.QtMultimedia','--exclude-module','PySide6.QtPdf',
         '--add-data',f'{BASE / "windows/qml"};qml',
         '--add-data',f'{art};art','--add-binary',f'{engine};engine',
         '--add-data',f'{__import__("certifi").where()};.',
@@ -60,6 +63,8 @@ def main():
     # warp.verify_trace expects this exact bundle filename.
     import certifi
     shutil.copyfile(certifi.where(),BASE/'dist-windows/MINER/_internal/cacert.pem')
+    from windows.package_size import prune
+    size_report=prune(BASE/'dist-windows/MINER/_internal')
     output=Path(os.environ.get('RUNNER_TEMP',str(work)))/'miner-windows-diagnostics'
     output.mkdir(parents=True,exist_ok=True)
     exe=BASE/'dist-windows/MINER/MINER.exe'
@@ -90,7 +95,9 @@ def main():
       'ui_theme':'Pearl White','default_controls':'A rounded floating','alternative_controls':'B flush integrated',
       'supplied_asset_sha256':{name:hashlib.sha256((art/'pearl/mascot'/name).read_bytes()).hexdigest() for name in ('miner-transparent.png','MINER-wordmark-transparent.png')},'ui_engine':'Qt Quick RHI + Fluent controls and functional Pearl buttons','network_engine':'sing-box 1.12.0 Windows TUN',
       'ui_scale_factors':[1,1.25,1.5,2],'windows_11_live_tested':False,'vanguard_tested':False,
-      'uninstaller_verified':True,'school_network_tested':False,'warp_live_tested':False}
+      'uninstaller_verified':True,'school_network_tested':False,'warp_live_tested':False,'source_commit':os.environ.get('GITHUB_SHA'),
+      'package_optimization':size_report,'installer_bytes':setup.stat().st_size,'size_target_bytes':80_000_000,
+      'size_target_met':setup.stat().st_size<=80_000_000}
     for path in [setup]:
         digest=hashlib.sha256(path.read_bytes()).hexdigest()
         report['sha256']=digest
