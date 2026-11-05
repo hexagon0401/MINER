@@ -11,6 +11,7 @@
 
 ![Beta 1.1](https://img.shields.io/badge/STATUS-BETA_1.1-0EFB2E?style=flat-square&labelColor=0C1421)
 ![macOS](https://img.shields.io/badge/macOS-Apple_Silicon-E6E8E6?style=flat-square&logo=apple&logoColor=white&labelColor=0C1421)
+![Windows](https://img.shields.io/badge/Windows-x64_BETA-0078D4?style=flat-square&logo=windows&logoColor=white&labelColor=0C1421)
 ![Cloudflare WARP](https://img.shields.io/badge/Cloudflare-WARP-F38020?style=flat-square&logo=cloudflare&logoColor=white&labelColor=0C1421)
 ![Python](https://img.shields.io/badge/Python-3776AB?style=flat-square&logo=python&logoColor=white)
 ![Swift](https://img.shields.io/badge/Swift-F05138?style=flat-square&logo=swift&logoColor=white)
@@ -33,7 +34,7 @@ MINER는 **클라이언트 통신은 WARP로, 게임 플레이 통신은 직접 
 | 게임 실행 파일의 통신 | 직접 연결 |
 | 일반 DNS · 포트 53 | WARP를 통한 암호화 DNS |
 
-현재는 macOS와 개인용 Cloudflare WARP를 중심으로 개발합니다. 게임 통신 자체가 차단된 환경에서는 직접 연결이 작동하지 않을 수 있습니다. 전국 모든 학교에서의 작동이나 모든 지연·연결 끊김의 해결을 보장하지 않습니다.
+현재는 개인용 Cloudflare WARP를 기반으로 macOS와 Windows x64 버전을 개발합니다. 게임 통신 자체가 차단된 환경에서는 직접 연결이 작동하지 않을 수 있습니다. 전국 모든 학교에서의 작동이나 모든 지연·연결 끊김의 해결을 보장하지 않습니다.
 
 <details>
 <summary><strong>개발 배경 · 왜 WARP와 분리 라우팅인가요?</strong></summary>
@@ -50,11 +51,14 @@ MINER는 **클라이언트 통신은 WARP로, 게임 플레이 통신은 직접 
 
 [![Apple Silicon DMG 다운로드](https://img.shields.io/badge/macOS-DMG_다운로드-0EFB2E?style=for-the-badge&logo=apple&logoColor=white&labelColor=0C1421)](https://github.com/hexagon0401/MINER/releases/download/v5.0.0-beta.1.1/MINER-v5.0.0-beta.1.1-macOS-AppleSilicon.dmg)
 
+[![Windows EXE 다운로드](https://img.shields.io/badge/Windows-EXE_다운로드-0078D4?style=for-the-badge&logo=windows&logoColor=white&labelColor=0C1421)](https://github.com/hexagon0401/MINER/releases/download/v5.0.0-beta.1.1-windows.4/MINER-v5.0.0-beta.1.1-windows.4-Windows-x64-Setup.exe)
+
 **MINER BETA 1.1 · Apple Silicon**
 베타 1 기반의 땅굴 모양 개선 버전입니다. [릴리스 노트·검증 파일 보기](https://github.com/hexagon0401/MINER/releases/tag/v5.0.0-beta.1.1)
 
 | 구분 | 현재 상태 |
 | :-- | :-- |
+| Windows 베타 1 · build 4 | [설치 EXE](https://github.com/hexagon0401/MINER/releases/download/v5.0.0-beta.1.1-windows.4/MINER-v5.0.0-beta.1.1-windows.4-Windows-x64-Setup.exe) · [릴리스·검증 파일](https://github.com/hexagon0401/MINER/releases/tag/v5.0.0-beta.1.1-windows.4) · [소스](https://github.com/hexagon0401/MINER/tree/windows-beta1) |
 | 베타 1 유지 보수 | [`beta1-maintenance`](https://github.com/hexagon0401/MINER/tree/beta1-maintenance)에서 개발 |
 | 베타 2 | 학교 현황·진단·제보 기능의 **소스만 보관**. 배포용 DMG에 미포함 |
 | 공유 제보 서버 | 미개방 |
@@ -97,6 +101,28 @@ MINER는 **클라이언트 통신은 WARP로, 게임 플레이 통신은 직접 
 <img src="docs/images/macos-install/03-open-anyway.png" alt="최종 실행 확인 창의 Open Anyway 버튼" width="460" />
 
 macOS 버전과 표시 언어에 따라 버튼 이름이나 화면 구성은 조금 다를 수 있습니다. `앱이 손상되어 열 수 없습니다`처럼 다른 오류가 표시되는 경우에는 이 안내와 다른 문제일 수 있으므로 오류 문구를 확인해 주세요.
+
+</details>
+
+### Windows x64
+
+1. 개인용 Cloudflare WARP를 설치하고 최초 등록을 마칩니다.
+2. 위 **Windows EXE**로 설치한 뒤 MINER를 실행합니다. 관리자 권한(UAC)이 필요합니다.
+3. **시작**으로 연결하고 **중지**로 엔진 정리와 WARP 복귀를 확인합니다. 설정은 **Ctrl+,**로 엽니다.
+4. 제거하려면 MINER에서 중지·종료한 뒤 Windows의 **설치된 앱**에서 MINER를 제거합니다. 사용자 설정과 로그, WARP는 보존합니다.
+
+> [!NOTE]
+> Windows 11 x64를 대상으로 개발하지만 자동 검증은 **Windows Server 2025**에서 수행했습니다. 설치·재설치·제거, 실제 TUN 생성·종료, 프로세스 정리, 화면 배율 100~200%를 확인했습니다. **실제 Windows 11·WARP 연결·학교망·LoL·Vanguard는 미검증**이며, 실행 파일은 Authenticode 미서명입니다.
+
+<details>
+<summary><strong>Windows 실행 화면과 애니메이션 보기</strong></summary>
+
+아래는 패키징한 EXE의 **UI 검증 화면**입니다. 연결 상태는 검사용 주입 값이며 실제 WARP나 게임 접속 성공을 의미하지 않습니다.
+
+<img src="docs/assets/windows-beta1/idle.png" alt="Windows MINER 베타 1 대기 화면 — 실제 EXE UI 검증" width="420" />
+<img src="docs/assets/windows-beta1/settings.png" alt="Windows MINER 한영·테마·동작 줄이기·개발자 설정" width="280" />
+
+[애니메이션 GIF](https://github.com/hexagon0401/MINER/releases/download/v5.0.0-beta.1.1-windows.4/MINER-v5.0.0-beta.1.1-windows.4-Windows-x64-Preview.gif) · [전체 스크린샷 ZIP](https://github.com/hexagon0401/MINER/releases/download/v5.0.0-beta.1.1-windows.4/MINER-v5.0.0-beta.1.1-windows.4-Windows-x64-Screenshots.zip) · [Mac 대비 변경점](https://github.com/hexagon0401/MINER/blob/windows-beta1/v5/windows/README.md)
 
 </details>
 
@@ -145,6 +171,7 @@ macOS 버전과 표시 언어에 따라 버튼 이름이나 화면 구성은 조
 
 | 문서 | 내용 |
 | :-- | :-- |
+| [Windows 기술 안내](https://github.com/hexagon0401/MINER/blob/windows-beta1/v5/windows/README.md) | Windows 베타 1 설치·복구·현지화 변경점 |
 | [v5 기술 안내](v5/README.md) | 설치·연결 구조·CLI 사용법 |
 | [학교 데이터·제보 시스템](v5/community/README.md) | 베타 2의 로컬 진단과 제보 구조 |
 | [베타 2 인계](v5/docs/BETA2_HANDOFF.md) | 개발 상태와 남은 작업 |
