@@ -1,25 +1,25 @@
 # MINER Homebrew 배포 준비
 
-현재 정식 배포 대상은 **MINER ALPHA v1**입니다. ALPHA는 세대 코드명이며 테스트 단계 표시가 아닙니다. `Casks/miner.rb`는 Apple Silicon·Intel을 자동으로 구분해 ALPHA v1의 검증된 DMG와 SHA-256을 사용합니다. 이전 `miner-beta.rb`와 생성기는 과거 이력으로 유지합니다.
+현재 정식 배포 대상은 **MINER ALPHA v1**입니다. ALPHA는 세대 코드명이며 테스트 단계 표시가 아닙니다. 저장소 루트의 [Casks/miner.rb](../../Casks/miner.rb)는 Apple Silicon·Intel을 자동으로 구분해 ALPHA v1의 검증된 DMG와 SHA-256을 사용합니다. 이 디렉터리의 이전 `Casks/miner-beta.rb`와 생성기는 과거 이력으로 유지합니다.
 
 ## 배포 경로
 
-먼저 공개 전용 tap `hexagon0401/homebrew-miner`로 배포합니다. 이 디렉터리 자체는 아직 사용자에게 공개된 tap이 아니므로 아래 설치 명령은 tap 등록과 검증을 마친 뒤 안내해야 합니다.
+기존 공개 저장소 `hexagon0401/MINER`를 그대로 tap으로 사용합니다. 별도 저장소는 필요하지 않습니다. Homebrew가 루트 `Casks/`에서 앱 정의를 찾도록 구성했습니다. Mac에서의 Homebrew 검사와 설치·실행 검증은 아직 남아 있으므로 아래는 검증용 설치 명령입니다.
 
 ```bash
-brew tap hexagon0401/miner
-brew install --cask miner
+brew tap hexagon0401/miner https://github.com/hexagon0401/MINER.git
+brew install --cask hexagon0401/miner/miner
 ```
 
-또는 `brew install --cask hexagon0401/miner/miner`로 설치합니다. 최소 macOS는 앱 빌드 대상과 같은 Ventura(13)입니다. 개인용 Cloudflare WARP는 별도로 설치·등록합니다.
+첫 번째 명령의 저장소 URL을 생략하면 Homebrew가 기본 규칙에 따라 `hexagon0401/homebrew-miner`를 찾습니다. 기존 MINER 저장소를 사용할 때는 처음 등록할 때 위 URL을 반드시 지정합니다. 등록 이후에는 `brew install --cask hexagon0401/miner/miner`만 사용하면 됩니다. 최소 macOS는 앱 빌드 대상과 같은 Ventura(13)입니다. 개인용 Cloudflare WARP는 별도로 설치·등록합니다.
 
 ## 사용자 준비
 
-GitHub에서 소유자를 `hexagon0401`, 이름을 `homebrew-miner`, 공개 범위를 **Public**으로 하여 빈 저장소를 생성합니다. README·라이선스 자동 생성은 선택하지 않아도 됩니다. 현재 기존 저장소의 Git 읽기는 가능하지만 저장소 생성 API 인증이 실패하므로, 생성 이후 Git으로 cask를 배치하는 방식으로 진행할 수 있습니다. 인증 토큰을 채팅에 보낼 필요는 없습니다.
+새 저장소 생성이나 추가 인증 토큰은 필요하지 않습니다. Homebrew가 설치된 Mac에서 위 명령으로 검증할 수 있습니다. DMG를 직접 설치한 MINER가 이미 있다면 먼저 중지·종료하고, Homebrew가 같은 앱의 존재로 설치를 중단하면 기존 앱의 데이터와 제거 안내를 확인한 뒤 전환합니다.
 
 ## 배포 전 확인
 
-1. **tap 저장소 준비:** 공개 `hexagon0401/homebrew-miner`에 `Casks/miner.rb`를 배치합니다. 앱 소스·DMG를 복사할 필요 없이 기존 ALPHA v1 릴리스 파일을 다운로드합니다.
+1. **tap 등록:** 위의 명시적 URL로 기존 MINER 저장소를 등록합니다. 앱 소스·DMG를 복사할 필요 없이 기존 ALPHA v1 릴리스 파일을 다운로드합니다. tap을 복제할 때는 프로젝트 소스와 보관 이력도 함께 내려받으므로, 규모가 커지면 별도 tap을 선택할 수 있습니다.
 2. **익명 다운로드 검사:** 토큰 없이 두 DMG를 다운로드해 각각 아래 해시와 일치하는지 확인합니다. Apple Silicon URL의 익명 접근은 개발 환경에서 HTTP 200을 확인했습니다. 실제 전체 파일 검사는 별도로 수행합니다.
 3. **Homebrew 검사:** Mac에서 tap 설치 후 `brew style --cask hexagon0401/miner/miner`와 `brew audit --cask --online hexagon0401/miner/miner`를 실행합니다. 검사 오류는 보안 우회로 숨기지 않고 수정합니다.
 4. **설치·업데이트·제거 검증:** Apple Silicon과 Intel에서 실제 앱 설치·실행, 중지 후 WARP 복귀, 업데이트·제거를 확인합니다. 실행 중 설치·제거가 중단되는지도 확인합니다.
@@ -34,7 +34,7 @@ GitHub에서 소유자를 `hexagon0401`, 이름을 `homebrew-miner`, 공개 범�
 
 ## 서명·실행 허용
 
-현재 DMG 앱은 ad-hoc 서명이며 Apple 공증이 없습니다. Homebrew로 설치해도 macOS 최초 실행 경고가 없어지는 것은 아닙니다. Developer ID 서명·Apple 공증을 준비하면 배포 경험을 개선할 수 있습니다. 전용 tap 준비와 서명 준비는 별도로 진행할 수 있습니다.
+현재 DMG 앱은 ad-hoc 서명이며 Apple 공증이 없습니다. Homebrew로 설치해도 macOS 최초 실행 경고가 없어지는 것은 아닙니다. Developer ID 서명·Apple 공증을 준비하면 배포 경험을 개선할 수 있습니다. tap 준비와 서명 준비는 별도로 진행할 수 있습니다.
 
 Apple 자격 증명은 채팅이나 cask에 넣지 않고 저장소 Secrets에 등록합니다. [서명·공증 안내](../../v5/docs/SIGNING.md)를 따릅니다. Gatekeeper 전역 해제나 quarantine 제거를 cask에서 자동 실행하지 않습니다.
 
