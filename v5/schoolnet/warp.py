@@ -1,6 +1,7 @@
 """Control the separately installed WARP client; never implement its tunnel."""
 import http.client
 import json
+import os
 from pathlib import Path
 import platform
 import re
@@ -22,6 +23,8 @@ def resolve_cli(value=None):
     candidate = value or shutil.which("warp-cli")
     if not candidate and platform.system() == "Darwin":
         candidate = "/Applications/Cloudflare WARP.app/Contents/Resources/warp-cli"
+    if not candidate and platform.system() == "Windows":
+        candidate = str(Path(os.environ.get("ProgramW6432", os.environ.get("ProgramFiles", r"C:\Program Files"))) / "Cloudflare" / "Cloudflare WARP" / "warp-cli.exe")
     if not candidate or not Path(candidate).is_file():
         raise ValueError("warp-cli unavailable; install WARP or pass --warp-cli with its installed path")
     return str(candidate)

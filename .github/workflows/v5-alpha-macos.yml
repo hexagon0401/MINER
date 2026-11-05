@@ -3,7 +3,7 @@ name: MINER macOS DMG
 on:
   push:
     branches: [main, v5-alpha]
-    tags: ['v5.0.0-alpha.*', 'v5.0.0-delta.*', 'v5.0.0-beta.*']
+    tags: ['v5.0.0-alpha.*', 'v5.0.0-delta.*', 'v5.0.0-beta.*', '!v5.0.0-beta.*-windows.*']
     paths: ['v5/**', '.github/workflows/v5-alpha-macos.yml']
   workflow_dispatch:
 
