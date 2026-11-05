@@ -85,9 +85,9 @@ def install_runtime(base, resources, profile):
                 os.replace(destination, backup)
                 backups[name] = backup
             os.replace(stage / name, destination)
+            replaced.append(name)
             for path in [destination, *destination.rglob("*")]:
                 path.chmod(0o755 if path.is_dir() or path.stat().st_mode & 0o111 else 0o644)
-            replaced.append(name)
         write_json(base / MARKER, {"id": LABEL, "version": __version__})
     except Exception:
         for name in reversed(replaced):
@@ -150,6 +150,8 @@ def start_installed(profile):
     if log.exists() and log.stat().st_size > 5 * 1024 * 1024:
         os.replace(log, base / "engine.previous.log")
     offset = log.stat().st_size if log.exists() else 0
+    log.touch(exist_ok=True)
+    log.chmod(0o644)
     command = ["/bin/launchctl", "submit", "-l", LABEL,
                "-o", str(base / "engine.log"), "-e", str(base / "engine.log"), "--",
                str(base / "runtime/schoolnet-cli"), "run", "--directory", str(directory),
