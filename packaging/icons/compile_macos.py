@@ -21,9 +21,13 @@ def compile_icon(source, output):
         raise ValueError("Native compiler must emit one backwards-compatible ICNS")
     iconset = output / "Export.iconset"
     subprocess.run(["iconutil", "-c", "iconset", str(icons[0]), "-o", str(iconset)], check=True)
-    png = iconset / "icon_512x512@2x.png"
-    if not png.exists():
-        raise ValueError("Native icon must include a 1024px PNG for Windows and older Macs")
+    # Apple's Icon Composer fallback ICNS can contain only up to 256px. Windows
+    # ICO uses a maximum 256px image; macOS uses the full native Assets.car.
+    png = next((iconset / name for name in (
+        "icon_512x512@2x.png", "icon_512x512.png", "icon_128x128@2x.png",
+    ) if (iconset / name).exists()), None)
+    if png is None:
+        raise ValueError("Native icon must include at least a 256px Windows fallback")
     shutil.copyfile(png, output / "AppIcon.png")
     if icons[0].name != "AppIcon.icns":
         shutil.copyfile(icons[0], output / "AppIcon.icns")
