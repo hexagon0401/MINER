@@ -1,0 +1,38 @@
+name: Read MINER native diagnostics
+on:
+  workflow_dispatch:
+    inputs:
+      run_id:
+        description: Native build run ID
+        required: true
+permissions:
+  contents: read
+  actions: read
+jobs:
+  report:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Fetch native build diagnostics
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          REPORT_RUN: ${{ inputs.run_id }}
+        run: |
+          [[ "$REPORT_RUN" =~ ^[0-9]+$ ]]
+          gh run download "$REPORT_RUN" --pattern 'v111-release-*' --dir diagnostics
+      - name: Expose bounded test logs and package size in check annotations
+        run: |
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          def notice(name,text):
+              print('::notice title='+name+'::'+text.replace('%','%25').replace('\r','%0D').replace('\n','%0A'))
+          for path in Path('diagnostics').rglob('*.verification.json'):
+              data=json.loads(path.read_text())
+              if 'installer_bytes' in data:
+                  notice('Windows package report',json.dumps({k:data.get(k) for k in ['installer_bytes','size_target_met','package_optimization']})[-7500:])
+          for path in Path('diagnostics').rglob('*.log'):
+              if 'release-' in path.name:
+                  notice(path.name,path.read_text(errors='replace')[-4500:])
+          PY
