@@ -99,10 +99,8 @@ def instance_lock(directory):
     with (Path(directory) / "runtime.lock").open("a+b") as lock:
         if os.name == "nt":
             import msvcrt
-            lock.seek(0)
-            if not lock.read(1):
-                lock.write(b"0")
-                lock.flush()
+            # Windows permits byte-range locks beyond EOF. Acquire before any
+            # read/write: a second reader of the locked byte raises PermissionError.
             lock.seek(0)
             try:
                 msvcrt.locking(lock.fileno(), msvcrt.LK_NBLCK, 1)

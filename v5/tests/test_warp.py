@@ -1,4 +1,5 @@
 import io
+from pathlib import Path
 from unittest.mock import MagicMock, patch
 import unittest
 
@@ -125,7 +126,7 @@ class WarpTests(unittest.TestCase):
         with patch.object(warp.sys, "frozen", True, create=True), patch.object(warp.sys, "_MEIPASS", "/fixture/internal", create=True), patch(
             "socket.create_connection"), patch.object(warp, "socks_connect"), patch("ssl.create_default_context", return_value=context):
             warp.verify_trace()
-        context.load_verify_locations.assert_called_once_with(cafile="/fixture/internal/cacert.pem")
+        context.load_verify_locations.assert_called_once_with(cafile=str(Path("/fixture/internal") / "cacert.pem"))
 
 
 if __name__ == "__main__":

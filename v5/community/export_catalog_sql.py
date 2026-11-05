@@ -1,4 +1,6 @@
 """Prepare a D1 import from a validated complete catalog. No cloud calls."""
+
+from contextlib import closing
 import argparse
 import json
 from pathlib import Path
@@ -10,7 +12,7 @@ def literal(value):
 
 
 def export(source,output,allow_fixture=False):
-    with sqlite3.connect(f'file:{Path(source).resolve()}?mode=ro',uri=True) as db:
+    with closing(sqlite3.connect(f'file:{Path(source).resolve()}?mode=ro',uri=True)) as db:
         metadata={k:json.loads(v) for k,v in db.execute('SELECT key,value FROM catalog_meta')}
         if not metadata['complete'] or (metadata['fixture'] and not allow_fixture): raise ValueError('Complete official catalog required')
         rows=list(db.execute('SELECT * FROM schools ORDER BY id'))
