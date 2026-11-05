@@ -17,6 +17,15 @@ from schoolnet.probe import socks_connect
 
 
 class RuntimeTests(unittest.TestCase):
+    def test_stale_temporary_file_does_not_block_settings_and_bad_json_preserves_previous(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path=Path(directory)/"settings.json"
+            stale=path.with_suffix(".json.tmp");stale.write_text("interrupted earlier save")
+            write_json(path,{"language":"ko"})
+            self.assertEqual({"language":"ko"},json.loads(path.read_text()))
+            with self.assertRaises(TypeError):write_json(path,{"bad":object()})
+            self.assertEqual({"language":"ko"},json.loads(path.read_text()))
+            self.assertEqual("interrupted earlier save",stale.read_text())
     def test_init_preserves_existing_profile_and_render_regenerates(self):
         with tempfile.TemporaryDirectory() as directory:
             self.assertEqual(main(["init", "--directory", directory]), 0)

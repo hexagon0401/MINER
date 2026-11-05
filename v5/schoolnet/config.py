@@ -27,6 +27,7 @@ GAMES = {
     "macos": ["LeagueofLegends", "League of Legends"],
     "windows": ["League of Legends.exe"],
 }
+RIOT_DOMAINS = ["riotgames.com", "riotcdn.net", "riotgames.net", "pvp.net", "leagueoflegends.com"]
 
 
 @dataclass
@@ -78,7 +79,9 @@ def build_config(profile: Profile) -> dict:
     tun = {
         "type": "tun", "tag": "schoolnet-tun",
         "address": ["172.30.255.1/30", "fdfe:dcba:9876::1/126"],
-        "mtu": p.mtu, "auto_route": True, "strict_route": True, "stack": "system",
+        # Strict mode enforces DNS on Windows and can block ordinary interface
+        # traffic. Fail-closed applies to Riot's proxy rules, not the whole host.
+        "mtu": p.mtu, "auto_route": True, "strict_route": False, "stack": "system",
     }
     if p.game_cidrs:
         tun["route_exclude_address"] = list(p.game_cidrs)
@@ -99,7 +102,10 @@ def build_config(profile: Profile) -> dict:
         # Explicit ICMP rejection lets Chromium abandon QUIC promptly and retry
         # HTTPS/TCP through WARP. Voice/other UDP support is still not assumed.
         rules.append({**selector, "network": "udp", "action": "reject", "method": "default", "no_drop": True})
-    route = {"rules": rules, "final": "direct", "default_domain_resolver": "warp-dns"}
+    dns_rules = [{**selector, "action": "route", "server": "warp-dns"} for selector in selectors]
+    # OS DNS services may own the query instead of the originating client.
+    dns_rules.append({"domain_suffix": RIOT_DOMAINS, "action": "route", "server": "warp-dns"})
+    route = {"rules": rules, "final": "direct", "default_domain_resolver": "direct-dns"}
     if p.physical_interface:
         route["default_interface"] = p.physical_interface
     else:
@@ -109,8 +115,9 @@ def build_config(profile: Profile) -> dict:
         "dns": {
             "servers": [{"type": "https", "tag": "warp-dns", "server": "1.1.1.1",
                          "server_port": 443, "path": "/dns-query", "detour": "warp",
-                         "tls": {"enabled": True, "server_name": "cloudflare-dns.com"}}],
-            "final": "warp-dns", "cache_capacity": 4096,
+                         "tls": {"enabled": True, "server_name": "cloudflare-dns.com"}},
+                        {"type": "local", "tag": "direct-dns"}],
+            "rules": dns_rules, "final": "direct-dns", "independent_cache": True, "cache_capacity": 4096,
         },
         "inbounds": [tun],
         "outbounds": [

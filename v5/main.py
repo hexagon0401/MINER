@@ -29,6 +29,7 @@ def main(argv=None):
         command.add_argument("--directory", type=Path, required=True)
         command.add_argument("--engine", default="sing-box")
         command.add_argument("--warp-cli")
+        if name == "run": command.add_argument("--managed-helper", action="store_true")
     probe = commands.add_parser("benchmark", help="compare TCP connection times, not game ping")
     probe.add_argument("--host", required=True)
     probe.add_argument("--port", type=int, default=443)
@@ -41,15 +42,29 @@ def main(argv=None):
     warp.add_argument("--proxy-port", type=int, default=40000)
     warp.add_argument("--warp-cli")
     desktop = commands.add_parser("desktop", help="macOS app service management")
-    desktop.add_argument("operation", choices=["start", "stop", "status", "uninstall"])
+    desktop.add_argument("operation", choices=["start", "stop", "status", "uninstall", "helper-install", "helper-serve", "helper-start", "helper-stop", "helper-status"])
+    desktop.add_argument("--owner", type=int)
     desktop.add_argument("--resources", type=Path)
     desktop.add_argument("--profile", type=Path)
+    update = commands.add_parser("update", help="check or verify an official installer download")
+    update.add_argument("operation", choices=["check", "download"])
+    update.add_argument("--platform", choices=["macos", "windows"], required=True)
+    update.add_argument("--arch", choices=["arm64", "x86_64", "x64"], required=True)
+    update.add_argument("--directory", type=Path)
     community = commands.add_parser("community-diagnose", help="read-only school report diagnostics; no routing changes")
     community.add_argument("--directory", type=Path, required=True)
     community.add_argument("--engine", required=True)
     args = parser.parse_args(argv)
     try:
-        if args.command == "community-diagnose":
+        if args.command == "update":
+            from schoolnet import updates
+            info = updates.check(args.platform, args.arch)
+            if args.operation == "download":
+                if args.directory is None: raise ValueError("Download directory required")
+                if not info["available"]: raise ValueError("No newer official release is available")
+                info = updates.download(info, args.directory)
+            print(json.dumps(info)); return 0
+        elif args.command == "community-diagnose":
             from community.diagnostics import diagnose, CHECKS
             try:
                 result = diagnose(args.directory, args.engine)
@@ -76,12 +91,26 @@ def main(argv=None):
             print(json.dumps(result, indent=2))
             return 0 if result["preflight_ok"] else 1
         elif args.command == "run":
-            return run(args.directory, args.engine, args.warp_cli)
+            return run(args.directory, args.engine, args.warp_cli, managed_helper=args.managed_helper)
         elif args.command == "benchmark":
             result = benchmark(args.host, args.port, args.samples, args.proxy_port, args.timeout)
             print(json.dumps(result, indent=2))
             return 0 if all(p["successes"] for p in result["paths"].values()) else 1
         elif args.command == "desktop":
+            if args.operation.startswith("helper-"):
+                from schoolnet import macos_helper as helper
+                if sys.platform != "darwin":
+                    raise ValueError("Persistent helper is macOS-only")
+                operation = args.operation.removeprefix("helper-")
+                if operation == "install": result = helper.install(args.resources, args.profile, args.owner)
+                elif operation == "serve": return helper.serve(args.owner)
+                else:
+                    if operation == "start":
+                        from schoolnet.warp import progress
+                        progress("routing", 4)
+                    result = helper.request(operation, load_profile(args.profile) if operation == "start" else None)
+                    if operation == "start" and result.get("running"): progress("running", 5)
+                print(json.dumps(result)); return 0
             from schoolnet.macos_service import manage
             return manage(args.operation, args.resources, args.profile)
         elif args.command == "warp":

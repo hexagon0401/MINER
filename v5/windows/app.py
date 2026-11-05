@@ -31,11 +31,24 @@ class Worker(QThread):
         except Exception as exc:self.failed.emit(str(exc))
 
 
+class UpdateWorker(QThread):
+    completed=Signal(object); failed=Signal(str)
+    def __init__(self,info=None):
+        super().__init__();self.info=info
+    def run(self):
+        try:
+            from schoolnet import updates
+            result=updates.download(self.info,DATA/'Updates') if self.info else updates.check('windows','x64')
+            self.completed.emit(result)
+        except Exception as exc:self.failed.emit(str(exc))
+
+
 class Bridge(QObject):
     changed=Signal();effect=Signal(str);closeRequested=Signal()
     def __init__(self,testing=False):
         super().__init__();self.testing=testing;self.worker=None;self.closing=False;self.detail='';self.count=0
         self.settings_open=False;self.fixture_busy=False;self.pending_kill=False;self.effects_supported=False
+        self.update_worker=None;self.update_busy=False;self.update_message='';self.update_info=None;self.pending_installer=None
         DATA.mkdir(parents=True,exist_ok=True)
         try:
             cfg=json.loads((DATA/'settings.json').read_text(encoding='utf-8'))
@@ -62,14 +75,15 @@ class Bridge(QObject):
             'dark':False,'controlLayout':self.control_layout,'effectsSupported':self.effects_supported,
             'reduced':self.reduced or self.appearance['reduced'],'systemReduced':self.appearance['reduced'],
             'contrast':self.appearance['contrast'],'phase':self.phase,'completed':self.count,
-            'detail':self.detail,'canStart':not self.dirty and not active,
+            'detail':self.detail,'canStart':not self.dirty and not active and not self.update_busy,
             'canStop':self.dirty and self.phase not in ('restoring','disconnecting'),
             'canKill':self.phase not in ('disconnecting','disconnected'),
             'busy':(active or self.fixture_busy) and self.phase not in ('running','restoring','disconnecting','error','restored','disconnected'),
             'settingsOpen':self.settings_open,'latinFontFamily':self.font_family,'fontFamily':self.korean_font if self.language=='ko' else self.font_family,'version':LABEL,
             'art':QUrl.fromLocalFile(str(ART.resolve())+os.sep).toString(),
             'pearlArt':QUrl.fromLocalFile(str((ART/'pearl' if (ART/'pearl').exists() else ROOT/'windows/pearl').resolve())+os.sep).toString(),
-            'validation':self.testing}
+            'validation':self.testing,'updateBusy':self.update_busy,'updateMessage':self.update_message,
+            'updateAvailable':bool(self.update_info and self.update_info.get('available'))}
 
     def save(self):
         from schoolnet.runtime import write_json
@@ -113,6 +127,7 @@ class Bridge(QObject):
     @Slot(result=bool)
     def requestClose(self):
         if self.testing:return True
+        if self.update_busy:return False
         if self.dirty or (self.worker and self.worker.isRunning()):
             self.closing=True
             if self.phase not in ('restoring','disconnecting'):self.end()
@@ -167,6 +182,42 @@ class Bridge(QObject):
     @Slot()
     def logs(self):
         if sys.platform=='win32':os.startfile(str(DATA))
+
+    @Slot()
+    def checkUpdate(self):
+        if self.testing or self.update_busy:return
+        self.update_message=WORDS[self.language]['update_checking'];self.run_update()
+
+    @Slot()
+    def installUpdate(self):
+        if self.testing or self.update_busy or not self.update_info or not self.update_info.get('available'):return
+        if self.dirty or (self.worker and self.worker.isRunning()):
+            self.update_message=WORDS[self.language]['update_stop'];self.changed.emit();return
+        self.update_message=WORDS[self.language]['update_downloading'];self.run_update(self.update_info)
+
+    def run_update(self,info=None):
+        self.update_busy=True;self.update_worker=UpdateWorker(info)
+        self.update_worker.completed.connect(self.update_result)
+        self.update_worker.failed.connect(self.update_error)
+        self.update_worker.finished.connect(self.update_finished)
+        self.update_worker.start();self.changed.emit()
+
+    def update_result(self,result):
+        if result.get('verified'):
+            self.pending_installer=result['path'];return
+        self.update_info=result
+        self.update_message=(WORDS[self.language]['update_available']+' '+result['version']) if result.get('available') else WORDS[self.language]['update_current']
+
+    def update_error(self,message):self.update_message=message;self.pending_installer=None
+
+    def update_finished(self):
+        self.update_busy=False
+        if self.pending_installer:
+            try:
+                from windows.updates import launch
+                launch(self.pending_installer);self.pending_installer=None;self.closeRequested.emit()
+            except Exception as exc:self.update_message=str(exc);self.pending_installer=None
+        self.changed.emit()
 
 
 def create_app(testing=False):

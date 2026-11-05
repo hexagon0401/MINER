@@ -17,9 +17,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     var window: NSWindow!
     let model = MinerModel()
     var settingsWindow: NSWindow?
-    var schoolsWindow:NSWindow?
-    lazy var community = SchoolCommunityModel(dataDirectory:dataDirectory,catalogURL:resources.appendingPathComponent("Community/schools.sqlite3"),cli:cli,engine:engine)
     var managedWarp = false
+    var updateInfo:[String:Any] = [:]
     var buttons: [NSButton] = []
     var running = false { didSet { model.engine = running } }
     var busy = false
@@ -69,7 +68,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             runDeltaSmoke(output:URL(fileURLWithPath:CommandLine.arguments[index+1]),arch:CommandLine.arguments[index+2])
             return
         }
-        append("MINER BETA 2: 학교 연결·게임 핑·종료 복구는 실기 확인이 필요합니다.")
+        append("MINER ALPHA v1.1.1: 연결 경로와 종료 복구를 확인하세요.")
         refresh()
     }
 
@@ -87,7 +86,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         guard !CommandLine.arguments.contains("--ui-smoke") else {
             throw NSError(domain:identifier,code:1,userInfo:[NSLocalizedDescriptionKey:"Network/backend actions are disabled in UI smoke fixtures"])
         }
-        if administrator && arguments.prefix(2).elementsEqual(["desktop", "start"]) {
+        if administrator && (arguments.prefix(2).elementsEqual(["desktop", "start"]) || arguments.prefix(2).elementsEqual(["desktop", "helper-install"])) {
             DispatchQueue.main.async { self.model.phase = "admin_auth"; self.model.completed = 3 }
         }
         let process = Process()
@@ -146,7 +145,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     func operation(_ work: @escaping () throws -> String, completion: (() -> Void)? = nil) {
-        guard !busy else { return }
+        guard !busy && !model.updateBusy else { return }
         setBusy(true)
         DispatchQueue.global(qos: .userInitiated).async {
             let result: Result<String, Error> = Result { try work() }
@@ -171,30 +170,19 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         return ["warp", operation, "--proxy-port", String(port), "--progress"]
     }
     @objc func connectWarp() {
-        guard !busy && !running else { return }
+        guard !busy && !model.updateBusy && !running else { return }
         managedWarp = true; model.phase = "cli_check"; model.completed = 0; model.error = ""
         operation({ try self.execute(self.warpArguments("connect")) }, completion: { self.model.phase = "warp_ready"; self.model.warp = true; self.model.completed = 3 })
     }
     @objc func showSettings() {
         if settingsWindow == nil {
-            let settings = NSWindow(contentRect:NSRect(x:0,y:0,width:460,height:640),styleMask:[.titled,.closable,.resizable],backing:.buffered,defer:false)
+            let settings = NSWindow(contentRect:NSRect(x:0,y:0,width:420,height:380),styleMask:[.titled,.closable],backing:.buffered,defer:false)
             settings.title = "MINER Settings"
-            settings.minSize = NSSize(width:440,height:520)
             settings.isReleasedWhenClosed = false
             settings.contentView = NSHostingView(rootView:MinerSettings(model:model,controller:self))
             settings.center(); settingsWindow = settings
         }
         settingsWindow?.makeKeyAndOrderFront(nil)
-    }
-    @objc func showSchools() {
-        if schoolsWindow == nil {
-            let window = NSWindow(contentRect:NSRect(x:0,y:0,width:720,height:620),styleMask:[.titled,.closable,.resizable],backing:.buffered,defer:false)
-            window.title = "MINER · Schools"
-            window.minSize = NSSize(width:600,height:480);window.isReleasedWhenClosed = false
-            window.contentView = NSHostingView(rootView:SchoolDetailsView(community:community,model:model))
-            window.center();schoolsWindow = window
-        }
-        schoolsWindow?.makeKeyAndOrderFront(nil)
     }
     @objc func showDiagnostics() {
         let log = URL(fileURLWithPath:"/Library/Application Support/SchoolNet v5 Alpha/engine.log")
@@ -234,7 +222,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         }
     }
     @objc func start() {
-        guard !busy && !running else { return }
+        guard !busy && !model.updateBusy && !running else { return }
         managedWarp = true; model.phase = "cli_check"; model.completed = 0; model.error = ""
         guard Bundle.main.bundleURL.path == "/Applications/MINER.app" else {
             append("DMG에서 앱을 Applications로 복사한 뒤 그 앱을 실행하세요."); return
@@ -242,6 +230,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         operation({
             try self.ensureProfile()
             _ = try self.execute(self.warpArguments("connect"))
+            if self.model.alwaysAllow {
+                try self.ensureHelper()
+                return try self.execute(["desktop", "helper-start", "--profile", self.dataDirectory.path])
+            }
             return try self.execute(["desktop", "start", "--resources", self.resources.path,
                                      "--profile", self.dataDirectory.path], administrator: true)
         }, completion: { self.running = true; self.model.phase = "running"; self.model.completed = 5; self.model.warp = true })
@@ -250,7 +242,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         guard !busy else { return }
         model.phase = "stopping"
         operation({
-            if self.running { _ = try self.execute(["desktop", "stop"], administrator:true) }
+            if self.running { _ = try self.stopEngine() }
             DispatchQueue.main.async { self.running = false }
             return try self.execute(["warp", "restore"])
         }, completion: { self.running = false; self.model.phase = "stopped"; self.model.completed = 0; self.model.warp = true; self.model.restored = true; self.managedWarp = false })
@@ -263,6 +255,66 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                 DispatchQueue.main.async { self.running = info["running"] as? Bool ?? false; if self.running { self.model.phase = "running"; self.model.completed = 5; self.managedWarp = true } }
             }
             return text
+        }
+    }
+    func helperReady() -> Bool {
+        guard let text = try? execute(["desktop","helper-status"]), let data = text.data(using:.utf8),
+              let info = try? JSONSerialization.jsonObject(with:data) as? [String:Any] else { return false }
+        return (info["version"] as? String) == (Bundle.main.object(forInfoDictionaryKey:"SchoolNetReleaseVersion") as? String)
+    }
+    func ensureHelper() throws {
+        if helperReady() { return }
+        _ = try execute(["desktop","helper-install","--resources",resources.path,"--profile",dataDirectory.path,"--owner",String(getuid())],administrator:true)
+        guard helperReady() else { throw NSError(domain:identifier,code:1,userInfo:[NSLocalizedDescriptionKey:"MINER helper did not become ready"] ) }
+    }
+    func stopEngine() throws -> String {
+        if model.alwaysAllow && helperReady() { return try execute(["desktop","helper-stop"]) }
+        return try execute(["desktop","stop"],administrator:true)
+    }
+    var updateArchitecture:String {
+        #if arch(arm64)
+        return "arm64"
+        #else
+        return "x86_64"
+        #endif
+    }
+    @objc func checkUpdate() {
+        guard !model.updateBusy && !busy else { return }
+        model.updateBusy = true; model.updateMessage = model.tr("최신 정식 버전을 확인하고 있습니다.","Checking the latest official release.")
+        DispatchQueue.global(qos:.utility).async {
+            do {
+                let text = try self.execute(["update","check","--platform","macos","--arch",self.updateArchitecture])
+                let info = try JSONSerialization.jsonObject(with:Data(text.utf8)) as? [String:Any] ?? [:]
+                DispatchQueue.main.async {
+                    self.updateInfo = info; self.model.updateBusy = false
+                    self.model.updateAvailable = info["available"] as? Bool == true
+                    self.model.updateMessage = self.model.updateAvailable ? self.model.tr("새 버전: ","New release: ") + (info["version"] as? String ?? "") + self.model.tr(" · 연결을 중지한 뒤 설치하세요."," · Stop MINER before installing.") : self.model.tr("최신 버전입니다.","You are up to date.")
+                }
+            } catch { DispatchQueue.main.async { self.model.updateBusy = false; self.model.updateMessage = self.model.redact(error.localizedDescription) } }
+        }
+    }
+    @objc func installUpdate() {
+        guard model.updateAvailable && !model.updateBusy && !busy && !running else { return }
+        if updateInfo["manager"] as? String == "homebrew" {
+            guard let brew = updateInfo["brew"] as? String, ["/opt/homebrew/bin/brew","/usr/local/bin/brew"].contains(brew) else { return }
+            let command = "while /usr/bin/pgrep -x MINER >/dev/null; do /bin/sleep 1; done; " + shellQuote(brew) + " update && " + shellQuote(brew) + " upgrade --cask hexagon0401/miner/miner"
+            let process = Process(); process.executableURL = URL(fileURLWithPath:"/usr/bin/osascript")
+            process.arguments = ["-e","tell application \"Terminal\" to do script " + appleString(command)]
+            do { try process.run(); NSApp.terminate(nil) } catch { model.updateMessage = error.localizedDescription }
+            return
+        }
+        model.updateBusy = true; model.updateMessage = model.tr("설치 파일 다운로드·SHA-256 검증 중…","Downloading and verifying the installer…")
+        DispatchQueue.global(qos:.utility).async {
+            do {
+                let text = try self.execute(["update","download","--platform","macos","--arch",self.updateArchitecture,"--directory",self.dataDirectory.appendingPathComponent("Updates").path])
+                let info = try JSONSerialization.jsonObject(with:Data(text.utf8)) as? [String:Any] ?? [:]
+                guard info["verified"] as? Bool == true, let path = info["path"] as? String else { throw NSError(domain:identifier,code:1) }
+                DispatchQueue.main.async {
+                    self.model.updateBusy = false
+                    self.model.updateMessage = self.model.tr("검증 완료. DMG에서 MINER를 응용 프로그램 폴더로 옮겨 교체하세요.","Verified. Drag MINER from the DMG to Applications to replace it.")
+                    NSWorkspace.shared.open(URL(fileURLWithPath:path)); NSApp.terminate(nil)
+                }
+            } catch { DispatchQueue.main.async { self.model.updateBusy = false; self.model.updateMessage = self.model.redact(error.localizedDescription) } }
         }
     }
     @objc func uninstall() {
@@ -279,7 +331,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             if let data = try? Data(contentsOf: marker),
                let owner = try? JSONSerialization.jsonObject(with: data) as? [String: String], owner["id"] == identifier {
                 try FileManager.default.removeItem(at: self.dataDirectory)
-                try SchoolCrypto.removeKey()
             }
             return result
         }, completion: {
@@ -295,12 +346,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
     func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool { true }
     func applicationShouldTerminate(_ sender: NSApplication) -> NSApplication.TerminateReply {
-        if busy { return .terminateCancel }
+        if busy || model.updateBusy { return .terminateCancel }
         guard running || managedWarp else { return .terminateNow }
         model.phase = "stopping"; setBusy(true)
         DispatchQueue.global().async {
             do {
-                if self.running { _ = try self.execute(["desktop", "stop"],administrator:true) }
+                if self.running { _ = try self.stopEngine() }
                 DispatchQueue.main.async { self.running = false }
                 _ = try self.execute(["warp", "restore"])
                 DispatchQueue.main.async { self.managedWarp = false; self.model.restored = true; NSApp.reply(toApplicationShouldTerminate:true) }

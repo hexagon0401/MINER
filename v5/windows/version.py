@@ -1,6 +1,7 @@
 """Single source of Windows release identity; macOS version is independent."""
-VERSION = '5.0.0-beta.1.1-windows.8'
-FILE_VERSION = '5.0.0.8'
-LABEL = 'MINER BETA 1 · Windows Pearl White build 8'
-TAG = 'v' + VERSION
-STEM = f'MINER-{TAG}-Windows-x64'
+from schoolnet import __release_version__
+VERSION = __release_version__
+FILE_VERSION = '5.0.0.10'
+LABEL = f'MINER ALPHA v{VERSION} · Windows'
+TAG = 'miner-alpha-v' + VERSION
+STEM = f'MINER-ALPHA-v{VERSION}-Windows-x64'

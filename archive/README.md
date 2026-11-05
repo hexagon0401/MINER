@@ -72,3 +72,7 @@ git switch -c restore/example archive/branches/보관된-원래-브랜치-이름
 | [SchoolNet v5.0.0-alpha.1](https://github.com/hexagon0401/MINER/releases/tag/v5.0.0-alpha.1) | 과거 프리릴리스 |
 
 Beta 소스는 `archive/betas/beta2-source`, `archive/betas/macos-beta1.1`, `archive/betas/windows-beta1-pearl-white` 태그로도 확인할 수 있습니다.
+
+## 베타 2 UI 보관
+
+정식 ALPHA v1.1.1은 배포 중인 베타 1 기반 UI로 개발을 이어갑니다. 기존 베타 2 UI·빌드 소스는 [`archive/betas/beta2-ui-before-1.1.1`](https://github.com/hexagon0401/MINER/tree/archive/betas/beta2-ui-before-1.1.1)에 보존합니다. 학교 카탈로그·제보 관련 소스도 보관하며 정식 앱 UI에는 활성화하지 않습니다.

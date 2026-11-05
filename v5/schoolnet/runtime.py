@@ -9,6 +9,7 @@ import re
 import shutil
 import signal
 import subprocess
+import tempfile
 import time
 
 from .config import ENGINE_VERSION, Profile, build_config
@@ -26,11 +27,16 @@ def load_profile(directory):
 
 def write_json(path, data):
     path = Path(path)
-    temporary = path.with_suffix(path.suffix + ".tmp")
-    with temporary.open("x", encoding="utf-8") as stream:
-        json.dump(data, stream, ensure_ascii=False, indent=2)
-        stream.write("\n")
-    os.replace(temporary, path)
+    temporary = None
+    try:
+        with tempfile.NamedTemporaryFile(mode="w", encoding="utf-8", dir=path.parent,
+                                         prefix=path.name+".", suffix=".tmp", delete=False) as stream:
+            temporary = Path(stream.name)
+            json.dump(data, stream, ensure_ascii=False, indent=2)
+            stream.write("\n"); stream.flush(); os.fsync(stream.fileno())
+        os.replace(temporary, path)
+    finally:
+        if temporary is not None: temporary.unlink(missing_ok=True)
 
 
 def native_platform():
@@ -122,10 +128,20 @@ def instance_lock(directory):
                 fcntl.flock(lock, fcntl.LOCK_UN)
 
 
-def run(directory, engine="sing-box", warp_cli=None):
+def run(directory, engine="sing-box", warp_cli=None, managed_helper=False):
     directory = Path(directory).resolve()
     with instance_lock(directory):
-        result = doctor(directory, engine, warp_cli)
+        if managed_helper:
+            from .macos_service import BASE
+            if native_platform() != "macos" or not is_admin() or directory != BASE / "profile" or Path(engine).resolve() != BASE / "bin/sing-box":
+                raise ValueError("Managed helper can use only its root-owned installed engine/profile")
+            profile = load_profile(directory)
+            if profile.platform != "macos": raise ValueError("Managed helper requires a macOS profile")
+            check_engine(str(engine), directory / "sing-box.json")
+            proxy_ready(profile.proxy_port); verify_trace(profile.proxy_port)
+            result = {"preflight_ok":True,"engine":str(engine)}
+        else:
+            result = doctor(directory, engine, warp_cli)
         if not result["preflight_ok"]:
             raise ValueError("this profile cannot run on this operating system")
         if not is_admin():

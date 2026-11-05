@@ -31,7 +31,7 @@ struct MinerAbout:View {
                 }
                 Spacer()
             }
-            Text("MINER · " + (Bundle.main.object(forInfoDictionaryKey:"SchoolNetReleaseVersion") as? String ?? "BETA"))
+            Text("MINER · " + (Bundle.main.object(forInfoDictionaryKey:"MINERPublicReleaseVersion") as? String ?? "1.1.1"))
                 .font(.caption).foregroundStyle(.secondary)
         }.frame(maxWidth:.infinity,alignment:.leading)
     }

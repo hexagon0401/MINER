@@ -16,7 +16,7 @@ import urllib.request
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 from install_engine import install
-from schoolnet import __version__
+from schoolnet import __version__, __release_version__
 from icon_assets import bundle_icon, install_macos_icon, macos_icon_info
 from macos.signing import developer_identity, notarize, sign_app, validate_notary_credentials
 
@@ -33,7 +33,7 @@ def validate_resource_paths(app):
             raise ValueError(f"non-ASCII bundle path would risk resource sealing: {path}")
 
 
-def build(expected_arch, signing="adhoc", identity=None, notary_profile=None, dmg_background=None, validation_only=False, allow_incomplete_catalog=False):
+def build(expected_arch, signing="adhoc", identity=None, notary_profile=None, dmg_background=None):
     if platform.system() != "Darwin":
         raise ValueError("DMG builds require macOS (GitHub Actions workflow is provided)")
     arch = platform.machine()
@@ -62,11 +62,10 @@ def build(expected_arch, signing="adhoc", identity=None, notary_profile=None, dm
     if signed:
         packager += ["--codesign-identity", identity]
     execute(*packager, ROOT / "main.py")
-    execute("xcrun", "swiftc", "-swift-version", "5", "-parse-as-library", "-O", "-framework", "AppKit", "-framework", "SwiftUI", "-lsqlite3",
+    execute("xcrun", "swiftc", "-swift-version", "5", "-parse-as-library", "-O", "-framework", "AppKit", "-framework", "SwiftUI",
             "-target", f"{arch}-apple-macosx13.0", ROOT / "macos" / "App.swift",
             ROOT / "macos" / "MinerUI.swift", ROOT / "macos" / "DeltaUI.swift",
-            ROOT / "macos" / "DeltaSmoke.swift", ROOT / "macos" / "DeveloperAbout.swift", ROOT / "macos" / "SchoolStore.swift",
-            ROOT / "macos" / "SchoolCommunity.swift", ROOT / "macos" / "SchoolsUI.swift", ROOT / "macos" / "SchoolSmoke.swift", "-o", contents / "MacOS" / "MINER")
+            ROOT / "macos" / "DeltaSmoke.swift", ROOT / "macos" / "DeveloperAbout.swift", "-o", contents / "MacOS" / "MINER")
     ui_assets = resources / "UIAssets"
     ui_assets.mkdir()
     for source in (ROOT / "macos/design/assets").iterdir():
@@ -76,11 +75,6 @@ def build(expected_arch, signing="adhoc", identity=None, notary_profile=None, dm
         shutil.copy2(source, ui_assets / ("delta-" + source.name))
     from macos.profile_assets import bundle_avatar
     developer = bundle_avatar(ui_assets, work, execute)
-    community_assets = resources / "Community"
-    community_assets.mkdir()
-    for name in ["schools.sqlite3", "schools.json", "community-config.json"]:
-        shutil.copy2(ROOT / "community/data" / name, community_assets / name)
-    catalog_metadata = json.loads((community_assets / "schools.json").read_text())
     icon = bundle_icon(ui_assets, __version__)
     iconset = work / "AppIcon.iconset"
     iconset.mkdir()
@@ -93,8 +87,8 @@ def build(expected_arch, signing="adhoc", identity=None, notary_profile=None, dm
     info = {
         "CFBundleName": "MINER", "CFBundleDisplayName": "MINER", "CFBundleIconFile": "AppIcon",
         "CFBundleIdentifier": "org.schoolnet.v5.alpha", "CFBundleExecutable": "MINER",
-        "CFBundlePackageType": "APPL", "CFBundleShortVersionString": "5.0.0",
-        "CFBundleVersion": f"{502 if 'beta' in __version__ else 501 if 'delta' in __version__ else 500}{int(__version__.rsplit('.', 1)[1]):03d}", "SchoolNetReleaseVersion": __version__,
+        "CFBundlePackageType": "APPL", "CFBundleShortVersionString": __release_version__,
+        "CFBundleVersion": "502111", "SchoolNetReleaseVersion": __version__, "MINERPublicReleaseVersion": __release_version__,
         "LSMinimumSystemVersion": "13.0", "NSHighResolutionCapable": True,
     }
     info.update(macos_icon_info(icon))
@@ -134,21 +128,18 @@ def build(expected_arch, signing="adhoc", identity=None, notary_profile=None, dm
     execute(cli, "--version")
     execute(cli, "--help")
     execute(cli, "desktop", "status")
+    helper_report = None
+    if os.environ.get("GITHUB_ACTIONS") == "true":
+        from macos.helper_smoke import run as helper_smoke
+        helper_report = helper_smoke(cli, work)
     smoke = work / "schema-smoke"
     execute(cli, "init", "--directory", smoke, "--platform", "macos")
     execute(engine, "check", "-c", smoke / "sing-box.json")
     ui_report_dir = Path(os.environ.get("RUNNER_TEMP", str(work / "ui-smoke")))
-    subprocess.run([str(contents / "MacOS/MINER"), "--ui-smoke", str(ui_report_dir), arch,
-                    "--school-fixture", str(ROOT / "community/fixtures/test-catalog.sqlite3"),
-                    "--school-vectors", str(ROOT / "community/fixtures/protocol-vectors.json")], check=True, timeout=60)
+    subprocess.run([str(contents / "MacOS/MINER"), "--ui-smoke", str(ui_report_dir), arch], check=True, timeout=45)
     ui_report = json.loads((ui_report_dir / f"miner-ui-{arch}.json").read_text())
     if ui_report.get("ok") is not True or ui_report.get("network_actions") != 0:
         raise ValueError("Native UI checks did not pass")
-    if validation_only:
-        print("Native validation completed; no distribution DMG requested")
-        return
-    if not allow_incomplete_catalog and (catalog_metadata.get("complete") is not True or catalog_metadata.get("fixture") is not False):
-        raise ValueError("Complete official school catalog required for beta 2 distribution. Supply NEIS_API_KEY or import an official CSV; native UI validation passed.")
     app_receipt = None
     if signed:
         archive = work / "notary-app.zip"
@@ -209,8 +200,7 @@ def build(expected_arch, signing="adhoc", identity=None, notary_profile=None, dm
         "dmg_to_disk_signature_verified": True, "sha256": digest,
         "finder_background_layout_verified": dmg_background is not None,
         "app_name": app.name, "native_ui_smoke": ui_report,
-        "school_catalog": catalog_metadata, "development_only": allow_incomplete_catalog and not catalog_metadata.get("complete",False),
-        "developer": developer, "release_channel": icon["channel"], "app_icon_sha256": icon["sha256"],
+        "developer": developer, "helper_smoke": helper_report, "source_commit": os.environ.get("GITHUB_SHA"), "release_channel": icon["channel"], "app_icon_sha256": hashlib.sha256((ui_assets / "AppIcon.png").read_bytes()).hexdigest(),
     }, indent=2), encoding="utf-8")
     print(f"Verified DMG: {dmg}")
 
@@ -223,7 +213,5 @@ if __name__ == "__main__":
     parser.add_argument("--notary-profile", help="local notarytool keychain profile")
     default_background = ROOT / "macos/design/dmg-background.png"
     parser.add_argument("--dmg-background", type=Path, default=default_background if default_background.is_file() else None)
-    parser.add_argument("--validation-only", action="store_true", help="run native UI/engine checks without publishing a DMG")
-    parser.add_argument("--allow-incomplete-catalog", action="store_true", help="local development only; DMG cannot be published as nationwide-ready")
     args = parser.parse_args()
-    build(args.arch, args.signing, args.identity, args.notary_profile, args.dmg_background, args.validation_only, args.allow_incomplete_catalog)
+    build(args.arch, args.signing, args.identity, args.notary_profile, args.dmg_background)
