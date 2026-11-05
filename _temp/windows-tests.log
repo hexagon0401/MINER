@@ -1,0 +1,77 @@
+test_default_routes_only_selected_tcp_through_proxy (test_config.ProfileTests.test_default_routes_only_selected_tcp_through_proxy) ... ok
+test_dns_is_verified_doh_inside_warp (test_config.ProfileTests.test_dns_is_verified_doh_inside_warp) ... ok
+test_embedded_web_helpers_match_without_tunneling_safari_or_game_bundle (test_config.ProfileTests.test_embedded_web_helpers_match_without_tunneling_safari_or_game_bundle) ... ok
+test_every_client_selector_has_tcp_proxy_and_explicit_quic_rejection (test_config.ProfileTests.test_every_client_selector_has_tcp_proxy_and_explicit_quic_rejection) ... ok
+test_game_has_explicit_priority_on_both_platforms (test_config.ProfileTests.test_game_has_explicit_priority_on_both_platforms) ... ok
+test_no_udp_socks_assumption (test_config.ProfileTests.test_no_udp_socks_assumption) ... ok
+test_optional_kernel_exclusion_only_exact_observed_hosts (test_config.ProfileTests.test_optional_kernel_exclusion_only_exact_observed_hosts) ... ok
+test_output_is_independent_and_interface_selection_is_exclusive (test_config.ProfileTests.test_output_is_independent_and_interface_selection_is_exclusive) ... ok
+test_rejects_invalid_configuration_and_game_overlap (test_config.ProfileTests.test_rejects_invalid_configuration_and_game_overlap) ... ok
+test_missing_original_background_is_not_silently_replaced (test_dmg_layout.DmgLayoutTests.test_missing_original_background_is_not_silently_replaced) ... ok
+test_real_app_and_applications_have_fixed_cavern_positions (test_dmg_layout.DmgLayoutTests.test_real_app_and_applications_have_fixed_cavern_positions) ... ok
+test_architecture_mapping (test_installer.InstallerTests.test_architecture_mapping) ... ok
+test_modified_download_rejected_before_unpacking (test_installer.InstallerTests.test_modified_download_rejected_before_unpacking) ... ok
+test_verified_archive_extracts_only_named_binary (test_installer.InstallerTests.test_verified_archive_extracts_only_named_binary) ... ok
+test_windows_zip_layout (test_installer.InstallerTests.test_windows_zip_layout) ... ok
+test_ascii_resources_survive_normalization (test_macos_packaging.PackagingTests.test_ascii_resources_survive_normalization) ... ok
+test_rejects_both_unicode_filename_normalizations_before_signing (test_macos_packaging.PackagingTests.test_rejects_both_unicode_filename_normalizations_before_signing) ... ok
+test_bad_upgrade_does_not_replace_existing_runtime (test_macos_service.ServiceTests.test_bad_upgrade_does_not_replace_existing_runtime) ... skipped 'macOS service/signing contracts use POSIX permissions; tested on POSIX CI'
+test_failed_stop_prevents_deletion (test_macos_service.ServiceTests.test_failed_stop_prevents_deletion) ... skipped 'macOS service/signing contracts use POSIX permissions; tested on POSIX CI'
+test_managed_upgrade_preserves_profile_and_logs (test_macos_service.ServiceTests.test_managed_upgrade_preserves_profile_and_logs) ... skipped 'macOS service/signing contracts use POSIX permissions; tested on POSIX CI'
+test_mutations_require_admin_and_macos (test_macos_service.ServiceTests.test_mutations_require_admin_and_macos) ... skipped 'macOS service/signing contracts use POSIX permissions; tested on POSIX CI'
+test_preserves_unmanaged_directory (test_macos_service.ServiceTests.test_preserves_unmanaged_directory) ... skipped 'macOS service/signing contracts use POSIX permissions; tested on POSIX CI'
+test_refuses_app_from_disk_image_before_network_commands (test_macos_service.ServiceTests.test_refuses_app_from_disk_image_before_network_commands) ... skipped 'macOS service/signing contracts use POSIX permissions; tested on POSIX CI'
+test_status_does_not_claim_functional_readiness (test_macos_service.ServiceTests.test_status_does_not_claim_functional_readiness) ... skipped 'macOS service/signing contracts use POSIX permissions; tested on POSIX CI'
+test_symlink_directory_is_rejected (test_macos_service.ServiceTests.test_symlink_directory_is_rejected) ... skipped 'macOS service/signing contracts use POSIX permissions; tested on POSIX CI'
+test_uninstall_stops_before_removing_only_managed_tree (test_macos_service.ServiceTests.test_uninstall_stops_before_removing_only_managed_tree) ... skipped 'macOS service/signing contracts use POSIX permissions; tested on POSIX CI'
+test_inside_out_signing_with_hardened_runtime_and_timestamp (test_macos_signing.SigningTests.test_inside_out_signing_with_hardened_runtime_and_timestamp) ... skipped 'macOS service/signing contracts use POSIX permissions; tested on POSIX CI'
+test_keychain_cleanup_rejects_unrelated_files (test_macos_signing.SigningTests.test_keychain_cleanup_rejects_unrelated_files) ... skipped 'macOS service/signing contracts use POSIX permissions; tested on POSIX CI'
+test_missing_signing_and_notary_credentials_fail_explicitly (test_macos_signing.SigningTests.test_missing_signing_and_notary_credentials_fail_explicitly) ... skipped 'macOS service/signing contracts use POSIX permissions; tested on POSIX CI'
+test_private_notary_file_is_temporary_and_not_an_argument_value (test_macos_signing.SigningTests.test_private_notary_file_is_temporary_and_not_an_argument_value) ... skipped 'macOS service/signing contracts use POSIX permissions; tested on POSIX CI'
+test_rejected_notarization_never_staples (test_macos_signing.SigningTests.test_rejected_notarization_never_staples) ... skipped 'macOS service/signing contracts use POSIX permissions; tested on POSIX CI'
+test_requires_developer_id_not_apple_development (test_macos_signing.SigningTests.test_requires_developer_id_not_apple_development) ... skipped 'macOS service/signing contracts use POSIX permissions; tested on POSIX CI'
+test_zip_submission_does_not_attempt_staple_zip (test_macos_signing.SigningTests.test_zip_submission_does_not_attempt_staple_zip) ... skipped 'macOS service/signing contracts use POSIX permissions; tested on POSIX CI'
+test_bounded_probe_inputs (test_probe.ProbeTests.test_bounded_probe_inputs) ... ok
+test_distribution_is_named_and_failure_aware (test_probe.ProbeTests.test_distribution_is_named_and_failure_aware) ... ok
+test_eof_and_auth_rejection (test_probe.ProbeTests.test_eof_and_auth_rejection) ... ok
+test_proxy_failure_is_not_success_or_udp_loss (test_probe.ProbeTests.test_proxy_failure_is_not_success_or_udp_loss) ... ok
+test_real_socks_negotiation_and_tcp_comparison (test_probe.ProbeTests.test_real_socks_negotiation_and_tcp_comparison) ... ok
+test_both_platforms_with_actual_pinned_engine (test_runtime.EngineIntegrationTests.test_both_platforms_with_actual_pinned_engine) ... skipped 'set SCHOOLNET_TEST_ENGINE for real schema validation'
+test_real_engine_socks_chain_without_tun_or_route_changes (test_runtime.EngineIntegrationTests.test_real_engine_socks_chain_without_tun_or_route_changes) ... skipped 'set SCHOOLNET_TEST_ENGINE for engine outbound integration'
+test_engine_version_rejected_before_execution (test_runtime.RuntimeTests.test_engine_version_rejected_before_execution) ... ok
+test_init_preserves_existing_profile_and_render_regenerates (test_runtime.RuntimeTests.test_init_preserves_existing_profile_and_render_regenerates) ... Error: profile already exists; edit profile.json and use render
+ok
+test_profile_lock_is_exclusive_and_released (test_runtime.RuntimeTests.test_profile_lock_is_exclusive_and_released) ... ok
+test_proxy_port_mismatch_rejected (test_runtime.RuntimeTests.test_proxy_port_mismatch_rejected) ... ok
+test_termination_reaches_child_and_releases_lock (test_runtime.RuntimeTests.test_termination_reaches_child_and_releases_lock) ... skipped 'POSIX process signaling integration'
+test_warp_full_tunnel_and_unknown_output_rejected (test_runtime.RuntimeTests.test_warp_full_tunnel_and_unknown_output_rejected) ... ok
+test_warp_proxy_mode_recognized_without_dumping_settings (test_runtime.RuntimeTests.test_warp_proxy_mode_recognized_without_dumping_settings) ... ok
+test_button_sequence_disconnects_full_tunnel_before_proxy_connect (test_warp.WarpTests.test_button_sequence_disconnects_full_tunnel_before_proxy_connect) ... ok
+test_explicit_disconnect_does_not_change_to_full_tunnel (test_warp.WarpTests.test_explicit_disconnect_does_not_change_to_full_tunnel) ... ok
+test_failed_trace_disconnects_new_proxy_and_never_selects_full_tunnel (test_warp.WarpTests.test_failed_trace_disconnects_new_proxy_and_never_selects_full_tunnel) ... ok
+test_healthy_proxy_is_idempotent_without_disconnect (test_warp.WarpTests.test_healthy_proxy_is_idempotent_without_disconnect) ... ok
+test_packaged_app_adds_ca_trust_without_disabling_tls (test_warp.WarpTests.test_packaged_app_adds_ca_trust_without_disabling_tls) ... ok
+test_progress_follows_real_checks (test_warp.WarpTests.test_progress_follows_real_checks) ... ok
+test_restore_explicit_udp_mode_and_validate (test_warp.WarpTests.test_restore_explicit_udp_mode_and_validate) ... ok
+test_restore_unsupported_mode_does_not_disconnect (test_warp.WarpTests.test_restore_unsupported_mode_does_not_disconnect) ... ok
+test_restore_wrong_dns_mode_is_not_success (test_warp.WarpTests.test_restore_wrong_dns_mode_is_not_success) ... ok
+test_status_does_not_treat_disconnected_as_connected (test_warp.WarpTests.test_status_does_not_treat_disconnected_as_connected) ... ok
+test_trace_uses_remote_hostname_tls_and_does_not_return_ip (test_warp.WarpTests.test_trace_uses_remote_hostname_tls_and_does_not_return_ip) ... ok
+test_unsupported_cli_fails_before_network_mutation (test_warp.WarpTests.test_unsupported_cli_fails_before_network_mutation) ... ok
+test_cancel_during_warp_setup_restores_without_starting_tun (test_windows_controller.WindowsLifecycleTests.test_cancel_during_warp_setup_restores_without_starting_tun) ... ok
+test_engine_early_exit_keeps_recovery_state_and_closes_job (test_windows_controller.WindowsLifecycleTests.test_engine_early_exit_keeps_recovery_state_and_closes_job) ... ok
+test_engine_schema_failure_never_spawns_or_restores_implicitly (test_windows_controller.WindowsLifecycleTests.test_engine_schema_failure_never_spawns_or_restores_implicitly) ... ok
+test_explicit_restore_retry_does_not_activate_proxy (test_windows_controller.WindowsLifecycleTests.test_explicit_restore_retry_does_not_activate_proxy) ... ok
+test_forced_stop_is_reported_as_failure (test_windows_controller.WindowsLifecycleTests.test_forced_stop_is_reported_as_failure) ... ok
+test_non_admin_cannot_change_warp (test_windows_controller.WindowsLifecycleTests.test_non_admin_cannot_change_warp) ... ok
+test_profile_preserves_edits_and_rejects_other_platform (test_windows_controller.WindowsLifecycleTests.test_profile_preserves_edits_and_rejects_other_platform) ... ok
+test_proxy_failure_never_starts_engine_or_restores_full_tunnel (test_windows_controller.WindowsLifecycleTests.test_proxy_failure_never_starts_engine_or_restores_full_tunnel) ... ok
+test_restore_failure_keeps_recovery_marker (test_windows_controller.WindowsLifecycleTests.test_restore_failure_keeps_recovery_marker) ... ok
+test_successful_restore_clears_recovery_marker_and_ignores_bad_profile (test_windows_controller.WindowsLifecycleTests.test_successful_restore_clears_recovery_marker_and_ignores_bad_profile) ... ok
+
+----------------------------------------------------------------------
+Ran 69 tests in 1.641s
+
+OK (skipped=19)
+Created C:\Users\runneradmin\AppData\Local\Temp\tmpwm2_b7tf; no network settings changed
+Rendered sing-box.json; no network settings changed

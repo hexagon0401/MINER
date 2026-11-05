@@ -1,0 +1,318 @@
+{
+  "tag": "v5.0.0-beta.1.1-windows.6",
+  "source_sha": "ee956b081099ef810a658d5ed1f9e6d9965f0927",
+  "run_url": "https://github.com/hexagon0401/MINER/actions/runs/41980665218",
+  "build": "success",
+  "publication": "success",
+  "jobs": [
+    {
+      "name": "build",
+      "status": "completed",
+      "conclusion": "success",
+      "started_at": "2026-11-05T06:28:42Z",
+      "completed_at": "2026-11-05T06:33:39Z",
+      "runner_name": "GitHub Actions 1000000137",
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/checkout@v4",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/setup-python@v5",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run python -m pip install PySide6==6.8.3 pyinstaller==6.22.3 certifi==2026.10.23 Pillow==11.3.0",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Portable tests",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Build and verify Windows package",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/upload-artifact@v4",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/upload-artifact@v4",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Post Run actions/setup-python@v5",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Post Run actions/checkout@v4",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success"
+        }
+      ],
+      "failed_steps": []
+    },
+    {
+      "name": "release",
+      "status": "completed",
+      "conclusion": "success",
+      "started_at": "2026-11-05T06:33:41Z",
+      "completed_at": "2026-11-05T06:33:54Z",
+      "runner_name": "GitHub Actions 1000000140",
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/checkout@v4",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/download-artifact@v4",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run gh release create \"$TAG\" release-assets/* --verify-tag --prerelease --title 'MINER BETA 1 \u2014 Windows' --notes-file v5/windows/RELEASE_NOTES.md",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Post Run actions/checkout@v4",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success"
+        }
+      ],
+      "failed_steps": []
+    },
+    {
+      "name": "report",
+      "status": "in_progress",
+      "conclusion": null,
+      "started_at": "2026-11-05T06:33:56Z",
+      "completed_at": null,
+      "runner_name": "GitHub Actions 1000000141",
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/checkout@v4",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/download-artifact@v4",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run python3 v5/macos/ci_report.py",
+          "status": "in_progress",
+          "conclusion": null
+        },
+        {
+          "name": "Run git switch --orphan \"$REPORT_REF\"",
+          "status": "pending",
+          "conclusion": null
+        },
+        {
+          "name": "Post Run actions/checkout@v4",
+          "status": "pending",
+          "conclusion": null
+        }
+      ],
+      "failed_steps": []
+    }
+  ],
+  "release": {
+    "assets": [
+      {
+        "apiUrl": "https://api.github.com/repos/hexagon0401/MINER/releases/assets/712347085",
+        "contentType": "image/png",
+        "createdAt": "2026-11-05T06:33:49Z",
+        "digest": "sha256:37f67756701b1a6fba69d9f3a989f75cb6678a82bb7c1475d5555aa9cc012dc5",
+        "downloadCount": 0,
+        "id": "RA_kwDOSHKeSc4qdY3N",
+        "label": "",
+        "name": "MINER-v5.0.0-beta.1.1-windows.6-Windows-x64-error.png",
+        "size": 56136,
+        "state": "uploaded",
+        "updatedAt": "2026-11-05T06:33:50Z",
+        "url": "https://github.com/hexagon0401/MINER/releases/download/v5.0.0-beta.1.1-windows.6/MINER-v5.0.0-beta.1.1-windows.6-Windows-x64-error.png"
+      },
+      {
+        "apiUrl": "https://api.github.com/repos/hexagon0401/MINER/releases/assets/712347088",
+        "contentType": "image/png",
+        "createdAt": "2026-11-05T06:33:49Z",
+        "digest": "sha256:fdbe97d06a015b54a381351c4561e33aef645546b6ebfe7983ca0c688a9d9133",
+        "downloadCount": 0,
+        "id": "RA_kwDOSHKeSc4qdY3Q",
+        "label": "",
+        "name": "MINER-v5.0.0-beta.1.1-windows.6-Windows-x64-idle.png",
+        "size": 49752,
+        "state": "uploaded",
+        "updatedAt": "2026-11-05T06:33:50Z",
+        "url": "https://github.com/hexagon0401/MINER/releases/download/v5.0.0-beta.1.1-windows.6/MINER-v5.0.0-beta.1.1-windows.6-Windows-x64-idle.png"
+      },
+      {
+        "apiUrl": "https://api.github.com/repos/hexagon0401/MINER/releases/assets/712347059",
+        "contentType": "image/gif",
+        "createdAt": "2026-11-05T06:33:49Z",
+        "digest": "sha256:7b7018032757169780ded1f1220f31018af2427b21e58c08a7d9b2fc4b6e371b",
+        "downloadCount": 0,
+        "id": "RA_kwDOSHKeSc4qdY2z",
+        "label": "",
+        "name": "MINER-v5.0.0-beta.1.1-windows.6-Windows-x64-Preview.gif",
+        "size": 655805,
+        "state": "uploaded",
+        "updatedAt": "2026-11-05T06:33:49Z",
+        "url": "https://github.com/hexagon0401/MINER/releases/download/v5.0.0-beta.1.1-windows.6/MINER-v5.0.0-beta.1.1-windows.6-Windows-x64-Preview.gif"
+      },
+      {
+        "apiUrl": "https://api.github.com/repos/hexagon0401/MINER/releases/assets/712347103",
+        "contentType": "image/png",
+        "createdAt": "2026-11-05T06:33:50Z",
+        "digest": "sha256:d6bde41021ad3f7334264d60cbe4c4ad79be2bc80482ebf47be724846bb70375",
+        "downloadCount": 0,
+        "id": "RA_kwDOSHKeSc4qdY3f",
+        "label": "",
+        "name": "MINER-v5.0.0-beta.1.1-windows.6-Windows-x64-proxy_connect.png",
+        "size": 48077,
+        "state": "uploaded",
+        "updatedAt": "2026-11-05T06:33:50Z",
+        "url": "https://github.com/hexagon0401/MINER/releases/download/v5.0.0-beta.1.1-windows.6/MINER-v5.0.0-beta.1.1-windows.6-Windows-x64-proxy_connect.png"
+      },
+      {
+        "apiUrl": "https://api.github.com/repos/hexagon0401/MINER/releases/assets/712347109",
+        "contentType": "image/png",
+        "createdAt": "2026-11-05T06:33:50Z",
+        "digest": "sha256:2f257be1c185aa3fb0df7ce036144c9f447d9c98ffcb3915c51077b5023d9975",
+        "downloadCount": 0,
+        "id": "RA_kwDOSHKeSc4qdY3l",
+        "label": "",
+        "name": "MINER-v5.0.0-beta.1.1-windows.6-Windows-x64-restored.png",
+        "size": 52153,
+        "state": "uploaded",
+        "updatedAt": "2026-11-05T06:33:50Z",
+        "url": "https://github.com/hexagon0401/MINER/releases/download/v5.0.0-beta.1.1-windows.6/MINER-v5.0.0-beta.1.1-windows.6-Windows-x64-restored.png"
+      },
+      {
+        "apiUrl": "https://api.github.com/repos/hexagon0401/MINER/releases/assets/712347117",
+        "contentType": "image/png",
+        "createdAt": "2026-11-05T06:33:50Z",
+        "digest": "sha256:95fb218c83c0d1cf0367fbfd5408987999ff3d6c48391efef9986449341a73b5",
+        "downloadCount": 0,
+        "id": "RA_kwDOSHKeSc4qdY3t",
+        "label": "",
+        "name": "MINER-v5.0.0-beta.1.1-windows.6-Windows-x64-running.png",
+        "size": 49317,
+        "state": "uploaded",
+        "updatedAt": "2026-11-05T06:33:50Z",
+        "url": "https://github.com/hexagon0401/MINER/releases/download/v5.0.0-beta.1.1-windows.6/MINER-v5.0.0-beta.1.1-windows.6-Windows-x64-running.png"
+      },
+      {
+        "apiUrl": "https://api.github.com/repos/hexagon0401/MINER/releases/assets/712347058",
+        "contentType": "application/zip",
+        "createdAt": "2026-11-05T06:33:49Z",
+        "digest": "sha256:a05cd882c1fbb8ba2d95eaef895e1ce6ef748d7ec0a8902bcfa5fe7c84bf69bf",
+        "downloadCount": 0,
+        "id": "RA_kwDOSHKeSc4qdY2y",
+        "label": "",
+        "name": "MINER-v5.0.0-beta.1.1-windows.6-Windows-x64-Screenshots.zip",
+        "size": 7265906,
+        "state": "uploaded",
+        "updatedAt": "2026-11-05T06:33:49Z",
+        "url": "https://github.com/hexagon0401/MINER/releases/download/v5.0.0-beta.1.1-windows.6/MINER-v5.0.0-beta.1.1-windows.6-Windows-x64-Screenshots.zip"
+      },
+      {
+        "apiUrl": "https://api.github.com/repos/hexagon0401/MINER/releases/assets/712347118",
+        "contentType": "image/png",
+        "createdAt": "2026-11-05T06:33:50Z",
+        "digest": "sha256:dd841d576de471db0e3399d1b1adffb80414617fd32e62005de055168fb0e055",
+        "downloadCount": 0,
+        "id": "RA_kwDOSHKeSc4qdY3u",
+        "label": "",
+        "name": "MINER-v5.0.0-beta.1.1-windows.6-Windows-x64-settings.png",
+        "size": 19492,
+        "state": "uploaded",
+        "updatedAt": "2026-11-05T06:33:50Z",
+        "url": "https://github.com/hexagon0401/MINER/releases/download/v5.0.0-beta.1.1-windows.6/MINER-v5.0.0-beta.1.1-windows.6-Windows-x64-settings.png"
+      },
+      {
+        "apiUrl": "https://api.github.com/repos/hexagon0401/MINER/releases/assets/712347057",
+        "contentType": "application/octet-stream",
+        "createdAt": "2026-11-05T06:33:49Z",
+        "digest": "sha256:a63641b602ca2a46ed4433e1f2d3b4e54142d2db48273c83994165cfbb03f328",
+        "downloadCount": 0,
+        "id": "RA_kwDOSHKeSc4qdY2x",
+        "label": "",
+        "name": "MINER-v5.0.0-beta.1.1-windows.6-Windows-x64-Setup.exe",
+        "size": 115153771,
+        "state": "uploaded",
+        "updatedAt": "2026-11-05T06:33:52Z",
+        "url": "https://github.com/hexagon0401/MINER/releases/download/v5.0.0-beta.1.1-windows.6/MINER-v5.0.0-beta.1.1-windows.6-Windows-x64-Setup.exe"
+      },
+      {
+        "apiUrl": "https://api.github.com/repos/hexagon0401/MINER/releases/assets/712347060",
+        "contentType": "application/octet-stream",
+        "createdAt": "2026-11-05T06:33:49Z",
+        "digest": "sha256:afc6ad956d25fa665227abad2c8e77ecea4f94fa6798ba39a3bebdb585429cd0",
+        "downloadCount": 0,
+        "id": "RA_kwDOSHKeSc4qdY20",
+        "label": "",
+        "name": "MINER-v5.0.0-beta.1.1-windows.6-Windows-x64-Setup.exe.sha256",
+        "size": 121,
+        "state": "uploaded",
+        "updatedAt": "2026-11-05T06:33:49Z",
+        "url": "https://github.com/hexagon0401/MINER/releases/download/v5.0.0-beta.1.1-windows.6/MINER-v5.0.0-beta.1.1-windows.6-Windows-x64-Setup.exe.sha256"
+      },
+      {
+        "apiUrl": "https://api.github.com/repos/hexagon0401/MINER/releases/assets/712347056",
+        "contentType": "application/json",
+        "createdAt": "2026-11-05T06:33:49Z",
+        "digest": "sha256:b6ceb6505d81abd047c2d381ad75b93b0019ef6cc94863cbe6cb865fdd2e9760",
+        "downloadCount": 0,
+        "id": "RA_kwDOSHKeSc4qdY2w",
+        "label": "",
+        "name": "MINER-v5.0.0-beta.1.1-windows.6-Windows-x64-Setup.exe.verification.json",
+        "size": 1804,
+        "state": "uploaded",
+        "updatedAt": "2026-11-05T06:33:49Z",
+        "url": "https://github.com/hexagon0401/MINER/releases/download/v5.0.0-beta.1.1-windows.6/MINER-v5.0.0-beta.1.1-windows.6-Windows-x64-Setup.exe.verification.json"
+      }
+    ],
+    "isPrerelease": true,
+    "name": "MINER BETA 1 \u2014 Windows",
+    "url": "https://github.com/hexagon0401/MINER/releases/tag/v5.0.0-beta.1.1-windows.6"
+  }
+}
