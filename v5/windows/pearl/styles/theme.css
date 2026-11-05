@@ -1,0 +1,64 @@
+/* MINER pearl-white visual tokens. Approximate colors for implementation. */
+:root {
+  --miner-ink: #353a45;
+  --miner-muted: #596173;
+  --miner-pearl: #f6f8ff;
+  --miner-ice: #e7f0ff;
+  --miner-lavender: #eeebff;
+  --miner-panel: rgba(255, 255, 255, 0.48);
+  --miner-panel-border: rgba(255, 255, 255, 0.88);
+  --miner-progress-track: #c3cce2;
+  --miner-start-light: #32e652;
+  --miner-start-dark: #08c82e;
+  --miner-kill-light: #fffafb;
+  --miner-kill-dark: #f9e4e9;
+  --miner-kill-border: #e9c3cd;
+  --miner-kill-ink: #733d48;
+  --miner-button-ink: #424a5b;
+}
+
+.miner-window {
+  box-sizing: border-box;
+  color: var(--miner-ink);
+  width: min(560px, 100%);
+  min-height: 680px;
+  padding: 22px 20px 18px;
+  border: 1px solid #d0d8e9;
+  border-radius: 20px;
+  background:
+    radial-gradient(ellipse at 8% 31%, rgba(217, 235, 255, 0.85), transparent 58%),
+    radial-gradient(ellipse at 90% 72%, rgba(230, 225, 255, 0.79), transparent 58%),
+    linear-gradient(150deg, #fcfdff, #f1f4ff 54%, #edf2ff);
+  font-family: "Segoe UI Variable", "Malgun Gothic", "Segoe UI", sans-serif;
+}
+
+.miner-brand { text-align: center; }
+.miner-wordmark { display: block; width: min(204px, 50%); height: auto; margin: 10px auto 4px; }
+.miner-tagline { margin: 0; color: #555d6d; font-size: 14px; font-weight: 650; }
+
+.miner-hero {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 258px;
+  margin-top: 18px;
+  border: 1px solid var(--miner-panel-border);
+  border-radius: 23px;
+  background:
+    radial-gradient(ellipse at 5% 86%, rgba(222, 236, 255, 0.54), transparent 54%),
+    radial-gradient(ellipse at 93% 92%, rgba(234, 228, 255, 0.50), transparent 55%),
+    var(--miner-panel);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.70);
+}
+.miner-hero img { display: block; max-height: 91%; max-width: 94%; object-fit: contain; }
+
+.miner-status { text-align: center; margin: 17px 0 0; }
+.miner-status-title { margin: 0; font-size: 25px; line-height: 1.3; font-weight: 790; }
+.miner-status-description { margin: 4px 0 0; font-size: 13px; line-height: 1.5; }
+
+.miner-progress { display: grid; grid-template-columns: repeat(5, 1fr) auto; gap: 6px; align-items: center; margin: 22px 0 20px; }
+.miner-progress-segment { height: 8px; border-radius: 6px; background: var(--miner-progress-track); }
+.miner-progress-segment[data-complete="true"] { background: #1bd642; }
+.miner-progress-count { margin-left: 9px; font-size: 12px; font-variant-numeric: tabular-nums; }
+
+.miner-footer { display: flex; justify-content: space-between; align-items: center; margin-top: 20px; font-size: 11px; gap: 8px; }
