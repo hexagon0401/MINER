@@ -1,0 +1,77 @@
+[
+  {
+    "name": "MINER BETA 1 — Windows",
+    "prerelease": true,
+    "tag_name": "v5.0.0-beta.1.1-windows.8"
+  },
+  {
+    "name": "MINER BETA 1 — Windows",
+    "prerelease": true,
+    "tag_name": "v5.0.0-beta.1.1-windows.7"
+  },
+  {
+    "name": "MINER BETA 1 — Windows",
+    "prerelease": true,
+    "tag_name": "v5.0.0-beta.1.1-windows.6"
+  },
+  {
+    "name": "MINER BETA 1 — Windows",
+    "prerelease": true,
+    "tag_name": "v5.0.0-beta.1.1-windows.5"
+  },
+  {
+    "name": "MINER BETA 1 — Windows",
+    "prerelease": true,
+    "tag_name": "v5.0.0-beta.1.1-windows.4"
+  },
+  {
+    "name": "MINER BETA 1 — Windows",
+    "prerelease": true,
+    "tag_name": "v5.0.0-beta.1.1-windows.3"
+  },
+  {
+    "name": "MINER ALPHA v1",
+    "prerelease": false,
+    "tag_name": "miner-alpha-v1"
+  },
+  {
+    "name": "MINER ALPHA universial Beta 1",
+    "prerelease": true,
+    "tag_name": "miner-alpha-universal-beta.1"
+  },
+  {
+    "name": "MINER BETA 1.1",
+    "prerelease": true,
+    "tag_name": "v5.0.0-beta.1.1"
+  },
+  {
+    "name": "MINER BETA",
+    "prerelease": true,
+    "tag_name": "v5.0.0-beta.1"
+  },
+  {
+    "name": "MINER Alpha",
+    "prerelease": true,
+    "tag_name": "v5.0.0-alpha.5-dmg.6"
+  },
+  {
+    "name": "SchoolNet v5.0.0-alpha.4",
+    "prerelease": true,
+    "tag_name": "v5.0.0-alpha.4"
+  },
+  {
+    "name": "SchoolNet v5.0.0-alpha.3",
+    "prerelease": true,
+    "tag_name": "v5.0.0-alpha.3"
+  },
+  {
+    "name": "SchoolNet v5.0.0-alpha.2",
+    "prerelease": true,
+    "tag_name": "v5.0.0-alpha.2"
+  },
+  {
+    "name": "SchoolNet v5.0.0-alpha.1",
+    "prerelease": true,
+    "tag_name": "v5.0.0-alpha.1"
+  }
+]

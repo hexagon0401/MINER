@@ -181,6 +181,8 @@ macOS 버전과 표시 언어에 따라 버튼 이름이나 화면 구성은 조
 
 ## 개발 안내
 
+[버전·beta·브랜치 보관함](archive/README.md) · [전체 파일·커밋 목록](archive/inventory.json)
+
 | 문서 | 내용 |
 | :-- | :-- |
 | [Windows 기술 안내](https://github.com/hexagon0401/MINER/blob/windows-beta1/v5/windows/README.md) | Windows 베타 1 설치·복구·현지화 변경점 |
