@@ -29,6 +29,7 @@ def main(argv=None):
         command.add_argument("--directory", type=Path, required=True)
         command.add_argument("--engine", default="sing-box")
         command.add_argument("--warp-cli")
+        if name == "run": command.add_argument("--managed-helper", action="store_true")
     probe = commands.add_parser("benchmark", help="compare TCP connection times, not game ping")
     probe.add_argument("--host", required=True)
     probe.add_argument("--port", type=int, default=443)
@@ -90,7 +91,7 @@ def main(argv=None):
             print(json.dumps(result, indent=2))
             return 0 if result["preflight_ok"] else 1
         elif args.command == "run":
-            return run(args.directory, args.engine, args.warp_cli)
+            return run(args.directory, args.engine, args.warp_cli, managed_helper=args.managed_helper)
         elif args.command == "benchmark":
             result = benchmark(args.host, args.port, args.samples, args.proxy_port, args.timeout)
             print(json.dumps(result, indent=2))

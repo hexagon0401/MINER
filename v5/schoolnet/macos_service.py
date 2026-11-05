@@ -85,6 +85,8 @@ def install_runtime(base, resources, profile):
                 os.replace(destination, backup)
                 backups[name] = backup
             os.replace(stage / name, destination)
+            for path in [destination, *destination.rglob("*")]:
+                path.chmod(0o755 if path.is_dir() or path.stat().st_mode & 0o111 else 0o644)
             replaced.append(name)
         write_json(base / MARKER, {"id": LABEL, "version": __version__})
     except Exception:
@@ -128,6 +130,43 @@ def prepare(resources, profile_dir):
     log.touch(exist_ok=True)
     log.chmod(0o644)
     return base
+
+
+def start_installed(profile):
+    """Persistent approval may execute only the installed root-owned runtime."""
+    if platform.system() != "Darwin" or os.geteuid() != 0:
+        raise ValueError("Installed engine requires the macOS root helper")
+    base = owned_base()
+    if status()["running"]: raise ValueError("MINER is already running")
+    stop()
+    directory = base / "profile"
+    directory.mkdir(mode=0o700, exist_ok=True)
+    if directory.is_symlink(): raise ValueError("Managed profile must not be a symlink")
+    write_json(directory / "profile.json", profile.to_dict())
+    write_json(directory / "sing-box.json", build_config(profile))
+    engine = base / "bin/sing-box"
+    check_engine(str(engine), directory / "sing-box.json")
+    log = base / "engine.log"
+    if log.exists() and log.stat().st_size > 5 * 1024 * 1024:
+        os.replace(log, base / "engine.previous.log")
+    offset = log.stat().st_size if log.exists() else 0
+    command = ["/bin/launchctl", "submit", "-l", LABEL,
+               "-o", str(base / "engine.log"), "-e", str(base / "engine.log"), "--",
+               str(base / "runtime/schoolnet-cli"), "run", "--directory", str(directory),
+               "--engine", str(engine), "--managed-helper"]
+    subprocess.run(command, check=True, capture_output=True, text=True, timeout=10)
+    deadline = time.monotonic() + 20
+    while time.monotonic() < deadline:
+        result = status()
+        text = ""
+        if log.exists():
+            with log.open("rb") as stream:
+                stream.seek(offset); text = stream.read().decode(errors="replace")
+        if result["running"] and "sing-box started" in text and "inbound/tun" in text: return result
+        if not result["running"] and text: raise ValueError("Installed engine exited during startup; inspect engine.log")
+        time.sleep(.1)
+    stop()
+    raise ValueError("TUN readiness timed out; routing was stopped")
 
 
 def manage(operation, resources=None, profile=None):

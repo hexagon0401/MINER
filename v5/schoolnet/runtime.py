@@ -128,10 +128,20 @@ def instance_lock(directory):
                 fcntl.flock(lock, fcntl.LOCK_UN)
 
 
-def run(directory, engine="sing-box", warp_cli=None):
+def run(directory, engine="sing-box", warp_cli=None, managed_helper=False):
     directory = Path(directory).resolve()
     with instance_lock(directory):
-        result = doctor(directory, engine, warp_cli)
+        if managed_helper:
+            from .macos_service import BASE
+            if native_platform() != "macos" or not is_admin() or directory != BASE / "profile" or Path(engine).resolve() != BASE / "bin/sing-box":
+                raise ValueError("Managed helper can use only its root-owned installed engine/profile")
+            profile = load_profile(directory)
+            if profile.platform != "macos": raise ValueError("Managed helper requires a macOS profile")
+            check_engine(str(engine), directory / "sing-box.json")
+            proxy_ready(profile.proxy_port); verify_trace(profile.proxy_port)
+            result = {"preflight_ok":True,"engine":str(engine)}
+        else:
+            result = doctor(directory, engine, warp_cli)
         if not result["preflight_ok"]:
             raise ValueError("this profile cannot run on this operating system")
         if not is_admin():

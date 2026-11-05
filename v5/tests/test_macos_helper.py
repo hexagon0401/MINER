@@ -25,9 +25,14 @@ class HelperTests(unittest.TestCase):
             stop.assert_called_once()
 
     def test_non_macos_profiles_never_reach_service(self):
-        with patch.object(helper.service,"manage") as manage,self.assertRaises(ValueError):
+        with patch.object(helper.service,"start_installed") as manage,self.assertRaises(ValueError):
             helper.dispatch({"operation":"start","profile":{"platform":"windows"}},501,501)
         manage.assert_not_called()
+
+    def test_reused_approval_never_prepares_or_executes_the_mutable_app_bundle(self):
+        with patch.object(helper.service,"status",return_value={"running":False}),patch.object(helper.service,"prepare") as prepare,patch.object(helper.service,"start_installed",return_value={"running":True}) as start:
+            result=helper.dispatch({"operation":"start","profile":{"platform":"macos"}},501,501)
+            self.assertTrue(result['running']);start.assert_called_once();prepare.assert_not_called()
 
     def test_kernel_peer_identity_matches_current_user(self):
         left,right=socket.socketpair()

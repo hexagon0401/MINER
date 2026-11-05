@@ -58,7 +58,7 @@ def request(operation, profile=None):
         connection.connect(str(SOCKET))
         if peer_uid(connection) != 0:
             raise ValueError("Helper is not a root-owned process")
-        message = {"operation": operation}
+        message = {"operation": operation, "version": __version__}
         if profile is not None:
             message["profile"] = profile.to_dict()
         connection.sendall(json.dumps(message).encode() + b"\n")
@@ -84,13 +84,7 @@ def dispatch(message, uid, owner):
             raise ValueError("Helper only accepts macOS profiles")
         if service.status()["running"]:
             raise ValueError("MINER is already running")
-        directory = service.owned_base() / "helper-profile"
-        directory.mkdir(mode=0o700, exist_ok=True)
-        if directory.is_symlink():
-            raise ValueError("Root profile must not be a symlink")
-        write_json(directory / "profile.json", profile.to_dict())
-        service.manage("start", service.APP_RESOURCES, directory)
-        result = service.status()
+        result = service.start_installed(profile)
     else:
         raise ValueError("Unsupported helper command")
     return {"ok": True, "version": __version__, "helper_pid": os.getpid(), **result}
@@ -110,7 +104,9 @@ def serve(owner):
             with connection:
                 connection.settimeout(5)
                 try:
-                    response = dispatch(receive(connection), peer_uid(connection), owner)
+                    message = receive(connection)
+                    if message.get("version") != __version__: raise ValueError("Helper update needs administrator approval")
+                    response = dispatch(message, peer_uid(connection), owner)
                 except (ValueError, TypeError, OSError, subprocess.SubprocessError) as exc:
                     response = {"ok": False, "error": str(exc), "version": __version__}
                 try:
@@ -144,6 +140,7 @@ def install(resources, profile, owner):
     data = {"Label": LABEL, "ProgramArguments": [str(base / "runtime/schoolnet-cli"),
             "desktop", "helper-serve", "--owner", str(owner)], "RunAtLoad": True,
             "KeepAlive": False, "UserName": "root", "Umask": 0o077,
+            "EnvironmentVariables": {"PATH":"/usr/bin:/bin:/usr/sbin:/sbin"},
             "StandardOutPath": str(base / "helper.log"), "StandardErrorPath": str(base / "helper.log")}
     PLIST.write_bytes(plistlib.dumps(data))
     PLIST.chmod(0o600)
