@@ -1,0 +1,99 @@
+name: MINER ALPHA universal Beta 1 bundle
+on:
+  push:
+    tags: ['miner-alpha-universal-beta.1']
+permissions:
+  contents: read
+jobs:
+  intel:
+    runs-on: macos-15-intel
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: 7999c5ba0c99fe9b3d7b605b839f5cfaad092387
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install verified native dependencies
+        working-directory: v5
+        run: |
+          python -m pip install pyinstaller==6.22.3 certifi==2026.10.23 dmgbuild==1.6.7
+          python install_engine.py
+          SCHOOLNET_TEST_ENGINE="$PWD/local/bin/sing-box" python -m unittest discover -s tests -v
+      - name: Import Developer ID when configured
+        id: signing
+        working-directory: v5
+        env:
+          APPLE_CERTIFICATE_P12_BASE64: ${{ secrets.APPLE_CERTIFICATE_P12_BASE64 }}
+          APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          NOTARY_CONFIGURED: ${{ secrets.APPLE_NOTARY_KEY_P8_BASE64 != '' || secrets.APPLE_NOTARY_KEY_ID != '' || secrets.APPLE_NOTARY_ISSUER_ID != '' }}
+        run: python macos/signing_credentials.py
+      - name: Build native Intel app and verify installed DMG
+        working-directory: v5
+        env:
+          SIGNING_ENABLED: ${{ steps.signing.outputs.enabled }}
+          CODE_SIGN_IDENTITY: ${{ steps.signing.outputs.identity }}
+          APPLE_NOTARY_KEY_P8_BASE64: ${{ secrets.APPLE_NOTARY_KEY_P8_BASE64 }}
+          APPLE_NOTARY_KEY_ID: ${{ secrets.APPLE_NOTARY_KEY_ID }}
+          APPLE_NOTARY_ISSUER_ID: ${{ secrets.APPLE_NOTARY_ISSUER_ID }}
+        run: |
+          set +e
+          if [ "$SIGNING_ENABLED" = true ]; then
+            python macos/build.py --arch x86_64 --signing developer-id > "$RUNNER_TEMP/miner-intel-build.log" 2>&1
+          else
+            python macos/build.py --arch x86_64 --signing adhoc > "$RUNNER_TEMP/miner-intel-build.log" 2>&1
+          fi
+          result=$?
+          cat "$RUNNER_TEMP/miner-intel-build.log"
+          exit "$result"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: universal-intel-diagnostics
+          path: ${{ runner.temp }}/miner-*
+          if-no-files-found: warn
+      - name: Remove signing keychain
+        if: always() && steps.signing.outputs.keychain != ''
+        working-directory: v5
+        env:
+          SIGNING_KEYCHAIN: ${{ steps.signing.outputs.keychain }}
+        run: python macos/signing_credentials.py --cleanup "$SIGNING_KEYCHAIN"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: universal-intel-verified
+          path: v5/dist/*
+          if-no-files-found: error
+  release:
+    needs: intel
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: universal-intel-verified
+          path: platform-assets
+      - name: Download immutable verified Apple Silicon and Windows releases
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          gh release download v5.0.0-beta.1.1 --pattern '*AppleSilicon.dmg' --pattern '*AppleSilicon.dmg.verification.json' --dir platform-assets
+          gh release download v5.0.0-beta.1.1-windows.8 --pattern '*Setup.exe' --pattern '*Setup.exe.verification.json' --dir platform-assets
+      - name: Verify every platform and assemble named bundle
+        env:
+          TAG: ${{ github.ref_name }}
+        run: python3 packaging/universal/bundle.py platform-assets release-assets "$TAG"
+      - name: Publish complete prerelease
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          TAG: ${{ github.ref_name }}
+        run: gh release create "$TAG" release-assets/* --verify-tag --prerelease --title 'MINER ALPHA universial Beta 1' --notes-file packaging/universal/RELEASE_NOTES.md
+      - uses: actions/upload-artifact@v4
+        with:
+          name: universal-release-manifest
+          path: release-assets/*.json
