@@ -3,6 +3,8 @@ on:
   push:
     tags: ['v5.0.0-beta.1.1-windows.*']
   workflow_dispatch:
+env:
+  PYTHONUTF8: "1"
 permissions:
   contents: read
 jobs:
@@ -17,7 +19,9 @@ jobs:
       - run: python -m pip install PySide6==6.8.3 pyinstaller==6.22.3 certifi==2026.10.23 Pillow==11.3.0
       - name: Portable tests
         working-directory: v5
-        run: python -m unittest discover -s tests -v
+        run: |
+          python -m unittest discover -s tests -v 2>&1 | Tee-Object -FilePath "$env:RUNNER_TEMP/windows-tests.log"
+          exit $LASTEXITCODE
       - name: Build and verify Windows package
         working-directory: v5
         run: python windows/build.py
@@ -28,6 +32,7 @@ jobs:
           path: |
             ${{ runner.temp }}/miner-windows-diagnostics/**
             v5/windows/work/tun-smoke.log
+            ${{ runner.temp }}/windows-tests.log
           if-no-files-found: warn
       - uses: actions/upload-artifact@v4
         with:

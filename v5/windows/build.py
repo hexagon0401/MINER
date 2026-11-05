@@ -57,7 +57,7 @@ def main():
     assert ui['ok']
     iscc=shutil.which('ISCC.exe') or r'C:\Program Files (x86)\Inno Setup 6\ISCC.exe'
     execute(iscc,BASE/'windows/installer.iss')
-    setup=BASE/'dist-windows/MINER-v5.0.0-beta.1.1-windows.1-Windows-x64-Setup.exe'
+    setup=BASE/'dist-windows/MINER-v5.0.0-beta.1.1-windows.2-Windows-x64-Setup.exe'
     execute(setup,'/VERYSILENT','/SUPPRESSMSGBOXES','/NORESTART',f'/DIR={work / "installed"}')
     execute(work/'installed/MINER.exe','--self-test',output/'installed')
     execute(work/'installed/unins000.exe','/VERYSILENT','/SUPPRESSMSGBOXES','/NORESTART')
@@ -66,7 +66,7 @@ def main():
         if not (work/'installed/MINER.exe').exists(): break
         time.sleep(.2)
     assert not (work/'installed/MINER.exe').exists(),'Uninstall did not remove app'
-    report={'version':'5.0.0-beta.1.1-windows.1','base':'MINER Beta 1.1','architecture':'x64',
+    report={'version':'5.0.0-beta.1.1-windows.2','base':'MINER Beta 1.1','architecture':'x64',
       'authenticode_signed':False,'ui':ui,'native_tun':native,'installer_verified':True,
       'uninstaller_verified':True,'school_network_tested':False,'warp_live_tested':False}
     for path in [setup]:
