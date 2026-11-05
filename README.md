@@ -1,12 +1,42 @@
-# MINER
+<div align="center">
 
 <img src="docs/assets/miner-readme-banner.png" alt="MINER — Dig your way out. 땅굴을 파는 광부 캐릭터 배너" width="100%" />
 
+# MINER
+
 **Dig your way out. — 학교 네트워크의 벽을 넘어.**
+
+클라이언트는 WARP로, 게임은 직접 연결로.
+학교 네트워크의 접속 제한과 게임 지연 문제에서 출발한 분리 라우팅 앱입니다.
+
+![Beta 1.1](https://img.shields.io/badge/STATUS-BETA_1.1-0EFB2E?style=flat-square&labelColor=0C1421)
+![macOS](https://img.shields.io/badge/macOS-Apple_Silicon-E6E8E6?style=flat-square&logo=apple&logoColor=white&labelColor=0C1421)
+![Cloudflare WARP](https://img.shields.io/badge/Cloudflare-WARP-F38020?style=flat-square&logo=cloudflare&logoColor=white&labelColor=0C1421)
+![Python](https://img.shields.io/badge/Python-3776AB?style=flat-square&logo=python&logoColor=white)
+![Swift](https://img.shields.io/badge/Swift-F05138?style=flat-square&logo=swift&logoColor=white)
+
+[다운로드](#다운로드) · [설치](#설치) · [사용 방법](#사용-방법) · [성능](#성능-performance) · [개발 안내](#개발-안내)
+
+</div>
+
+---
 
 ## 개요
 
 학교에서는 리그 오브 레전드(LoL)를 비롯한 게임의 접속과 플레이를 네트워크에서 제한합니다. MINER는 이러한 제한을 기술적으로 파훼하고, 대한민국 교육청을 통해 학교에 제공되는 **스쿨넷 환경의 게임 접속 차단을 회피·돌파하는 것**을 목표로 시작한 프로젝트입니다.
+
+MINER는 **클라이언트 통신은 WARP로, 게임 플레이 통신은 직접 연결로** 나눕니다. **접속 가능성과 함께 게임 지연 및 컴퓨터 성능에 주는 영향을 줄이는 것**이 개발의 핵심입니다. 연결·종료에 필요한 설정 전환도 앱에서 처리합니다.
+
+| 통신 | 연결 경로 |
+| :-- | :-- |
+| Riot·LoL 클라이언트 및 웹 Helper의 TCP | WARP Local Proxy |
+| 게임 실행 파일의 통신 | 직접 연결 |
+| 일반 DNS · 포트 53 | WARP를 통한 암호화 DNS |
+
+현재는 macOS와 개인용 Cloudflare WARP를 중심으로 개발합니다. 게임 통신 자체가 차단된 환경에서는 직접 연결이 작동하지 않을 수 있습니다. 전국 모든 학교에서의 작동이나 모든 지연·연결 끊김의 해결을 보장하지 않습니다.
+
+<details>
+<summary><strong>개발 배경 · 왜 WARP와 분리 라우팅인가요?</strong></summary>
 
 처음에는 모바일 데이터와 핫스팟으로 학교망을 벗어나거나, VPN으로 통신 경로를 우회하는 방법을 살펴봤습니다. 하지만 모바일 데이터는 다운로드 용량과 핫스팟 한도, 요금 부담이 있었고, 일부 VPN은 비용과 지연 시간, 연결 안정성 측면에서 게임용으로 사용하기에 아쉬움이 있었습니다.
 
@@ -14,23 +44,21 @@
 
 클라이언트 로그인과 다운로드는 정상적으로 진행되더라도, 게임 중 지연이 급격히 커지거나 WARP 연결이 불안정해지는 경우가 있었습니다. 재연결 과정에서 게임 접속이 끊기기도 했고, 이를 피하려고 WARP를 끄면 게임 종료 후 클라이언트에 복귀할 때 다시 WARP를 켜고 클라이언트까지 재실행해야 했습니다. **단순히 접속만 되는 것으로는 충분하지 않았습니다.**
 
-MINER는 이 경험에서 출발했습니다. 클라이언트와 게임 플레이에 필요한 통신 경로를 나누어, **클라이언트 통신은 WARP로 보내고 게임 플레이 통신은 직접 연결하는 분리 라우팅**을 사용합니다. 연결과 종료에 필요한 설정 전환도 앱에서 처리해, 사용자가 매번 WARP를 켜고 끄는 불편함을 줄이려 합니다.
+</details>
 
-개발의 핵심은 **차단된 서비스에 접속하면서도 게임 지연과 컴퓨터 성능에 주는 영향을 줄이는 것**입니다. 모든 통신을 일괄 우회하기보다, 우회가 필요한 통신에 WARP를 적용하는 방향으로 개발합니다. 다만 게임 통신 자체가 차단된 환경에서는 직접 연결이 작동하지 않을 수 있으며, 분리 라우팅이 모든 지연이나 연결 끊김을 해결하는 것은 아닙니다.
+## 다운로드
 
-현재는 macOS와 개인용 Cloudflare WARP를 중심으로 개발합니다. 전국 모든 학교에서의 작동을 보장하는 단계는 아니며, 학교별 네트워크 설정과 게임의 통신 방식에 따라 결과가 달라질 수 있습니다.
+[![Apple Silicon DMG 다운로드](https://img.shields.io/badge/macOS-DMG_다운로드-0EFB2E?style=for-the-badge&logo=apple&logoColor=white&labelColor=0C1421)](https://github.com/hexagon0401/MINER/releases/download/v5.0.0-beta.1.1/MINER-v5.0.0-beta.1.1-macOS-AppleSilicon.dmg)
 
-## 배포 버전
+**MINER BETA 1.1 · Apple Silicon**
+베타 1 기반의 땅굴 모양 개선 버전입니다. [릴리스 노트·검증 파일 보기](https://github.com/hexagon0401/MINER/releases/tag/v5.0.0-beta.1.1)
 
-| 버전 | 상태 |
-|---|---|
-| **베타 1.1** | [Apple Silicon DMG 다운로드](https://github.com/hexagon0401/MINER/releases/download/v5.0.0-beta.1.1/MINER-v5.0.0-beta.1.1-macOS-AppleSilicon.dmg) · 베타 1 기반, 땅굴 모양 개선 · UI·서명 무결성·설치 복사 검증 완료 |
-| **베타 1 유지 보수** | [`beta1-maintenance` 브랜치](https://github.com/hexagon0401/MINER/tree/beta1-maintenance)에서 개발을 이어갑니다. |
-| **베타 2** | 학교 현황·로컬 진단·제보 기능의 소스만 보관합니다. 현재 배포용 DMG에는 포함되지 않습니다. |
-| 공유 제보 서버 | 아직 개방하지 않았습니다. |
-| Homebrew | 배포 준비 단계입니다. 현재는 위 DMG로 설치해 주세요. |
-
-[프리릴리스 페이지](https://github.com/hexagon0401/MINER/releases/tag/v5.0.0-beta.1.1)에서 배포 파일과 검증 정보를 확인할 수 있습니다.
+| 구분 | 현재 상태 |
+| :-- | :-- |
+| 베타 1 유지 보수 | [`beta1-maintenance`](https://github.com/hexagon0401/MINER/tree/beta1-maintenance)에서 개발 |
+| 베타 2 | 학교 현황·진단·제보 기능의 **소스만 보관**. 배포용 DMG에 미포함 |
+| 공유 제보 서버 | 미개방 |
+| Homebrew | 준비 중 · 현재는 위 DMG로 설치 |
 
 ## 설치
 
@@ -41,7 +69,12 @@ MINER는 이 경험에서 출발했습니다. 클라이언트와 게임 플레�
 3. 왼쪽의 `MINER.app`을 오른쪽의 **Applications(응용 프로그램)** 폴더로 드래그합니다.
 4. 응용 프로그램 폴더에서 `MINER.app`을 실행합니다.
 
-#### 처음 실행할 때 macOS에서 차단되는 경우
+> [!IMPORTANT]
+> 현재 macOS 배포본은 **ad-hoc 서명이며 Apple 공증이 없습니다.** 처음 실행할 때 차단되면 아래 안내를 펼쳐 주세요.
+
+<details>
+<summary><strong>처음 실행할 때 차단되나요? · Open Anyway 안내와 스크린샷</strong></summary>
+
 
 현재 배포본은 **ad-hoc 서명이며 Apple 공증이 적용되지 않았습니다.** 처음 실행하면 아래 순서로 앱 실행을 허용해야 할 수 있습니다. MINER 공식 릴리스에서 받은 파일인지 확인한 뒤 진행해 주세요.
 
@@ -65,6 +98,8 @@ MINER는 이 경험에서 출발했습니다. 클라이언트와 게임 플레�
 
 macOS 버전과 표시 언어에 따라 버튼 이름이나 화면 구성은 조금 다를 수 있습니다. `앱이 손상되어 열 수 없습니다`처럼 다른 오류가 표시되는 경우에는 이 안내와 다른 문제일 수 있으므로 오류 문구를 확인해 주세요.
 
+</details>
+
 ## 사용 방법
 
 1. 기존 SchoolNet 또는 MINER가 실행 중이면 먼저 중지하고 종료합니다.
@@ -72,25 +107,6 @@ macOS 버전과 표시 언어에 따라 버튼 이름이나 화면 구성은 조
 3. 클라이언트의 TCP 통신은 WARP 경로로, 게임 실행 파일과 나머지 트래픽은 직접 경로로 보냅니다. 진행 막대는 실제 백엔드 상태에 따라 표시됩니다.
 4. **중지** 또는 앱 종료 시 엔진을 정리하고 WARP를 **UDP — Traffic and DNS** 모드로 복귀시킵니다. 실패하면 앱에 표시되는 오류를 확인합니다.
 5. **⌘,**로 설정을 열어 한국어·영어 변경, 개발자 소개, 제거 기능을 사용할 수 있습니다.
-
-## 현재 검증 범위
-
-베타 1.1은 자동 테스트 59개, macOS 네이티브 UI 검사 22개, DMG 설치 복사 후 앱 서명 무결성 검증을 통과했습니다. 학교망에서의 실제 게임 지연·프레임·클라이언트 영상 재생과 WARP 복귀는 사용자 환경에서 별도로 확인해야 합니다. 프록시 HTTPS 진단 성공이 실제 게임 플레이나 특정 학교에서의 작동을 증명하지는 않습니다.
-
-베타 2 소스의 초록 깃발은 과거 성공 기록이 있음을, 빨강 깃발은 성공이 아직 확인되지 않았음을 뜻합니다. 내 기기의 기록과 운영자가 승인한 공유 기록은 구분하며, 전국 학교 통계와 공유 제보 서비스는 현재 제공하지 않습니다.
-
-## 개발 안내
-
-- [v5 설치·기술 안내](v5/README.md)
-- [학교 데이터·진단·제보 시스템](v5/community/README.md)
-- [베타 2 인계 및 남은 작업](v5/docs/BETA2_HANDOFF.md)
-- [Homebrew 배포 준비](packaging/homebrew/README.md)
-- [Apple 서명·공증 설정](v5/docs/SIGNING.md)
-- [개인 Mac 빌드 러너 준비](v5/docs/SELF_HOSTED_MAC.md)
-
-개발자: [Punkthats*it · @hexagon0401](https://github.com/hexagon0401)
-
-이전 v1~v4는 개발 이력으로 보존합니다. v5 설치·제거는 WARP나 이전 버전을 삭제하지 않습니다.
 
 ## 성능 (Performance)
 
@@ -119,10 +135,30 @@ macOS 버전과 표시 언어에 따라 버튼 이름이나 화면 구성은 조
 
 **Dig your way out.**
 
+## 현재 검증 범위
+
+베타 1.1은 자동 테스트 59개, macOS 네이티브 UI 검사 22개, DMG 설치 복사 후 앱 서명 무결성 검증을 통과했습니다. 학교망에서의 실제 게임 지연·프레임·클라이언트 영상 재생과 WARP 복귀는 사용자 환경에서 별도로 확인해야 합니다. 프록시 HTTPS 진단 성공이 실제 게임 플레이나 특정 학교에서의 작동을 증명하지는 않습니다.
+
+베타 2 소스의 초록 깃발은 과거 성공 기록이 있음을, 빨강 깃발은 성공이 아직 확인되지 않았음을 뜻합니다. 내 기기의 기록과 운영자가 승인한 공유 기록은 구분하며, 전국 학교 통계와 공유 제보 서비스는 현재 제공하지 않습니다.
+
+## 개발 안내
+
+| 문서 | 내용 |
+| :-- | :-- |
+| [v5 기술 안내](v5/README.md) | 설치·연결 구조·CLI 사용법 |
+| [학교 데이터·제보 시스템](v5/community/README.md) | 베타 2의 로컬 진단과 제보 구조 |
+| [베타 2 인계](v5/docs/BETA2_HANDOFF.md) | 개발 상태와 남은 작업 |
+| [Homebrew](packaging/homebrew/README.md) | 배포 준비 |
+| [Apple 서명·공증](v5/docs/SIGNING.md) | 인증서와 공증 설정 |
+| [Mac 빌드 러너](v5/docs/SELF_HOSTED_MAC.md) | 개인 Mac 러너 준비 |
+
+이전 v1~v4는 개발 이력으로 보존합니다. v5 설치·제거는 WARP나 이전 버전을 삭제하지 않습니다.
+
 ## 개발자 프로필
 
-<a href="https://github.com/hexagon0401"><img src="https://avatars.githubusercontent.com/u/82876856?v=4&amp;s=256" alt="hexagon0401 GitHub 프로필 이미지" width="96" /></a>
+<a href="https://github.com/hexagon0401"><img src="https://avatars.githubusercontent.com/u/82876856?v=4&amp;s=256" alt="hexagon0401 GitHub 프로필 이미지" width="88" /></a>
 
 **[Punkthats*it · @hexagon0401](https://github.com/hexagon0401)**
-
 MINER를 개발하고 있습니다. 프로젝트 소식과 소스 코드는 GitHub에서 확인할 수 있습니다.
+
+[![GitHub 프로필](https://img.shields.io/badge/GitHub-hexagon0401-E6E8E6?style=flat-square&logo=github&logoColor=white&labelColor=0C1421)](https://github.com/hexagon0401)
