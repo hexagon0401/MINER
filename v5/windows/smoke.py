@@ -24,8 +24,9 @@ def run(output):
     app=QApplication.instance() or QApplication([])
     w=ui.Window();w.show();w.activateWindow();wait(app,.2)
     watermark=QLabel('UI VALIDATION · simulated states · no live WARP',w)
-    watermark.setStyleSheet('background:#ffd54a;color:#142337;font-size:10px;padding:3px;');watermark.adjustSize()
+    watermark.setStyleSheet('background:#ffd54a;color:#142337;font-size:10px;padding:3px;');watermark.adjustSize();watermark.show()
     checks=[]
+    assert watermark.isVisible()
     for asset in ['school.png','mascot-runtime-256.png','AppIcon.png','developer-avatar.png','full-window-strata.png']:
         assert not ui.QPixmap(str(ui.ART/asset)).isNull(),asset
     checks.append('Beta icon, scene, mascot and offline avatar decode')
@@ -74,7 +75,7 @@ def run(output):
         if index==40:w.update_state('restoring',0);w.motion.play('stop',w.stop.mapTo(w,w.stop.rect().center()),False)
         if index==47:w.update_state('restored',0)
         wait(app,.12);watermark.raise_();app.processEvents()
-        image=w.grab().toImage();ptr=image.bits()
+        image=w.grab().toImage()
         # Save through PNG to avoid depending on a platform QImage memory layout.
         from PySide6.QtCore import QBuffer,QIODevice
         buffer=QBuffer();buffer.open(QIODevice.WriteOnly);image.save(buffer,'PNG')

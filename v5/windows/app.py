@@ -125,6 +125,30 @@ class Motion(QWidget):
         p.end()
 
 
+class StageBar(QWidget):
+    """Five fixed segments reflect completed backend stages; never auto-increment."""
+    def __init__(self):
+        super().__init__();self.value=0;self.label='0/5';self.setFixedHeight(24)
+    def setText(self,text):
+        self.label=text.rsplit(' ',1)[-1];self.value=int(self.label.split('/')[0])
+        self.setAccessibleName(self.label);self.update()
+    def text(self): return self.label
+    def paintEvent(self,event):
+        p=QPainter(self);p.setRenderHint(QPainter.Antialiasing)
+        gap=5;available=max(20,self.width()-44);segment=(available-gap*4)/5
+        p.setPen(Qt.NoPen)
+        for n in range(5):
+            p.setBrush(QColor('#04c539') if n<self.value else QColor(110,130,150,100))
+            p.drawRoundedRect(ui_rect(n*(segment+gap),9,segment,5),2.5,2.5)
+        p.setPen(self.palette().color(QPalette.WindowText))
+        p.drawText(self.rect(),Qt.AlignRight|Qt.AlignVCenter,self.label);p.end()
+
+
+def ui_rect(x,y,w,h):
+    from PySide6.QtCore import QRectF
+    return QRectF(x,y,w,h)
+
+
 class Worker(QThread):
     progress=Signal(str,int); failed=Signal(str)
     def __init__(self,restore=False):
@@ -162,7 +186,7 @@ class Window(QWidget):
         self.cave=Cave();main.addWidget(self.cave,1)
         self.status=QLabel();self.status.setWordWrap(True);self.status.setObjectName('status');main.addWidget(self.status)
         self.description=QLabel();self.description.setWordWrap(True);main.addWidget(self.description)
-        self.steps=QLabel();main.addWidget(self.steps)
+        self.steps=StageBar();main.addWidget(self.steps)
         self.error_details=QTextEdit();self.error_details.setReadOnly(True);self.error_details.setMaximumHeight(100);self.error_details.hide();main.addWidget(self.error_details)
         scroll.setWidget(body);layout.addWidget(scroll,1)
         self.start=QPushButton();self.start.setObjectName('start');self.start.setMinimumHeight(46);self.start.clicked.connect(self.begin);layout.addWidget(self.start)
@@ -185,6 +209,12 @@ class Window(QWidget):
             return
         dark=self.theme=='dark' or (self.theme=='system' and QApplication.palette().color(QPalette.Window).lightness()<128)
         self.dark=dark
+        if sys.platform=='win32':
+            try:
+                value=ctypes.c_int(int(dark));dwm=ctypes.windll.dwmapi.DwmSetWindowAttribute
+                dwm.argtypes=[ctypes.c_void_p,ctypes.c_uint,ctypes.c_void_p,ctypes.c_uint]
+                dwm(int(self.winId()),20,ctypes.byref(value),ctypes.sizeof(value))
+            except (AttributeError,OSError):pass
         bg,fg,panel,muted=('#111a26','#edf2f7','#29394d','#aab9cb') if dark else ('#f3f6fa','#142337','#e2e9f1','#465b73')
         self.setStyleSheet(f'QWidget {{background:{bg};color:{fg};}} QLabel {{background:transparent;}} QScrollArea {{border:0;}} QPushButton,QComboBox {{padding:8px;border:1px solid {muted};border-radius:9px;background:{panel};}} QPushButton:disabled {{color:{muted};border-color:{panel};}} QPushButton:focus,QComboBox:focus {{border:2px solid #008b32;}} #start {{background:#0ee432;color:#05220e;font-weight:700;}} #start:disabled {{background:{panel};color:{muted};}} #wordmark {{font-size:28px;font-weight:800;}} #status {{font-size:17px;font-weight:600;}} QTextEdit {{background:{panel};}}')
 
@@ -259,8 +289,8 @@ class Window(QWidget):
         d=QDialog(self);self.dialog=d;d.setMinimumWidth(360);l=QVBoxLayout(d)
         language_label=QLabel();l.addWidget(language_label)
         language=QComboBox();language.addItems(['한국어','English']);language.setCurrentIndex(0 if self.lang=='ko' else 1);l.addWidget(language)
-        theme_label=QLabel();l.addWidget(theme_label);theme=QComboBox();l.addWidget(theme)
-        reduce=QCheckBox();reduce.setChecked(self.reduced);l.addWidget(reduce)
+        theme_label=QLabel();l.addWidget(theme_label);theme=QComboBox();theme.setEnabled(not self.appearance["contrast"]);l.addWidget(theme)
+        reduce=QCheckBox();reduce.setChecked(self.reduced);reduce.setEnabled(not self.appearance["reduced"]);l.addWidget(reduce)
         about=QLabel();l.addWidget(about)
         avatar=QLabel();pix=QPixmap(str(ART/'developer-avatar.png'))
         if not pix.isNull():avatar.setPixmap(pix.scaled(64,64,Qt.KeepAspectRatio,Qt.SmoothTransformation))
