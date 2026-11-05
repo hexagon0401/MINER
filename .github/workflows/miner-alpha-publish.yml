@@ -23,6 +23,9 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           GH_REPO: ${{ github.repository }}
         run: |
+          if ! gh release view miner-alpha-v1 >/dev/null 2>&1; then
+            gh release create miner-alpha-v1 --verify-tag --draft --title 'MINER ALPHA v1' --notes-file packaging/alpha-v1/RELEASE_NOTES.md
+          fi
           gh release upload miner-alpha-v1 release-assets/* --clobber
           gh release edit miner-alpha-v1 --prerelease=false --draft=false --latest --title 'MINER ALPHA v1' --notes-file packaging/alpha-v1/RELEASE_NOTES.md
       - name: Verify all three installers were published
