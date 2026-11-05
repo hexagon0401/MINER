@@ -1,0 +1,32 @@
+{
+  "ok": true,
+  "checks": [
+    "real Qt Quick scene renders all backend states without network actions",
+    "errors gate restart and preserve explicit restoration",
+    "Pearl White A/B layouts, centered supplied logo, green button and equal action widths",
+    "Fluent settings, Korean-English copy, theme and persisted preferences",
+    "small windows keep primary Windows actions accessible",
+    "static supplied mascot and no digging or progress timers",
+    "late Kill during Stop queues one explicit disconnect; no false WARP-off claim",
+    "scene graph, text antialiasing and language-specific Windows fonts recorded",
+    "minimizing preserves the static, timer-free Pearl White scene"
+  ],
+  "network_actions": 0,
+  "state_source": "injected UI fixtures",
+  "theme": "Pearl White",
+  "default_controls": "A rounded floating",
+  "fallback_controls": "B flush integrated",
+  "kill_switch": "Stop owned engine then disconnect WARP; regular internet retained",
+  "animation_preference_overridden_for_capture": false,
+  "software_adapter_preferred": true,
+  "capture_render_loop": "basic",
+  "foreground_override_for_capture": false,
+  "floating_shadows_active": true,
+  "ui_engine": "Qt Quick RHI",
+  "control_style": "FluentWinUI3",
+  "graphics_api": "GraphicsApi.Direct3D11",
+  "text_render_type": "QtTextRendering (high-quality distance fields)",
+  "text_render_type_value": 0,
+  "font": "Malgun Gothic",
+  "scale_factor": "1.5"
+}
