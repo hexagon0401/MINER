@@ -1,0 +1,10 @@
+{
+  "source": "MINER.icon",
+  "compiler": "Apple actool + iconutil",
+  "channel": "stable",
+  "info": {
+    "CFBundleIconFile": "MINER",
+    "CFBundleIconName": "MINER"
+  },
+  "sha256": "54c49e65c8b3f95fe43fd50bab2fdbfa5d4ae879671566ffbf48489a5b8cb1e2"
+}

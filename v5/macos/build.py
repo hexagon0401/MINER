@@ -17,6 +17,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 from install_engine import install
 from schoolnet import __version__
+from icon_assets import bundle_icon, install_macos_icon, macos_icon_info
 from macos.signing import developer_identity, notarize, sign_app, validate_notary_credentials
 
 
@@ -80,6 +81,7 @@ def build(expected_arch, signing="adhoc", identity=None, notary_profile=None, dm
     for name in ["schools.sqlite3", "schools.json", "community-config.json"]:
         shutil.copy2(ROOT / "community/data" / name, community_assets / name)
     catalog_metadata = json.loads((community_assets / "schools.json").read_text())
+    icon = bundle_icon(ui_assets, __version__)
     iconset = work / "AppIcon.iconset"
     iconset.mkdir()
     for size in [16,32,128,256,512]:
@@ -87,6 +89,7 @@ def build(expected_arch, signing="adhoc", identity=None, notary_profile=None, dm
             suffix = "@2x" if scale == 2 else ""
             execute("sips", "-z", size*scale, size*scale, ui_assets / "AppIcon.png", "--out", iconset / f"icon_{size}x{size}{suffix}.png")
     execute("iconutil", "-c", "icns", iconset, "-o", resources / "AppIcon.icns")
+    install_macos_icon(resources, icon)
     info = {
         "CFBundleName": "MINER", "CFBundleDisplayName": "MINER", "CFBundleIconFile": "AppIcon",
         "CFBundleIdentifier": "org.schoolnet.v5.alpha", "CFBundleExecutable": "MINER",
@@ -94,6 +97,7 @@ def build(expected_arch, signing="adhoc", identity=None, notary_profile=None, dm
         "CFBundleVersion": f"{502 if 'beta' in __version__ else 501 if 'delta' in __version__ else 500}{int(__version__.rsplit('.', 1)[1]):03d}", "SchoolNetReleaseVersion": __version__,
         "LSMinimumSystemVersion": "13.0", "NSHighResolutionCapable": True,
     }
+    info.update(macos_icon_info(icon))
     (contents / "Info.plist").write_bytes(plistlib.dumps(info))
     guide = (ROOT / "macos" / "사용 안내.txt").read_text(encoding="utf-8")
     if signed:
@@ -117,7 +121,7 @@ def build(expected_arch, signing="adhoc", identity=None, notary_profile=None, dm
         stream.write("certifi 2026.10.23 / Mozilla CA bundle (MPL-2.0): https://github.com/certifi/python-certifi\n")
     build_info = {"version": __version__, "architecture": arch, "build_os": platform.mac_ver()[0],
                   "python": platform.python_version(), "signed": "developer-id" if signed else "ad-hoc",
-                  "notarization_required": signed, "developer": developer}
+                  "notarization_required": signed, "developer": developer, "app_icon": icon}
     (resources / "build-info.json").write_text(json.dumps(build_info, indent=2), encoding="utf-8")
     validate_resource_paths(app)
     if signed:
@@ -206,7 +210,7 @@ def build(expected_arch, signing="adhoc", identity=None, notary_profile=None, dm
         "finder_background_layout_verified": dmg_background is not None,
         "app_name": app.name, "native_ui_smoke": ui_report,
         "school_catalog": catalog_metadata, "development_only": allow_incomplete_catalog and not catalog_metadata.get("complete",False),
-        "developer": developer, "app_icon_sha256": hashlib.sha256((ui_assets / "AppIcon.png").read_bytes()).hexdigest(),
+        "developer": developer, "release_channel": icon["channel"], "app_icon_sha256": icon["sha256"],
     }, indent=2), encoding="utf-8")
     print(f"Verified DMG: {dmg}")
 

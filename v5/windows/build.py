@@ -15,6 +15,7 @@ sys.path.insert(0,str(BASE))
 from install_engine import install
 from schoolnet.config import Profile, build_config
 from windows.version import VERSION, FILE_VERSION, LABEL, TAG, STEM
+from icon_assets import bundle_icon
 
 
 def execute(*args, timeout=600):
@@ -34,6 +35,7 @@ def main():
     if len(image)>4*1024*1024: raise ValueError('Avatar too large')
     (art/'avatar-source').write_bytes(image)
     with Image.open(art/'avatar-source') as avatar: avatar.convert('RGBA').save(art/'developer-avatar.png')
+    app_icon=bundle_icon(art,VERSION)
     with Image.open(art/'AppIcon.png') as icon:
         icon.save(work/'MINER.ico',sizes=[(16,16),(32,32),(48,48),(64,64),(128,128),(256,256)])
     shutil.copytree(BASE/'windows/pearl',art/'pearl',dirs_exist_ok=True)
@@ -84,7 +86,7 @@ def main():
     assert not (work/'installed 한글 path/MINER.exe').exists(),'Uninstall did not remove app'
     import platform
     report={'test_os':platform.platform(),'version':VERSION,'base':'MINER Beta 1.1','architecture':'x64',
-      'authenticode_signed':False,'ui':ui,'native_tun':native,'installer_verified':True,'upgrade_verified':True,'unicode_path_verified':True,
+      'authenticode_signed':False,'app_icon_sha256':app_icon['sha256'],'release_channel':app_icon['channel'],'ui':ui,'native_tun':native,'installer_verified':True,'upgrade_verified':True,'unicode_path_verified':True,
       'ui_theme':'Pearl White','default_controls':'A rounded floating','alternative_controls':'B flush integrated',
       'supplied_asset_sha256':{name:hashlib.sha256((art/'pearl/mascot'/name).read_bytes()).hexdigest() for name in ('miner-transparent.png','MINER-wordmark-transparent.png')},'ui_engine':'Qt Quick RHI + Fluent controls and functional Pearl buttons','network_engine':'sing-box 1.12.0 Windows TUN',
       'ui_scale_factors':[1,1.25,1.5,2],'windows_11_live_tested':False,'vanguard_tested':False,
