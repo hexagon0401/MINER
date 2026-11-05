@@ -51,21 +51,21 @@ MINER는 **클라이언트 통신은 WARP로, 게임 플레이 통신은 직접 
 
 ## 다운로드
 
-[![MINER ALPHA v1 출시 기념 배너](docs/assets/miner-alpha-v1-release-banner.png)](https://github.com/hexagon0401/MINER/releases/tag/miner-alpha-v1.0.1)
+[![MINER ALPHA v1 출시 기념 배너](docs/assets/miner-alpha-v1-release-banner.png)](https://github.com/hexagon0401/MINER/releases/tag/miner-alpha-v1.1.1)
 
-**MINER ALPHA v1.0.1** · [최신 정식 릴리스 보기](https://github.com/hexagon0401/MINER/releases/tag/miner-alpha-v1.0.1)
+**MINER ALPHA v1.1.1** · [최신 정식 릴리스 보기](https://github.com/hexagon0401/MINER/releases/tag/miner-alpha-v1.1.1)
 
-[![Apple Silicon DMG](https://img.shields.io/badge/macOS-Apple_Silicon_DMG-0EFB2E?style=for-the-badge&logo=apple&logoColor=white&labelColor=0C1421)](https://github.com/hexagon0401/MINER/releases/download/miner-alpha-v1.0.1/MINER-ALPHA-v1.0.1-macOS-AppleSilicon.dmg)
-[![Intel DMG](https://img.shields.io/badge/macOS-Intel_DMG-E6E8E6?style=for-the-badge&logo=apple&logoColor=white&labelColor=0C1421)](https://github.com/hexagon0401/MINER/releases/download/miner-alpha-v1.0.1/MINER-ALPHA-v1.0.1-macOS-Intel.dmg)
-[![Windows EXE](https://img.shields.io/badge/Windows-x64_EXE-0078D4?style=for-the-badge&logo=windows&logoColor=white&labelColor=0C1421)](https://github.com/hexagon0401/MINER/releases/download/miner-alpha-v1.0.1/MINER-ALPHA-v1.0.1-Windows-x64-Setup.exe)
+[![Apple Silicon DMG](https://img.shields.io/badge/macOS-Apple_Silicon_DMG-0EFB2E?style=for-the-badge&logo=apple&logoColor=white&labelColor=0C1421)](https://github.com/hexagon0401/MINER/releases/download/miner-alpha-v1.1.1/MINER-ALPHA-v1.1.1-macOS-AppleSilicon.dmg)
+[![Intel DMG](https://img.shields.io/badge/macOS-Intel_DMG-E6E8E6?style=for-the-badge&logo=apple&logoColor=white&labelColor=0C1421)](https://github.com/hexagon0401/MINER/releases/download/miner-alpha-v1.1.1/MINER-ALPHA-v1.1.1-macOS-Intel.dmg)
+[![Windows EXE](https://img.shields.io/badge/Windows-x64_EXE-0078D4?style=for-the-badge&logo=windows&logoColor=white&labelColor=0C1421)](https://github.com/hexagon0401/MINER/releases/download/miner-alpha-v1.1.1/MINER-ALPHA-v1.1.1-Windows-x64-Setup.exe)
 
 | 컴퓨터 | 설치 파일 | 구성 |
 | :-- | :-- | :-- |
-| Mac · Apple Silicon (M 시리즈) | [DMG 다운로드](https://github.com/hexagon0401/MINER/releases/download/miner-alpha-v1.0.1/MINER-ALPHA-v1.0.1-macOS-AppleSilicon.dmg) | macOS 기본 UI · SwiftUI |
-| Mac · Intel | [DMG 다운로드](https://github.com/hexagon0401/MINER/releases/download/miner-alpha-v1.0.1/MINER-ALPHA-v1.0.1-macOS-Intel.dmg) | macOS 기본 UI · SwiftUI |
-| Windows · x64 | [EXE 다운로드](https://github.com/hexagon0401/MINER/releases/download/miner-alpha-v1.0.1/MINER-ALPHA-v1.0.1-Windows-x64-Setup.exe) | Windows Pearl White · A/B 버튼 |
+| Mac · Apple Silicon (M 시리즈) | [DMG 다운로드](https://github.com/hexagon0401/MINER/releases/download/miner-alpha-v1.1.1/MINER-ALPHA-v1.1.1-macOS-AppleSilicon.dmg) | macOS 기본 UI · SwiftUI |
+| Mac · Intel | [DMG 다운로드](https://github.com/hexagon0401/MINER/releases/download/miner-alpha-v1.1.1/MINER-ALPHA-v1.1.1-macOS-Intel.dmg) | macOS 기본 UI · SwiftUI |
+| Windows · x64 | [EXE 다운로드](https://github.com/hexagon0401/MINER/releases/download/miner-alpha-v1.1.1/MINER-ALPHA-v1.1.1-Windows-x64-Setup.exe) | Windows Pearl White · A/B 버튼 · **56.3MB** |
 
-기존 v1의 네트워크·UI를 유지하고 기본 아이콘을 적용한 **ALPHA v1.0.1 정식 릴리스**입니다. 베타 빌드는 BETA 아이콘을 사용합니다. 플랫폼별로 **별도 설치 파일**을 제공합니다. Mac과 Windows는 각각의 UI를 유지합니다. [체크섬](https://github.com/hexagon0401/MINER/releases/download/miner-alpha-v1.0.1/SHA256SUMS.txt) · [플랫폼별 버전·출처](https://github.com/hexagon0401/MINER/releases/download/miner-alpha-v1.0.1/release-manifest.json) · [Windows 소스](https://github.com/hexagon0401/MINER/tree/windows-beta1)
+일반 웹의 DNS를 분리하고 관리자 승인 재사용·앱 업데이트·Windows 용량 최적화를 적용한 **ALPHA v1.1.1 정식 릴리스**입니다. 베타 빌드는 BETA 아이콘을 사용합니다. 플랫폼별로 **별도 설치 파일**을 제공합니다. Mac과 Windows는 각각의 UI를 유지합니다. [체크섬](https://github.com/hexagon0401/MINER/releases/download/miner-alpha-v1.1.1/SHA256SUMS.txt) · [플랫폼별 버전·출처](https://github.com/hexagon0401/MINER/releases/download/miner-alpha-v1.1.1/release-manifest.json) · [Windows 소스](https://github.com/hexagon0401/MINER/tree/windows-beta1)
 
 | 구분 | 현재 상태 |
 | :-- | :-- |
@@ -105,6 +105,7 @@ DMG로 직접 설치한 MINER가 이미 있으면 Homebrew 설치가 중단될 �
 2. 위에서 Mac의 칩에 맞는 **Apple Silicon 또는 Intel DMG**를 다운로드해 엽니다.
 3. 왼쪽의 `MINER.app`을 오른쪽의 **Applications(응용 프로그램)** 폴더로 드래그합니다.
 4. 응용 프로그램 폴더에서 `MINER.app`을 실행합니다.
+5. 설정의 **관리자 승인 항상 허용 · 도우미 재사용**을 켜면 최초 연결·도우미 업데이트 때 한 번 승인한 뒤 재사용합니다. 비밀번호는 저장하지 않으며 부팅 시 자동 연결하지 않습니다. 해제하면 매번 인증하며, 앱 설정의 제거 기능으로 설치된 도우미도 삭제합니다.
 
 > [!IMPORTANT]
 > 현재 macOS 배포본은 **ad-hoc 서명이며 Apple 공증이 없습니다.** 처음 실행할 때 차단되면 아래 안내를 펼쳐 주세요.
@@ -165,9 +166,17 @@ macOS 버전과 표시 언어에 따라 버튼 이름이나 화면 구성은 조
 
 1. 기존 SchoolNet 또는 MINER가 실행 중이면 먼저 중지하고 종료합니다.
 2. MINER에서 **시작**을 누릅니다. 앱이 WARP CLI로 Local Proxy 모드를 준비하고 `127.0.0.1:40000` 연결을 확인한 뒤 분리 라우팅을 시작합니다.
-3. 클라이언트의 TCP 통신은 WARP 경로로, 게임 실행 파일과 나머지 트래픽은 직접 경로로 보냅니다. 진행 막대는 실제 백엔드 상태에 따라 표시됩니다.
+3. Riot 클라이언트의 TCP 통신과 Riot 관련 DNS는 WARP 경로로, 게임·일반 브라우저·그 외 통신은 직접 경로로 보냅니다. 일반 웹의 DNS는 시스템 DNS를 사용합니다. 진행 막대는 실제 백엔드 상태에 따라 표시됩니다.
 4. **중지** 또는 앱 종료 시 엔진을 정리하고 WARP를 **UDP — Traffic and DNS** 모드로 복귀시킵니다. 실패하면 앱에 표시되는 오류를 확인합니다.
 5. **⌘,**로 설정을 열어 한국어·영어 변경, 개발자 소개, 제거 기능을 사용할 수 있습니다.
+
+### 앱에서 업데이트
+
+Mac·Windows 모두 **설정 → 앱 업데이트 → 업데이트 확인**에서 새 정식 버전을 확인합니다. 연결을 중지한 뒤 **업데이트 설치**를 누르세요. 직접 설치한 앱은 SHA-256 검증을 마친 설치 파일만 엽니다.
+
+- **Mac · Homebrew:** 앱 종료 후 Terminal에서 Homebrew 업데이트를 진행합니다.
+- **Mac · DMG:** 검증된 DMG를 열고 앱을 종료합니다. DMG의 MINER를 응용 프로그램 폴더로 옮겨 교체합니다.
+- **Windows:** 앱이 종료된 뒤 검증된 Setup.exe를 실행해 설치를 진행합니다.
 
 ## 성능 (Performance)
 
