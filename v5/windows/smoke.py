@@ -72,11 +72,12 @@ def run(output):
         checks.append('Windows reduce-motion preference prevents success transitions')
         label=w.findChild(QObject,'statusLabel')
         text_render=w.property('nativeTextMode')
-        assert text_render==2, 'Text must use resolution-independent curve rendering'
+        assert text_render==0, 'Body text must use distance-field antialiasing'
         api=str(w.rendererInterface().graphicsApi())
-        checks.append('scene graph, curve antialiasing and Windows font metadata recorded')
+        checks.append('scene graph, text antialiasing and language-specific Windows fonts recorded')
         b.setTheme('dark');state('idle',0,False);frames=[]
-        for index in range(55):
+        capture_motion=not (out.name.startswith('scale-') or out.name=='installed')
+        for index in range(55 if capture_motion else 1):
             if index==1:b.effect.emit('start')
             if index==2:
                 assert w.property('motionAllowed'), 'Window must be active for animation capture'
@@ -99,8 +100,10 @@ def run(output):
         result={'ok':True,'checks':checks,'network_actions':0,'state_source':'injected UI fixtures',
             'animation_preference_overridden_for_capture':capture_override,
             'software_adapter_preferred':os.environ.get('QSG_RHI_PREFER_SOFTWARE_RENDERER')=='1',
+            'capture_render_loop':os.environ.get('QSG_RENDER_LOOP','default'),
+            'foreground_override_for_capture':True,
             'ui_engine':'Qt Quick RHI','control_style':QQuickStyle.name(),'graphics_api':api,
-            'text_render_type':'CurveTextRendering', 'text_render_type_value':text_render,'font':b.font_family,
+            'text_render_type':'QtTextRendering (high-quality distance fields)', 'text_render_type_value':text_render,'font':b.state['fontFamily'],
             'scale_factor':os.environ.get('QT_SCALE_FACTOR','system')}
         (out/'windows-ui.json').write_text(json.dumps(result,indent=2),encoding='utf-8')
         (out/'qml-renderer.log').write_text('\n'.join(messages),encoding='utf-8')

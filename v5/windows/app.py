@@ -49,6 +49,7 @@ class Bridge(QObject):
         self.phase='interrupted' if self.dirty else 'idle'
         available=QFontDatabase.families()
         self.font_family=next((x for x in ('Segoe UI Variable Text','Segoe UI','Noto Sans') if x in available),QGuiApplication.font().family())
+        self.korean_font=next((x for x in ('Malgun Gothic','맑은 고딕','Noto Sans CJK KR') if x in available),self.font_family)
         QGuiApplication.styleHints().colorSchemeChanged.connect(lambda _:self.changed.emit())
 
     @Property('QVariantMap',notify=changed)
@@ -62,7 +63,7 @@ class Bridge(QObject):
             'detail':self.detail,'canStart':not self.dirty and not active,
             'canStop':self.dirty and self.phase!='restoring',
             'busy':(active or self.fixture_busy) and self.phase not in ('running','restoring','error','restored'),
-            'settingsOpen':self.settings_open,'fontFamily':self.font_family,'version':LABEL,
+            'settingsOpen':self.settings_open,'fontFamily':self.korean_font if self.language=='ko' else self.font_family,'version':LABEL,
             'art':QUrl.fromLocalFile(str(ART.resolve())+os.sep).toString(),
             'validation':self.testing}
 
@@ -108,7 +109,10 @@ class Bridge(QObject):
         return True
     @Slot(str)
     def setLanguage(self,value):
-        if value in WORDS:self.language=value;self.save()
+        if value in WORDS:
+            self.language=value
+            font=QGuiApplication.font();font.setFamily(self.state['fontFamily']);QGuiApplication.setFont(font)
+            self.save()
     def apply_appearance(self):
         hints=QGuiApplication.styleHints()
         scheme={'system':Qt.ColorScheme.Unknown,'dark':Qt.ColorScheme.Dark,'light':Qt.ColorScheme.Light}[self.theme]
@@ -142,12 +146,13 @@ def create_app(testing=False):
         os.environ.setdefault('QSG_RHI_BACKEND','d3d11')
         QQuickStyle.setStyle('FluentWinUI3')
     else:QQuickStyle.setStyle('Basic') # portable source checks, not a Windows style claim
-    QQuickWindow.setTextRenderType(QQuickWindow.TextRenderType.CurveTextRendering)
+    QQuickWindow.setTextRenderType(QQuickWindow.TextRenderType.QtTextRendering)
     app=QGuiApplication.instance() or QGuiApplication(sys.argv)
     font=app.font();font.setFamilies(['Segoe UI Variable Text','Segoe UI','Malgun Gothic'])
     font.setStyleStrategy(QFont.StyleStrategy.PreferAntialias|QFont.StyleStrategy.PreferQuality)
     font.setPixelSize(14);app.setFont(font);app.setWindowIcon(QIcon(str(ART/'AppIcon.png')))
-    bridge=Bridge(testing);bridge.apply_appearance();engine=QQmlApplicationEngine()
+    bridge=Bridge(testing);font.setFamily(bridge.state['fontFamily']);app.setFont(font)
+    bridge.apply_appearance();engine=QQmlApplicationEngine()
     engine.rootContext().setContextProperty('backend',bridge)
     qml=ROOT/'qml/Main.qml' if (ROOT/'qml/Main.qml').exists() else ROOT/'windows/qml/Main.qml'
     engine.load(QUrl.fromLocalFile(str(qml.resolve())))
@@ -159,6 +164,9 @@ def create_app(testing=False):
 
 def main():
     if '--self-test' in sys.argv:
+        # Keep Python's diagnostic callback and Qt's render loop on one thread
+        # during synchronous captures. Production retains Qt's default render loop.
+        os.environ['QSG_RENDER_LOOP']='basic'
         output=Path(sys.argv[sys.argv.index('--self-test')+1])
         try:
             from windows.smoke import run

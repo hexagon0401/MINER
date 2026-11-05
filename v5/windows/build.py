@@ -53,7 +53,7 @@ def main():
         '--add-data',f'{BASE / "windows/qml"};qml',
         '--add-data',f'{art};art','--add-binary',f'{engine};engine',
         '--add-data',f'{__import__("certifi").where()};.',
-        BASE/'windows/app.py')
+        BASE/'windows/entry.py')
     # warp.verify_trace expects this exact bundle filename.
     import certifi
     shutil.copyfile(certifi.where(),BASE/'dist-windows/MINER/_internal/cacert.pem')

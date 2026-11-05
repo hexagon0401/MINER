@@ -27,7 +27,7 @@ Windows 10 1809 이상 / Windows 11의 x64 PC용입니다. 개인용 Cloudflare 
 
 진행률은 실제 완료 단계만 반영하는 5개 막대로 표시합니다. Windows 어두운 테마에서는 지원되는 시스템의 제목 표시줄 색상도 맞춥니다. UI 검증 PNG·GIF에는 테스트용 연결 상태임을 화면에 표시합니다.
 
-## Windows build 6 — Qt Quick / Fluent
+## Windows build 7 — Qt Quick / Fluent
 
 - Qt Widgets 화면을 Qt Quick RHI 장면 그래프와 FluentWinUI3 스타일 컨트롤로 전환
 - Windows 기본 창·UAC·단축키 유지, 시스템/밝은/어두운 테마 적용
@@ -39,3 +39,5 @@ Windows 10 1809 이상 / Windows 11의 x64 PC용입니다. 개인용 Cloudflare 
 실제 렌더러와 글꼴·스타일은 검증 JSON에 기록합니다. Windows Server CI 검사이며 Windows 11 실기·실제 게임과 GPU 성능은 미검증입니다. UI 캡처의 연결 상태는 검사용 값입니다.
 
 CI에서는 Microsoft Direct3D 소프트웨어 어댑터를 우선하도록 요청합니다. 이는 Cloudflare WARP와 별개의 그래픽 기능이며, 실제 하드웨어 GPU 성능 측정이 아닙니다. GIF 캡처에서는 테스트 객체의 동작 줄이기 값만 잠시 해제해 애니메이션을 검증하며 Windows 전역 설정은 변경하지 않습니다.
+
+작은 본문은 고품질 distance-field 글꼴 안티앨리어싱을 사용하고, 한국어는 맑은 고딕·영어는 Segoe UI 계열을 우선합니다. 땅굴과 체크 표시는 CurveRenderer 벡터 경로를 사용합니다. 캡처는 동기식 단일 렌더 루프에서 수행하고 실제 앱은 Qt 기본 렌더 루프를 유지합니다.

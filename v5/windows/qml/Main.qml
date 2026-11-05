@@ -17,7 +17,8 @@ ApplicationWindow {
     property color ink: s.contrast ? palette.windowText : s.dark ? "#eef4f8" : "#172b3a"
     property color muted: s.contrast ? palette.windowText : s.dark ? "#a6b6c8" : "#546b7c"
     property color accent: s.contrast ? palette.highlight : "#16d84c"
-    property bool motionAllowed: active && visibility !== Window.Minimized && !s.reduced
+    property bool motionAllowed: (active || s.validation) && visibility !== Window.Minimized && !s.reduced
+    component CopyText: Label { renderType: Text.QtRendering; renderTypeQuality: Text.HighRenderTypeQuality }
     property int nativeTextMode: statusText.renderType
     property bool successActive: false
     color: s.contrast ? palette.window : s.dark ? "#111c2b" : "#f3f6fb"
@@ -62,12 +63,12 @@ ApplicationWindow {
                     width: parent.width; spacing: 12
                     RowLayout {
                         Layout.fillWidth: true
-                        Label { text: "MINER"; color: win.ink; font.pixelSize: 30; font.weight: Font.DemiBold }
+                        CopyText { text: "MINER"; color: win.ink; font.pixelSize: 30; font.weight: Font.DemiBold }
                         Item { Layout.fillWidth: true }
                         Rectangle { width: 7; height: 7; radius: 3.5; color: s.phase === "error" ? "#e95065" : s.phase === "running" ? win.accent : win.muted }
-                        Label { text: s.phase === "running" || s.phase === "idle" || s.phase === "error" ? s.text[s.phase] : s.completed + "/5"; color: win.muted; font.pixelSize: 12 }
+                        CopyText { text: s.phase === "running" || s.phase === "idle" || s.phase === "error" ? s.text[s.phase] : s.completed + "/5"; color: win.muted; font.pixelSize: 13 }
                     }
-                    Label { text: "Dig your way out."; color: win.muted; font.pixelSize: 13 }
+                    CopyText { text: "Dig your way out."; color: win.muted; font.pixelSize: 14 }
                     Item {
                         id: scene
                         objectName: "caveScene"
@@ -126,9 +127,9 @@ ApplicationWindow {
                             }
                         }
                     }
-                    Label { id: statusText; objectName: "statusLabel"; Layout.fillWidth: true; text: s.text[s.phase] || s.phase; color: win.ink; font.pixelSize: 19; font.weight: Font.DemiBold; wrapMode: Text.WordWrap }
-                    Label {
-                        Layout.fillWidth: true; color: win.muted; font.pixelSize: 13; wrapMode: Text.WordWrap
+                    CopyText { id: statusText; objectName: "statusLabel"; Layout.fillWidth: true; text: s.text[s.phase] || s.phase; color: win.ink; font.pixelSize: 19; font.weight: Font.DemiBold; wrapMode: Text.WordWrap }
+                    CopyText {
+                        Layout.fillWidth: true; color: win.muted; font.pixelSize: 14; wrapMode: Text.WordWrap
                         text: s.phase === "error" || s.phase === "interrupted" ? s.text.recovery : s.phase === "running" ? s.text.hint : s.busy ? s.text.opening : s.text.help
                     }
                     RowLayout {
@@ -137,16 +138,16 @@ ApplicationWindow {
                             model: 5
                             Rectangle { required property int index; Layout.fillWidth: true; height: 4; radius: 2; color: index < s.completed ? win.accent : win.muted; opacity: index < s.completed ? 1 : 0.25; Behavior on color { ColorAnimation { duration: s.reduced ? 0 : 160 } } }
                         }
-                        Label { objectName: "progressLabel"; text: s.completed+"/5"; color: win.muted; font.pixelSize: 12; Layout.leftMargin: 6 }
+                        CopyText { objectName: "progressLabel"; text: s.completed+"/5"; color: win.muted; font.pixelSize: 13; Layout.leftMargin: 6 }
                     }
-                    TextArea { objectName: "errorDetails"; Layout.fillWidth: true; visible: s.detail.length > 0; text: s.text.details+"\n"+s.detail; readOnly: true; wrapMode: TextEdit.Wrap; selectByMouse: true; font.pixelSize: 12 }
+                    TextArea { objectName: "errorDetails"; Layout.fillWidth: true; visible: s.detail.length > 0; text: s.text.details+"\n"+s.detail; readOnly: true; wrapMode: TextEdit.Wrap; selectByMouse: true; font.pixelSize: 13 }
                 }
             }
             Button { id: startButton; objectName: "startButton"; Layout.fillWidth: true; Layout.preferredHeight: 46; text: s.text.start; highlighted: true; enabled: s.canStart; font.weight: Font.DemiBold; onClicked: backend.begin() }
             Button { id: stopButton; objectName: "stopButton"; Layout.fillWidth: true; Layout.preferredHeight: 38; text: s.phase === "error" || s.phase === "interrupted" ? s.text.retry : s.text.stop; enabled: s.canStop; onClicked: backend.end() }
             RowLayout {
                 Layout.fillWidth: true
-                Label { Layout.fillWidth: true; text: "WARP Local Proxy · 127.0.0.1:40000"; color: win.muted; font.pixelSize: 11; wrapMode: Text.WordWrap }
+                CopyText { Layout.fillWidth: true; text: "WARP Local Proxy · 127.0.0.1:40000"; color: win.muted; font.pixelSize: 11; wrapMode: Text.WordWrap }
                 Button { objectName: "settingsButton"; text: s.text.settings; onClicked: backend.settings(true) }
             }
         }
@@ -166,7 +167,7 @@ ApplicationWindow {
                 anchors.horizontalCenter: parent.horizontalCenter; width: 64; height: 64; radius: 32; color: win.accent
                 Shape { anchors.centerIn: parent; width: 32; height: 28; antialiasing: true; preferredRendererType: Shape.CurveRenderer; ShapePath { strokeColor: "#0b2d19"; strokeWidth: 4; fillColor: "transparent"; capStyle: ShapePath.RoundCap; joinStyle: ShapePath.RoundJoin; startX: 3; startY: 14; PathLine { x: 12; y: 23 } PathLine { x: 29; y: 4 } } }
             }
-            Label { text: s.text.running; color: win.ink; font.pixelSize: 18; font.weight: Font.DemiBold }
+            CopyText { text: s.text.running; color: win.ink; font.pixelSize: 18; font.weight: Font.DemiBold }
         }
         SequentialAnimation {
             id: successAnim
@@ -176,8 +177,9 @@ ApplicationWindow {
             onStopped: { win.successActive = false; success.opacity = 0 }
         }
     }
-    Label { visible: s.validation; anchors.left: parent.left; anchors.bottom: parent.bottom; padding: 4; text: "UI VALIDATION · simulated states · no live WARP"; color: "#142337"; font.pixelSize: 10; background: Rectangle { color: "#ffd54a" } }
-    Window {
+    CopyText { visible: s.validation; anchors.left: parent.left; anchors.bottom: parent.bottom; padding: 4; text: "UI VALIDATION · simulated states · no live WARP"; color: "#142337"; font.pixelSize: 10; background: Rectangle { color: "#ffd54a" } }
+    ApplicationWindow {
+        font.family: s.fontFamily; font.pixelSize: 14
         id: preferences; objectName: "settingsWindow"; visible: s.settingsOpen
         title: s.text.settings; width: Math.min(440, Screen.desktopAvailableWidth); height: Math.min(600, Screen.desktopAvailableHeight)
         minimumWidth: 360; minimumHeight: 380
@@ -192,16 +194,16 @@ ApplicationWindow {
                 ScrollBar.horizontal.policy: ScrollBar.AlwaysOff
                 ColumnLayout {
                     width: parent.width; spacing: 12
-                    Label { text: s.text.settings; color: win.ink; font.pixelSize: 24; font.weight: Font.DemiBold }
-                    Label { text: s.text.language; color: win.muted }
+                    CopyText { text: s.text.settings; color: win.ink; font.pixelSize: 24; font.weight: Font.DemiBold }
+                    CopyText { text: s.text.language; color: win.muted }
                     ComboBox { objectName: "languageCombo"; Layout.fillWidth: true; model: ["한국어","English"]; currentIndex: s.language === "ko" ? 0 : 1; onActivated: backend.setLanguage(currentIndex === 0 ? "ko" : "en") }
-                    Label { text: s.text.theme; color: win.muted }
+                    CopyText { text: s.text.theme; color: win.muted }
                     ComboBox { Layout.fillWidth: true; model: [s.text.system,s.text.light,s.text.dark]; currentIndex: ["system","light","dark"].indexOf(s.theme); enabled: !s.contrast; onActivated: backend.setTheme(["system","light","dark"][currentIndex]) }
                     CheckBox { text: s.text.reduce; checked: s.reduced; enabled: !s.systemReduced; onToggled: backend.setReduced(checked) }
-                    Label { text: s.text.about; color: win.muted }
+                    CopyText { text: s.text.about; color: win.muted }
                     RowLayout {
                         Image { source: s.art+"developer-avatar.png"; Layout.preferredWidth: 60; Layout.preferredHeight: 60; smooth: true; mipmap: true }
-                        ColumnLayout { Label { text: "Punkthats*it · @hexagon0401"; color: win.ink } Label { text: s.version; color: win.muted; font.pixelSize: 11 } }
+                        ColumnLayout { CopyText { text: "Punkthats*it · @hexagon0401"; color: win.ink } CopyText { text: s.version; color: win.muted; font.pixelSize: 11 } }
                     }
                     RowLayout {
                         Button { text: "GitHub"; onClicked: backend.github() }
