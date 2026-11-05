@@ -1,3 +1,5 @@
+![MINER ALPHA v1 출시 기념 배너](https://raw.githubusercontent.com/hexagon0401/MINER/fd53ea60d6a0043b302d1aadc3b99898e301bf4d/docs/assets/miner-alpha-v1-release-banner.png)
+
 # MINER ALPHA v1
 
 MINER의 첫 번째 ALPHA 정식 릴리스입니다. **ALPHA는 개발 단계(alpha testing)가 아니라 MINER의 큰 버전 코드명**이며, `v1`은 이 코드명에서의 첫 배포를 뜻합니다.
