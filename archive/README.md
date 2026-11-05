@@ -38,12 +38,14 @@
 ### 원래 폴더 구조로 복구
 
 ```bash
+git fetch origin --tags
 git switch -c restore/legacy archive/snapshots/pre-organization-2026-11-05
 ```
 
 보관 브랜치를 다시 작업하려면 다음과 같이 복원합니다.
 
 ```bash
+git fetch origin --tags
 git switch -c restore/example archive/branches/보관된-원래-브랜치-이름
 ```
 
