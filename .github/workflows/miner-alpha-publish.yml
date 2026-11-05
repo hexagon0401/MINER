@@ -1,0 +1,51 @@
+name: Publish MINER ALPHA v1
+on:
+  push:
+    branches: [release/alpha-v1]
+    paths: ['.github/workflows/miner-alpha-publish.yml', 'packaging/alpha-v1/**']
+permissions:
+  contents: write
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Fetch verified immutable release payloads
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: gh release download miner-alpha-universal-beta.1 --dir platform-assets
+      - name: Check pinned payload hashes and promotion metadata
+        run: python3 packaging/alpha-v1/promote.py platform-assets release-assets
+      - name: Attach complete payloads to the first ALPHA release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          gh release upload miner-alpha-v1 release-assets/* --clobber
+          gh release edit miner-alpha-v1 --prerelease=false --draft=false --latest --title 'MINER ALPHA v1' --notes-file packaging/alpha-v1/RELEASE_NOTES.md
+      - name: Verify all three installers were published
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          gh api "repos/$GH_REPO/releases/tags/miner-alpha-v1" > published.json
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          m=json.loads(Path('release-assets/release-manifest.json').read_text())
+          r=json.loads(Path('published.json').read_text())
+          assert r['name']=='MINER ALPHA v1' and not r['draft'] and not r['prerelease']
+          by_name={a['name']:a for a in r['assets']}
+          for p in m['platforms']:
+              asset=by_name[p['filename']]
+              assert asset['state']=='uploaded' and asset['digest']=='sha256:'+p['sha256']
+          print('All three verified ALPHA v1 platform installers are published.')
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: alpha-v1-publication-evidence
+          path: |
+            published.json
+            release-assets/*.json
