@@ -1,16 +1,16 @@
-# MINER BETA — v5 분리 연결 실험판
+# MINER ALPHA v1.1.1 — 소스·연결 구조 안내
 
-**현재 소스는 macOS 우선의 `5.0.0-beta.2` 개발본입니다. 설치 가능한 최신 DMG는 [베타 1](https://github.com/hexagon0401/MINER/releases/tag/v5.0.0-beta.1)입니다.** 개인용 WARP의 Local proxy와 sing-box TUN을 연결해, Riot/LoL **클라이언트·웹 Helper의 TCP는 WARP**, **게임 실행 파일과 나머지 트래픽은 직접 경로**로 보냅니다. 게임 시작/종료 때 WARP를 전환하지 않습니다. DMG 앱은 제공된 MINER 디자인·캐릭터를 사용하며 `⌘,` 설정 창에서 한국어/English를 선택할 수 있습니다.
+**현재 정식 소스는 ALPHA v1.1.1입니다. 설치 파일은 [최신 정식 릴리스](https://github.com/hexagon0401/MINER/releases/tag/miner-alpha-v1.1.1)의 Apple Silicon·Intel DMG 및 Windows x64 EXE를 사용합니다.** 개인용 WARP의 Local proxy와 sing-box TUN을 연결해, Riot/LoL **클라이언트·웹 Helper의 TCP는 WARP**, **게임 실행 파일과 나머지 트래픽은 직접 경로**로 보냅니다. 게임 시작/종료 때 WARP를 전환하지 않습니다. DMG 앱은 제공된 MINER 디자인·캐릭터를 사용하며 `⌘,` 설정 창에서 한국어/English를 선택할 수 있습니다.
 
-사용자가 제공한 환경은 **개인용 WARP / macOS 27.1.1**입니다. 개발·자동 검증 환경은 Linux이므로 해당 macOS 버전의 실제 호환성, 학교에서의 연결 성공, 게임 핑 개선은 **아직 검증되지 않았습니다**. Windows용 설정도 생성하지만 Windows 네이티브 동작은 미검증입니다. 기존 v1~v4는 변경하지 않습니다.
+사용자가 제공한 환경은 **개인용 WARP / macOS 27.1.1**입니다. Linux 회귀 검사와 macOS Apple Silicon·Intel의 UI·도우미 피어 인증·DMG 검증, Windows Server 2025의 UI·TUN·설치·재설치·제거를 자동 검사했습니다. 해당 macOS 버전의 실제 Arc·학교망·게임 호환성과 Windows 11 실기 검증은 별도입니다. 기존 v1~v4는 변경하지 않습니다.
 
 ## DMG 앱 설치·제거
 
-GitHub의 `v5.0.0-beta.*` **사전 릴리스**는 Apple Silicon DMG를 우선 빌드합니다. DMG가 첨부되지 않은 릴리스는 소스 배포이며 설치 파일은 아직 제공되지 않습니다. 이전 Alpha는 Apple Silicon 또는 Intel DMG를 선택할 수 있습니다. 앱을 **Applications로 드래그**한 뒤 실행하면 됩니다. Python과 엔진이 포함되어 있습니다. 개인용 WARP는 별도로 설치·등록해두세요.
+현재 정식 릴리스는 Apple Silicon·Intel DMG를 각각 제공합니다. 이전 베타 릴리스는 별도 이력으로 보존합니다. 앱을 **Applications로 드래그**한 뒤 실행하면 됩니다. Python과 엔진이 포함되어 있습니다. 개인용 WARP는 별도로 설치·등록해두세요.
 
 앱의 **시작**은 WARP CLI로 Local Proxy·기본 포트 40000 연결과 검증을 수행한 뒤 v5를 실행합니다. **WARP 자동 연결**은 WARP 설정·검증만 실행하고, **WARP 연결 확인**은 설정을 바꾸지 않습니다. **중지·앱 종료**는 엔진을 먼저 중지하고 `warp-cli mode warp`로 UDP Traffic and DNS에 복귀합니다. 설정·연결 확인에 실패하면 오류를 표시하며, 종료 복귀 실패 시 앱을 유지합니다. **WARP 끄기**는 v5를 먼저 중지한 뒤 WARP 연결을 해제합니다. 최초 전체 터널 → 프록시 전환은 게임 밖에서 진행하세요.
 
-시작·중지·제거 때 macOS 관리자 인증을 사용합니다. **제거** 버튼은 실행을 중지하고 v5 지원 파일·사용자 설정·로그를 삭제한 뒤 앱을 휴지통으로 옮깁니다. WARP와 기존 v1~v4는 유지합니다. 새 alpha는 관리 중인 런타임을 검증 후 교체하며 사용자 프로필과 로그를 유지합니다. 제거 전에 필요한 로그를 복사하세요. 부팅 자동 시작 항목은 설치하지 않습니다.
+관리자 승인 재사용을 켜면 최초 도우미 설치·업데이트 때 한 번 인증하고 이후 시작·중지에는 사용자 전용 로컬 소켓을 사용합니다. 재사용 시 root 소유의 설치된 런타임만 실행하며 비밀번호는 저장하지 않습니다. **제거** 버튼은 실행을 중지하고 v5 지원 파일·사용자 설정·로그를 삭제한 뒤 앱을 휴지통으로 옮깁니다. WARP와 기존 v1~v4는 유지합니다. 새 alpha는 관리 중인 런타임을 검증 후 교체하며 사용자 프로필과 로그를 유지합니다. 제거 전에 필요한 로그를 복사하세요. 승인 재사용 도우미는 부팅 후 대기할 수 있으나 엔진·WARP 연결은 자동 시작하지 않습니다.
 
 인증서를 설정하지 않은 빌드는 **ad-hoc 서명이며 Apple 공증이 없습니다**. macOS가 실행을 제한할 수 있습니다. Developer ID 자격 증명을 설정하면 별도 서명·공증 검증을 거치며, 실제 상태는 DMG 옆의 `.verification.json`에 기록합니다. [인증서 발급·서명 설정 안내](docs/SIGNING.md)를 참고하세요. Gatekeeper를 전역 해제하는 절차는 사용하지 않습니다.
 
@@ -18,7 +18,7 @@ alpha.3은 한글 안내 파일명이 정규화되며 `a sealed resource is miss
 
 [앱 사용 안내](macos/사용%20안내.txt) · [릴리스 안내](macos/RELEASE_NOTES.md)
 
-macOS 빌드는 `.github/workflows/v5-alpha-macos.yml`에서 Apple Silicon/Intel을 각각 빌드하고, 코드 서명 무결성·DMG 검사·실제 마운트 후 내장 CLI 실행을 검증합니다. 태그 빌드가 모두 통과해야 DMG와 SHA-256 파일을 GitHub 사전 릴리스에 게시합니다. 아래 CLI 설치 절차는 소스에서 실행할 때 사용합니다.
+정식 v1.1.1 빌드는 `.github/workflows/miner-alpha-v111.yml`에서 Apple Silicon/Intel과 Windows를 검증하며, macOS는 코드 서명 무결성·DMG 검사·실제 마운트 후 내장 CLI 실행을 검증합니다. 태그 빌드가 모두 통과해야 DMG와 SHA-256 파일을 GitHub 정식 릴리스에 게시합니다. 아래 CLI 설치 절차는 소스에서 실행할 때 사용합니다.
 
 ## 연결 구조
 
@@ -29,17 +29,20 @@ RiotClientServices / LeagueClient / LeagueClientUx 등 TCP
 LeagueofLegends / League of Legends.exe (TCP·UDP)
   → 로컬 sing-box TUN → direct → 기존 인터넷 경로 → 게임 서버
 
-OS의 일반 DNS(port 53)
+일반 웹의 DNS(port 53)
+  → sing-box → 시스템 DNS → 직접 경로
+
+Riot 프로세스 또는 Riot 도메인의 DNS
   → sing-box → DoH(TLS 검증) → WARP SOCKS5 → Cloudflare DNS
 ```
 
 Python은 설정 생성·실행·검증만 담당합니다. 게임 패킷을 Python으로 중계하거나 프레임/메모리/게임 프로세스를 조작하지 않습니다. 게임 데이터의 원격 WARP 우회를 없애는 설계지만 **로컬 TUN 처리 비용은 남습니다**. 따라서 CPU·핑 무영향 또는 0ms 추가 지연을 보장하지 않습니다.
 
-DNS를 WARP로 보내는 이유는 macOS의 `mDNSResponder` 때문에 원래 앱을 DNS 프로세스 이름만으로 신뢰성 있게 구분하기 어렵기 때문입니다. DNS만 터널로 간다고 게임 데이터도 터널로 가는 것은 아닙니다. 반대로 WARP 장애 시 새로운 일반 DNS 조회도 실패할 수 있습니다. 사설 DNS·분할 DNS가 필요한 회사/학교 내부 서비스에는 이 기본 프로필이 적합하지 않을 수 있습니다. 앱 자체 DoH는 port 53 규칙에 해당하지 않으며 앱의 TCP 규칙을 따릅니다.
+v1.1.1은 Riot DNS와 일반 DNS의 경로·캐시를 분리합니다. macOS의 `mDNSResponder`처럼 OS가 질의를 대신할 수 있어 Riot 프로세스 규칙과 도메인 규칙을 함께 사용합니다. WARP 장애가 일반 웹의 DNS 조회까지 막지 않도록 기본 DNS는 시스템 경로를 사용합니다. 앱 자체 DoH는 port 53 규칙에 해당하지 않으며 앱의 TCP 규칙을 따릅니다. 실제 Arc·학교망에서의 최종 확인은 별도입니다.
 
 ## macOS 설치·실행
 
-필요한 것은 Python **3.10+**, 설치·연결된 **개인용 Cloudflare WARP**, 네트워크 엔진 **sing-box 1.12.0**입니다. Python 외부 패키지는 필요 없습니다. 먼저 실행 중인 게임과 Riot/LoL 클라이언트를 종료하고 설정합니다.
+필요한 것은 Python **3.10+**, 설치·연결된 **개인용 Cloudflare WARP**, 네트워크 엔진 **sing-box 1.12.0**입니다. 기본 CLI는 표준 라이브러리를 사용하며 소스의 앱 업데이트 명령에는 `certifi`가 필요합니다. 배포 앱에는 포함되어 있습니다. 먼저 실행 중인 게임과 Riot/LoL 클라이언트를 종료하고 설정합니다.
 
 1. 저장소의 `v5` 디렉터리에서 실행합니다.
 
@@ -160,13 +163,15 @@ macOS CI는 네트워크를 실행하지 않는 네이티브 UI fixture로 기�
 
 ## BETA 아이콘 · 개발자 소개
 
-`macos/design/MINER-BETA.icon/`에 제공된 원본을 보존하고, 밝은 기본 배경과 원본 레이어 크기·이동 값을 반영한 1024px ICNS 호환 PNG를 사용합니다. 기존 앱 내부 캐릭터는 변경하지 않습니다.
+베타 아이콘 원본은 `macos/design/MINER-BETA.icon/`에 보존합니다. 정식 빌드는 기본 아이콘, 베타 빌드는 BETA 아이콘을 사용하며 두 플랫폼의 선택·변환 규칙은 [아이콘 패키징 안내](../packaging/icons/README.md)를 따릅니다. 기존 앱 내부 캐릭터는 변경하지 않습니다.
 
 설정(⌘,)의 개발자 소개에는 GitHub 공개 프로필의 **Punkthats*it · @hexagon0401**, 이미지와 프로필 링크를 표시합니다. `macos/design/assets/developer-profile.json`이 프로필 정보의 원본이며, 빌드 시 이미지를 앱에 포함하고 해시를 검증 JSON에 기록합니다. 앱 실행 중에는 프로필 이미지를 요청하지 않습니다.
 
 BETA 릴리스는 실제 DMG 첨부 여부를 확인하세요. 베타 1은 별도 지속 재시도 작업에서 고정 소스·정상 실행 작업을 보존하며, 검증된 DMG 게시 후 새 빌드를 중단합니다.
 
-## 베타 2 학교 현황
+## 베타 2 학교 현황 · 보관 소스
+
+아래 내용은 [보관된 베타 2 UI 소스](https://github.com/hexagon0401/MINER/tree/archive/betas/beta2-ui-before-1.1.1)에 대한 설명이며 현재 정식 앱 UI에는 포함되지 않습니다. 베타 2 빌드 옵션은 해당 보관 태그를 별도로 체크아웃했을 때만 사용합니다.
 
 설정의 학교 현황에서 내 기기/전국 공유를 구분하고, 별도 상세 창에서 지역·학교명·학교급·초록/빨강 깃발을 검색합니다. 개인 성공은 즉시 반영하지만 전국 공유는 검토 승인 후 반영합니다. 90일이 지나도 누적 성공은 유지하며 오래된 기록과 마지막 확인일을 보여줍니다.
 
