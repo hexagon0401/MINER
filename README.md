@@ -51,14 +51,14 @@ MINER는 **클라이언트 통신은 WARP로, 게임 플레이 통신은 직접 
 
 [![Apple Silicon DMG 다운로드](https://img.shields.io/badge/macOS-DMG_다운로드-0EFB2E?style=for-the-badge&logo=apple&logoColor=white&labelColor=0C1421)](https://github.com/hexagon0401/MINER/releases/download/v5.0.0-beta.1.1/MINER-v5.0.0-beta.1.1-macOS-AppleSilicon.dmg)
 
-[![Windows EXE 다운로드](https://img.shields.io/badge/Windows-EXE_다운로드-0078D4?style=for-the-badge&logo=windows&logoColor=white&labelColor=0C1421)](https://github.com/hexagon0401/MINER/releases/download/v5.0.0-beta.1.1-windows.7/MINER-v5.0.0-beta.1.1-windows.7-Windows-x64-Setup.exe)
+[![Windows EXE 다운로드](https://img.shields.io/badge/Windows-EXE_다운로드-0078D4?style=for-the-badge&logo=windows&logoColor=white&labelColor=0C1421)](https://github.com/hexagon0401/MINER/releases/download/v5.0.0-beta.1.1-windows.8/MINER-v5.0.0-beta.1.1-windows.8-Windows-x64-Setup.exe)
 
 **MINER BETA 1.1 · Apple Silicon**
 베타 1 기반의 땅굴 모양 개선 버전입니다. [릴리스 노트·검증 파일 보기](https://github.com/hexagon0401/MINER/releases/tag/v5.0.0-beta.1.1)
 
 | 구분 | 현재 상태 |
 | :-- | :-- |
-| Windows 베타 1 · build 7 | [설치 EXE](https://github.com/hexagon0401/MINER/releases/download/v5.0.0-beta.1.1-windows.7/MINER-v5.0.0-beta.1.1-windows.7-Windows-x64-Setup.exe) · [릴리스·검증 파일](https://github.com/hexagon0401/MINER/releases/tag/v5.0.0-beta.1.1-windows.7) · [소스](https://github.com/hexagon0401/MINER/tree/windows-beta1) |
+| Windows 베타 1 · Pearl White build 8 | [설치 EXE](https://github.com/hexagon0401/MINER/releases/download/v5.0.0-beta.1.1-windows.8/MINER-v5.0.0-beta.1.1-windows.8-Windows-x64-Setup.exe) · [릴리스·검증 파일](https://github.com/hexagon0401/MINER/releases/tag/v5.0.0-beta.1.1-windows.8) · [소스](https://github.com/hexagon0401/MINER/tree/windows-beta1) |
 | 베타 1 유지 보수 | [`beta1-maintenance`](https://github.com/hexagon0401/MINER/tree/beta1-maintenance)에서 개발 |
 | 베타 2 | 학교 현황·진단·제보 기능의 **소스만 보관**. 배포용 DMG에 미포함 |
 | 공유 제보 서버 | 미개방 |
@@ -108,21 +108,23 @@ macOS 버전과 표시 언어에 따라 버튼 이름이나 화면 구성은 조
 
 1. 개인용 Cloudflare WARP를 설치하고 최초 등록을 마칩니다.
 2. 위 **Windows EXE**로 설치한 뒤 MINER를 실행합니다. 관리자 권한(UAC)이 필요합니다.
-3. **시작**으로 연결하고 **중지**로 엔진 정리와 WARP 복귀를 확인합니다. 설정은 **Ctrl+,**로 엽니다.
+3. **START**로 연결하고 **STOP**으로 엔진 정리와 WARP 복귀를 확인합니다. **KILL SWITCH**는 엔진 정리 후 WARP 연결을 해제하며 일반 인터넷은 유지합니다. 설정은 **Ctrl+,**로 열고 버튼 스타일에서 A안/B안을 전환할 수 있습니다.
 4. 제거하려면 MINER에서 중지·종료한 뒤 Windows의 **설치된 앱**에서 MINER를 제거합니다. 사용자 설정과 로그, WARP는 보존합니다.
 
 > [!NOTE]
-> Windows 화면은 **Qt Quick RHI·Fluent 컨트롤·D3D11**을 사용하고 한국어는 맑은 고딕, 영어는 Segoe UI 계열을 우선합니다. Mac은 SwiftUI를 유지하며 플랫폼별 창·설정 조작을 따릅니다. Windows 11 x64를 대상으로 개발하지만 자동 검증은 **Windows Server 2025**에서 수행했습니다. 설치·재설치·제거, 실제 TUN 생성·종료, 프로세스 정리, 화면 배율 100~200%를 확인했습니다. **실제 Windows 11·WARP 연결·학교망·LoL·Vanguard는 미검증**이며, 실행 파일은 Authenticode 미서명입니다.
+> Windows 화면은 **Pearl White A안·Qt Quick RHI·D3D11**을 사용하고 한국어는 맑은 고딕, 영어는 Segoe UI 계열을 우선합니다. Mac은 SwiftUI를 유지하며 플랫폼별 창·설정 조작을 따릅니다. Windows 11 x64를 대상으로 개발하지만 자동 검증은 **Windows Server 2025**에서 수행했습니다. 설치·재설치·제거, 실제 TUN 생성·종료, 프로세스 정리, 화면 배율 100~200%를 확인했습니다. **실제 Windows 11·WARP 연결·학교망·LoL·Vanguard는 미검증**이며, 실행 파일은 Authenticode 미서명입니다.
 
 <details>
 <summary><strong>Windows 실행 화면과 애니메이션 보기</strong></summary>
+
+기본은 **A안 플로팅 버튼**입니다. 설정의 **버튼 스타일**에서 B안 일체형 컨트롤로 전환할 수 있습니다. 새 에셋 명세에 따라 캐릭터는 정적이며, 학교·땅굴·채굴 효과는 표시하지 않습니다.
 
 아래는 패키징한 EXE의 **UI 검증 화면**입니다. 연결 상태는 검사용 주입 값이며 실제 WARP나 게임 접속 성공을 의미하지 않습니다.
 
 <img src="docs/assets/windows-beta1/idle.png" alt="Windows MINER 베타 1 대기 화면 — 실제 EXE UI 검증" width="420" />
 <img src="docs/assets/windows-beta1/settings.png" alt="Windows MINER 한영·테마·동작 줄이기·개발자 설정" width="280" />
 
-[애니메이션 GIF](https://github.com/hexagon0401/MINER/releases/download/v5.0.0-beta.1.1-windows.7/MINER-v5.0.0-beta.1.1-windows.7-Windows-x64-Preview.gif) · [전체 스크린샷 ZIP](https://github.com/hexagon0401/MINER/releases/download/v5.0.0-beta.1.1-windows.7/MINER-v5.0.0-beta.1.1-windows.7-Windows-x64-Screenshots.zip) · [Mac 대비 변경점](https://github.com/hexagon0401/MINER/blob/windows-beta1/v5/windows/README.md)
+[상태 전환 GIF](https://github.com/hexagon0401/MINER/releases/download/v5.0.0-beta.1.1-windows.8/MINER-v5.0.0-beta.1.1-windows.8-Windows-x64-Preview.gif) · [B안 미리보기](https://github.com/hexagon0401/MINER/releases/download/v5.0.0-beta.1.1-windows.8/MINER-v5.0.0-beta.1.1-windows.8-Windows-x64-flush.png) · [전체 스크린샷 ZIP](https://github.com/hexagon0401/MINER/releases/download/v5.0.0-beta.1.1-windows.8/MINER-v5.0.0-beta.1.1-windows.8-Windows-x64-Screenshots.zip) · [Mac 대비 변경점](https://github.com/hexagon0401/MINER/blob/windows-beta1/v5/windows/README.md)
 
 </details>
 
