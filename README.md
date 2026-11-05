@@ -51,21 +51,21 @@ MINER는 **클라이언트 통신은 WARP로, 게임 플레이 통신은 직접 
 
 ## 다운로드
 
-[![MINER ALPHA v1 출시 기념 배너](docs/assets/miner-alpha-v1-release-banner.png)](https://github.com/hexagon0401/MINER/releases/tag/miner-alpha-v1)
+[![MINER ALPHA v1 출시 기념 배너](docs/assets/miner-alpha-v1-release-banner.png)](https://github.com/hexagon0401/MINER/releases/tag/miner-alpha-v1.0.1)
 
-**MINER ALPHA v1** · [최신 정식 릴리스 보기](https://github.com/hexagon0401/MINER/releases/tag/miner-alpha-v1)
+**MINER ALPHA v1.0.1** · [최신 정식 릴리스 보기](https://github.com/hexagon0401/MINER/releases/tag/miner-alpha-v1.0.1)
 
-[![Apple Silicon DMG](https://img.shields.io/badge/macOS-Apple_Silicon_DMG-0EFB2E?style=for-the-badge&logo=apple&logoColor=white&labelColor=0C1421)](https://github.com/hexagon0401/MINER/releases/download/miner-alpha-v1/MINER-ALPHA-v1-macOS-AppleSilicon.dmg)
-[![Intel DMG](https://img.shields.io/badge/macOS-Intel_DMG-E6E8E6?style=for-the-badge&logo=apple&logoColor=white&labelColor=0C1421)](https://github.com/hexagon0401/MINER/releases/download/miner-alpha-v1/MINER-ALPHA-v1-macOS-Intel.dmg)
-[![Windows EXE](https://img.shields.io/badge/Windows-x64_EXE-0078D4?style=for-the-badge&logo=windows&logoColor=white&labelColor=0C1421)](https://github.com/hexagon0401/MINER/releases/download/miner-alpha-v1/MINER-ALPHA-v1-Windows-x64-Setup.exe)
+[![Apple Silicon DMG](https://img.shields.io/badge/macOS-Apple_Silicon_DMG-0EFB2E?style=for-the-badge&logo=apple&logoColor=white&labelColor=0C1421)](https://github.com/hexagon0401/MINER/releases/download/miner-alpha-v1.0.1/MINER-ALPHA-v1.0.1-macOS-AppleSilicon.dmg)
+[![Intel DMG](https://img.shields.io/badge/macOS-Intel_DMG-E6E8E6?style=for-the-badge&logo=apple&logoColor=white&labelColor=0C1421)](https://github.com/hexagon0401/MINER/releases/download/miner-alpha-v1.0.1/MINER-ALPHA-v1.0.1-macOS-Intel.dmg)
+[![Windows EXE](https://img.shields.io/badge/Windows-x64_EXE-0078D4?style=for-the-badge&logo=windows&logoColor=white&labelColor=0C1421)](https://github.com/hexagon0401/MINER/releases/download/miner-alpha-v1.0.1/MINER-ALPHA-v1.0.1-Windows-x64-Setup.exe)
 
 | 컴퓨터 | 설치 파일 | 구성 |
 | :-- | :-- | :-- |
-| Mac · Apple Silicon (M 시리즈) | [DMG 다운로드](https://github.com/hexagon0401/MINER/releases/download/miner-alpha-v1/MINER-ALPHA-v1-macOS-AppleSilicon.dmg) | macOS 기본 UI · SwiftUI |
-| Mac · Intel | [DMG 다운로드](https://github.com/hexagon0401/MINER/releases/download/miner-alpha-v1/MINER-ALPHA-v1-macOS-Intel.dmg) | macOS 기본 UI · SwiftUI |
-| Windows · x64 | [EXE 다운로드](https://github.com/hexagon0401/MINER/releases/download/miner-alpha-v1/MINER-ALPHA-v1-Windows-x64-Setup.exe) | Windows Pearl White · A/B 버튼 |
+| Mac · Apple Silicon (M 시리즈) | [DMG 다운로드](https://github.com/hexagon0401/MINER/releases/download/miner-alpha-v1.0.1/MINER-ALPHA-v1.0.1-macOS-AppleSilicon.dmg) | macOS 기본 UI · SwiftUI |
+| Mac · Intel | [DMG 다운로드](https://github.com/hexagon0401/MINER/releases/download/miner-alpha-v1.0.1/MINER-ALPHA-v1.0.1-macOS-Intel.dmg) | macOS 기본 UI · SwiftUI |
+| Windows · x64 | [EXE 다운로드](https://github.com/hexagon0401/MINER/releases/download/miner-alpha-v1.0.1/MINER-ALPHA-v1.0.1-Windows-x64-Setup.exe) | Windows Pearl White · A/B 버튼 |
 
-검증된 현재 빌드를 승격한 **ALPHA v1 정식 릴리스**입니다. 플랫폼별로 **별도 설치 파일**을 제공합니다. Mac과 Windows는 각각의 UI를 유지합니다. [체크섬](https://github.com/hexagon0401/MINER/releases/download/miner-alpha-v1/SHA256SUMS.txt) · [플랫폼별 버전·출처](https://github.com/hexagon0401/MINER/releases/download/miner-alpha-v1/release-manifest.json) · [Windows 소스](https://github.com/hexagon0401/MINER/tree/windows-beta1)
+기존 v1의 네트워크·UI를 유지하고 기본 아이콘을 적용한 **ALPHA v1.0.1 정식 릴리스**입니다. 베타 빌드는 BETA 아이콘을 사용합니다. 플랫폼별로 **별도 설치 파일**을 제공합니다. Mac과 Windows는 각각의 UI를 유지합니다. [체크섬](https://github.com/hexagon0401/MINER/releases/download/miner-alpha-v1.0.1/SHA256SUMS.txt) · [플랫폼별 버전·출처](https://github.com/hexagon0401/MINER/releases/download/miner-alpha-v1.0.1/release-manifest.json) · [Windows 소스](https://github.com/hexagon0401/MINER/tree/windows-beta1)
 
 | 구분 | 현재 상태 |
 | :-- | :-- |

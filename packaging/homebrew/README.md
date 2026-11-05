@@ -1,6 +1,6 @@
 # MINER Homebrew 배포 준비
 
-현재 정식 배포 대상은 **MINER ALPHA v1**입니다. ALPHA는 세대 코드명이며 테스트 단계 표시가 아닙니다. 저장소 루트의 [Casks/miner.rb](../../Casks/miner.rb)는 Apple Silicon·Intel을 자동으로 구분해 ALPHA v1의 검증된 DMG와 SHA-256을 사용합니다. 이 디렉터리의 이전 `Casks/miner-beta.rb`와 생성기는 과거 이력으로 유지합니다.
+배포 대상은 **MINER ALPHA의 최신 정식 릴리스**입니다. ALPHA는 세대 코드명이며 테스트 단계 표시가 아닙니다. 저장소 루트의 [Casks/miner.rb](../../Casks/miner.rb)는 Apple Silicon·Intel을 자동으로 구분해 최신 검증된 정식 DMG와 SHA-256을 사용합니다. 이 디렉터리의 이전 `Casks/miner-beta.rb`와 생성기는 과거 이력으로 유지합니다.
 
 ## 배포 경로
 
@@ -19,18 +19,20 @@ brew install --cask hexagon0401/miner/miner
 
 ## 배포 전 확인
 
-1. **tap 등록:** 위의 명시적 URL로 기존 MINER 저장소를 등록합니다. 앱 소스·DMG를 복사할 필요 없이 기존 ALPHA v1 릴리스 파일을 다운로드합니다. tap을 복제할 때는 프로젝트 소스와 보관 이력도 함께 내려받으므로, 규모가 커지면 별도 tap을 선택할 수 있습니다.
-2. **익명 다운로드 검사:** 토큰 없이 두 DMG를 다운로드해 각각 아래 해시와 일치하는지 확인합니다. Apple Silicon URL의 익명 접근은 개발 환경에서 HTTP 200을 확인했습니다. 실제 전체 파일 검사는 별도로 수행합니다.
+1. **tap 등록:** 위의 명시적 URL로 기존 MINER 저장소를 등록합니다. 앱 소스·DMG를 복사할 필요 없이 최신 ALPHA 정식 릴리스 파일을 다운로드합니다. tap을 복제할 때는 프로젝트 소스와 보관 이력도 함께 내려받으므로, 규모가 커지면 별도 tap을 선택할 수 있습니다.
+2. **익명 다운로드 검사:** 토큰 없이 두 DMG를 다운로드해 해당 릴리스 manifest 및 `latest.verification.json`의 해시와 일치하는지 확인합니다. 자동 갱신 작업의 전체 파일 SHA-256 검사와 별도로 사용자 환경의 익명 접근을 확인합니다.
 3. **Homebrew 검사:** Mac에서 tap 설치 후 `brew style --cask hexagon0401/miner/miner`와 `brew audit --cask --online hexagon0401/miner/miner`를 실행합니다. 검사 오류는 보안 우회로 숨기지 않고 수정합니다.
 4. **설치·업데이트·제거 검증:** Apple Silicon과 Intel에서 실제 앱 설치·실행, 중지 후 WARP 복귀, 업데이트·제거를 확인합니다. 실행 중 설치·제거가 중단되는지도 확인합니다.
 5. **공개 안내:** 검사가 통과한 뒤 루트 README에 실제 brew 설치 명령을 추가합니다. 공식 `homebrew/cask` 등재는 별도 후속 단계입니다.
+
+아래는 최초 ALPHA v1의 보관 해시입니다. 현재 cask의 버전과 실제 다운로드 검증 기록은 `latest.verification.json`에서 확인합니다.
 
 | Mac | SHA-256 |
 |---|---|
 | Apple Silicon | `8b430e5d4fac61d6e3c0e3a42f6058d22dc5ad0532df6b85672bc474a0eb40e4` |
 | Intel | `51012a4dd35bf7b3042c80df645fe40115ae1f69c56cc06580e37b748abb23f5` |
 
-출처는 `alpha-v1.verification.json`과 [ALPHA v1 정식 릴리스](https://github.com/hexagon0401/MINER/releases/tag/miner-alpha-v1)입니다. cask 버전 `1`은 배포 버전이며 앱 내부의 기존 빌드 번호는 검증 기록에 유지합니다.
+출처는 `alpha-v1.verification.json`과 [ALPHA v1 정식 릴리스](https://github.com/hexagon0401/MINER/releases/tag/miner-alpha-v1)입니다. cask 버전은 배포 버전(예: `1.0.1`)이며 앱 내부의 기존 빌드 번호는 검증 기록에 유지합니다.
 
 ## 서명·실행 허용
 
