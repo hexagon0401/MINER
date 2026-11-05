@@ -1,5 +1,6 @@
-from contextlib import closing
 """Import the complete official NEIS catalog into a read-only app database."""
+
+from contextlib import closing
 import argparse
 import csv
 from datetime import date

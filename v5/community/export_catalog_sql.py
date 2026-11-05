@@ -1,5 +1,6 @@
-from contextlib import closing
 """Prepare a D1 import from a validated complete catalog. No cloud calls."""
+
+from contextlib import closing
 import argparse
 import json
 from pathlib import Path
