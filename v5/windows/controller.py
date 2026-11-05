@@ -44,8 +44,12 @@ def session(directory, engine, stop, emit, restore_only=False):
         raise ValueError('Administrator permission is required. Restart MINER as administrator.')
     child = None
     directory = Path(directory)
-    profile = prepare(directory)
+    directory.mkdir(parents=True, exist_ok=True)
+    profile = None if restore_only else prepare(directory)
+    marker = directory / "session.json"
     with instance_lock(directory):
+        job = None
+        write_json(marker, {"version": 1, "unfinished": True})
         try:
             if not restore_only:
                 warp.activate(profile.proxy_port, notify=emit)
@@ -56,9 +60,12 @@ def session(directory, engine, stop, emit, restore_only=False):
                         raise ValueError('Windows preflight failed')
                     emit('engine_start', 4)
                     with (directory / 'engine.log').open('w', encoding='utf-8') as log:
+                        from windows.process import Job
+                        job = Job()
                         child = subprocess.Popen([str(engine), 'run', '-c', str(directory / 'sing-box.json')],
                             stdout=log, stderr=subprocess.STDOUT,
                             creationflags=subprocess.CREATE_NEW_PROCESS_GROUP)
+                        job.assign(child)
                         deadline = time.monotonic() + 20
                         ready = False
                         while child.poll() is None and not stop.wait(.15):
@@ -76,6 +83,11 @@ def session(directory, engine, stop, emit, restore_only=False):
             stop_engine(child)
             child = None
             warp.restore()
+            marker.unlink(missing_ok=True)
             emit('restored', 0)
         finally:
-            stop_engine(child)
+            try:
+                stop_engine(child)
+            finally:
+                if job is not None:
+                    job.close()

@@ -1,3 +1,4 @@
+import os
 import json
 from pathlib import Path
 import subprocess
@@ -9,6 +10,7 @@ from schoolnet import macos_service as service
 from schoolnet.config import Profile
 
 
+@unittest.skipIf(os.name == "nt", "macOS service/signing contracts use POSIX permissions; tested on POSIX CI")
 class ServiceTests(unittest.TestCase):
     def test_managed_upgrade_preserves_profile_and_logs(self):
         with tempfile.TemporaryDirectory() as directory:

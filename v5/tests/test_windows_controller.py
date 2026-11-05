@@ -54,3 +54,20 @@ class WindowsLifecycleTests(unittest.TestCase):
             with self.assertRaisesRegex(ValueError,'Administrator'):
                 controller.session('unused','engine',threading.Event(),lambda *args:None)
             activate.assert_not_called()
+
+    def test_restore_failure_keeps_recovery_marker(self):
+        with tempfile.TemporaryDirectory() as d:
+            with patch.object(controller,'is_admin',return_value=True), patch.object(controller.warp,'restore',side_effect=ValueError('restore failed')):
+                with self.assertRaisesRegex(ValueError,'restore failed'):
+                    controller.session(d,'engine',threading.Event(),lambda *a:None,True)
+            self.assertTrue((Path(d)/'session.json').exists())
+
+    def test_successful_restore_clears_recovery_marker_and_ignores_bad_profile(self):
+        with tempfile.TemporaryDirectory() as d:
+            (Path(d)/'profile.json').write_text('invalid JSON')
+            (Path(d)/'session.json').write_text('{}')
+            events=[]
+            with patch.object(controller,'is_admin',return_value=True),patch.object(controller.warp,'restore'):
+                controller.session(d,'engine',threading.Event(),lambda *a:events.append(a),True)
+            self.assertFalse((Path(d)/'session.json').exists())
+            self.assertEqual(events[-1],('restored',0))

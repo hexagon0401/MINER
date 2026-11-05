@@ -11,6 +11,7 @@ from macos import signing
 from macos import signing_credentials
 
 
+@unittest.skipIf(os.name == "nt", "macOS service/signing contracts use POSIX permissions; tested on POSIX CI")
 class SigningTests(unittest.TestCase):
     def test_requires_developer_id_not_apple_development(self):
         digest = "A" * 40
