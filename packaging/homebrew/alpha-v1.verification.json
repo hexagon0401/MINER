@@ -1,0 +1,32 @@
+{
+  "name": "MINER ALPHA v1",
+  "tag": "miner-alpha-v1",
+  "codename": "ALPHA",
+  "release_version": 1,
+  "prerelease": false,
+  "source_release": "miner-alpha-universal-beta.1",
+  "payloads_rebuilt": false,
+  "platforms": [
+    {
+      "filename": "MINER-ALPHA-v1-macOS-AppleSilicon.dmg",
+      "architecture": "arm64",
+      "sha256": "8b430e5d4fac61d6e3c0e3a42f6058d22dc5ad0532df6b85672bc474a0eb40e4",
+      "internal_build_version": "5.0.0-beta.1.1",
+      "original_source_tag": "v5.0.0-beta.1.1"
+    },
+    {
+      "filename": "MINER-ALPHA-v1-macOS-Intel.dmg",
+      "architecture": "x86_64",
+      "sha256": "51012a4dd35bf7b3042c80df645fe40115ae1f69c56cc06580e37b748abb23f5",
+      "internal_build_version": "5.0.0-beta.1.1",
+      "original_source_tag": "v5.0.0-beta.1.1"
+    },
+    {
+      "filename": "MINER-ALPHA-v1-Windows-x64-Setup.exe",
+      "architecture": "x64",
+      "sha256": "9258d19e12e2a010d20060a435b5470415086c8aa4be71537660c0e7346478b6",
+      "internal_build_version": "5.0.0-beta.1.1-windows.8",
+      "original_source_tag": "v5.0.0-beta.1.1-windows.8"
+    }
+  ]
+}
