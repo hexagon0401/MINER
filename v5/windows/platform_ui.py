@@ -22,3 +22,14 @@ def windows_appearance():
     except (AttributeError, OSError): pass
     return result
 
+
+WORDS['ko'].update({'disconnecting':'긴급 정지 중…', 'disconnected':'긴급 정지 완료',
+    'disconnected_hint':'WARP 연결이 해제되었습니다. 일반 인터넷은 유지됩니다.',
+    'kill_hint':'MINER 엔진 정리 후 WARP 연결 해제 · 일반 인터넷 유지',
+    'layout':'버튼 스타일', 'rounded':'A · 플로팅 버튼', 'flush':'B · 일체형 버튼',
+    'pearl':'Pearl White', 'kill':'KILL SWITCH'})
+WORDS['en'].update({'disconnecting':'Emergency stop…', 'disconnected':'Emergency stop complete',
+    'disconnected_hint':'WARP is disconnected. Your regular internet remains available.',
+    'kill_hint':'Stop MINER and disconnect WARP; regular internet stays available',
+    'layout':'Button style', 'rounded':'A · Floating controls', 'flush':'B · Integrated controls',
+    'pearl':'Pearl White', 'kill':'KILL SWITCH'})

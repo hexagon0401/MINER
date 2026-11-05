@@ -6,182 +6,218 @@ import QtQuick.Effects
 import QtQuick.Window
 
 ApplicationWindow {
-    id: win
-    objectName: "mainWindow"
-    visible: true
-    title: "MINER"
-    width: Math.min(584, Screen.desktopAvailableWidth)
-    height: Math.min(704, Screen.desktopAvailableHeight)
+    id: win; objectName: "mainWindow"
+    visible: true; title: "MINER"
+    width: Math.min(560, Screen.desktopAvailableWidth)
+    height: Math.min(680, Screen.desktopAvailableHeight)
     minimumWidth: 480; minimumHeight: 440
     property var s: backend.state
-    property color ink: s.contrast ? palette.windowText : s.dark ? "#eef4f8" : "#172b3a"
-    property color muted: s.contrast ? palette.windowText : s.dark ? "#a6b6c8" : "#546b7c"
-    property color accent: s.contrast ? palette.highlight : "#16d84c"
-    property bool motionAllowed: (active || s.validation) && visibility !== Window.Minimized && !s.reduced
-    component CopyText: Label { renderType: Text.QtRendering; renderTypeQuality: Text.HighRenderTypeQuality }
-    property int nativeTextMode: statusText.renderType
+    property color ink: s.contrast ? palette.windowText : "#353a45"
+    property color muted: s.contrast ? palette.windowText : "#596173"
+    property color accent: s.contrast ? systemPalette.highlight : "#1bd642"
+    property bool flush: s.controlLayout === "flush"
+    // Pearl White's supplied reference is static. No mining or success-loop timers.
+    property bool motionAllowed: false
     property bool successActive: false
-    color: s.contrast ? palette.window : s.dark ? "#111c2b" : "#f3f6fb"
-    font.family: s.fontFamily
-    font.pixelSize: 14
+    property int nativeTextMode: statusText.renderType
+    font.family: s.fontFamily; font.pixelSize: 14
+    color: s.contrast ? palette.window : "#f6f8ff"
     SystemPalette { id: systemPalette }
     palette.highlight: s.contrast ? systemPalette.highlight : "#13bb46"
     palette.accent: s.contrast ? systemPalette.highlight : "#13bb46"
     onClosing: function(close) { close.accepted = backend.requestClose() }
-    onMotionAllowedChanged: if (!motionAllowed) { waveAnim.stop(); successAnim.stop(); successActive = false }
     Shortcut { sequence: "Ctrl+,"; onActivated: backend.settings(true) }
-    Connections {
-        target: backend
-        function onCloseRequested() { win.close() }
-        function onEffect(kind) {
-            if (kind === "cancel" || kind === "stop") { successAnim.stop(); win.successActive = false }
-            if (!win.motionAllowed) return
-            if (kind === "success") { win.successActive = true; successAnim.restart() }
-            if (kind === "start" || kind === "stop") {
-                wave.color = kind === "start" ? "#16e151" : "#ff6470"
-                var button = kind === "start" ? startButton : stopButton
-                var pos = button.mapToItem(overlay, button.width/2, button.height/2)
-                wave.x = pos.x - wave.width/2; wave.y = pos.y - wave.height/2
-                waveAnim.restart()
+    Connections { target: backend; function onCloseRequested() { win.close() } }
+    component CopyText: Label {
+        renderType: Text.QtRendering; renderTypeQuality: Text.HighRenderTypeQuality
+        color: win.ink
+    }
+    component PearlButton: Button {
+        id: control
+        property string kind: "stop"
+        property bool integrated: false
+        property int labelSize: 18
+        hoverEnabled: true
+        padding: 8
+        font.family: s.latinFontFamily; font.pixelSize: labelSize; font.weight: Font.Bold
+        Accessible.name: text
+        background: Rectangle {
+            id: surface
+            radius: control.integrated ? 0 : 11
+            border.width: control.integrated ? 0 : 1
+            border.color: s.contrast ? systemPalette.windowText : control.kind === "start" ? "#54ec68" : control.kind === "kill" ? "#e9c3cd" : "#cdd6e7"
+            opacity: control.enabled ? 1 : 0.58
+            gradient: Gradient {
+                GradientStop { position: 0; color: s.contrast ? systemPalette.button : control.kind === "start" ? "#32e652" : control.kind === "kill" ? "#fffafb" : "#f8faff" }
+                GradientStop { position: 1; color: s.contrast ? systemPalette.button : control.kind === "start" ? "#08c82e" : control.kind === "kill" ? "#f9e4e9" : "#e9eefb" }
             }
+            layer.enabled: !control.integrated && !s.contrast && s.effectsSupported
+            layer.effect: MultiEffect {
+                shadowEnabled: true; shadowColor: control.kind === "start" ? "#1d8141" : control.kind === "kill" ? "#8f5463" : "#52678b"
+                shadowOpacity: 0.12; shadowBlur: 0.35; shadowVerticalOffset: control.down ? 1 : 4
+            }
+            Rectangle { anchors.fill: parent; anchors.margins: 1; radius: parent.radius; color: control.down ? "#16000000" : control.hovered ? "#0bffffff" : "transparent" }
+            Rectangle { anchors.fill: parent; anchors.margins: 2; radius: Math.max(0,parent.radius-2); color: "transparent"; border.width: control.activeFocus ? 2 : 0; border.color: s.contrast ? systemPalette.highlight : "#4577bf" }
+            Behavior on opacity { NumberAnimation { duration: s.reduced ? 0 : 100 } }
+        }
+        contentItem: CopyText {
+            text: control.text; font: control.font
+            color: s.contrast ? systemPalette.buttonText : control.kind === "start" ? "white" : control.kind === "kill" ? "#733d48" : "#424a5b"
+            horizontalAlignment: Text.AlignHCenter; verticalAlignment: Text.AlignVCenter
+            opacity: control.enabled ? 1 : 0.6
         }
     }
-    Image { anchors.fill: parent; source: s.art+"full-window-strata.png"; fillMode: Image.PreserveAspectCrop; smooth: true; mipmap: true; opacity: s.dark ? 0.24 : 0.08 }
-    Item {
-        id: page
-        anchors.fill: parent
-        layer.enabled: win.successActive && win.motionAllowed
-        layer.effect: MultiEffect { blurEnabled: true; blurMax: 12; blur: 0.3 }
-        ColumnLayout {
-            anchors.fill: parent; anchors.margins: 28; spacing: 14
-            ScrollView {
-                Layout.fillWidth: true; Layout.fillHeight: true
-                clip: true
-                ScrollBar.horizontal.policy: ScrollBar.AlwaysOff
-                contentWidth: availableWidth
+    Rectangle {
+        anchors.fill: parent; visible: !s.contrast
+        gradient: Gradient {
+            GradientStop { position: 0; color: "#fcfdff" }
+            GradientStop { position: 0.54; color: "#f1f4ff" }
+            GradientStop { position: 1; color: "#edf2ff" }
+        }
+    }
+    Shape {
+        anchors.fill: parent; visible: !s.contrast
+        preferredRendererType: Shape.CurveRenderer
+        ShapePath {
+            strokeColor: "transparent"
+            fillGradient: RadialGradient {
+                centerX: win.width*0.08; centerY: win.height*0.31; centerRadius: win.width*0.95
+                focalX: centerX; focalY: centerY
+                GradientStop { position: 0; color: "#b3d9ebff" }
+                GradientStop { position: 1; color: "#00d9ebff" }
+            }
+            startX: 0; startY: 0
+            PathLine { x: win.width; y: 0 } PathLine { x: win.width; y: win.height } PathLine { x: 0; y: win.height } PathLine { x: 0; y: 0 }
+        }
+        ShapePath {
+            strokeColor: "transparent"
+            fillGradient: RadialGradient {
+                centerX: win.width*0.95; centerY: win.height*0.7; centerRadius: win.width*0.85
+                focalX: centerX; focalY: centerY
+                GradientStop { position: 0; color: "#a0e6e1ff" }
+                GradientStop { position: 1; color: "#00e6e1ff" }
+            }
+            startX: 0; startY: 0
+            PathLine { x: win.width; y: 0 } PathLine { x: win.width; y: win.height } PathLine { x: 0; y: win.height } PathLine { x: 0; y: 0 }
+        }
+    }
+    ColumnLayout {
+        anchors.fill: parent; anchors.leftMargin: 20; anchors.rightMargin: 20; anchors.topMargin: 12; anchors.bottomMargin: 16; spacing: 16
+        ScrollView {
+            Layout.fillWidth: true; Layout.fillHeight: true; clip: true
+            ScrollBar.horizontal.policy: ScrollBar.AlwaysOff
+            contentWidth: availableWidth
+            ColumnLayout {
+                width: parent.width; spacing: 16
+                Item {
+                    Layout.fillWidth: true; Layout.preferredHeight: 76
+                    Column {
+                        anchors.horizontalCenter: parent.horizontalCenter; spacing: 5
+                        Image {
+                            objectName: "pearlWordmark"; anchors.horizontalCenter: parent.horizontalCenter
+                            width: 204; height: 47; source: s.pearlArt+"mascot/MINER-wordmark-transparent.png"
+                            sourceClipRect: Qt.rect(185,180,1795,407)
+                            fillMode: Image.PreserveAspectFit; smooth: true; mipmap: true
+                            Accessible.name: "MINER"; Accessible.role: Accessible.StaticText; visible: !s.contrast
+                        }
+                        CopyText { visible: s.contrast; anchors.horizontalCenter: parent.horizontalCenter; text: "MINER"; font.pixelSize: 36; font.weight: Font.ExtraBold }
+                        CopyText { text: "Dig your way out."; font.pixelSize: 20; font.weight: Font.DemiBold; color: win.muted }
+                    }
+                }
+                Rectangle {
+                    id: hero; objectName: "heroPanel"
+                    Layout.fillWidth: true; Layout.preferredHeight: win.height < 600 ? 150 : 258
+                    radius: 23; border.width: 1; border.color: s.contrast ? systemPalette.windowText : "#e2ffffff"
+                    gradient: Gradient {
+                        GradientStop { position: 0; color: s.contrast ? systemPalette.window : "#86ffffff" }
+                        GradientStop { position: 1; color: s.contrast ? systemPalette.window : "#5aeef0ff" }
+                    }
+                    Shape {
+                        anchors.fill: parent; anchors.margins: 1; visible: !s.contrast
+                        preferredRendererType: Shape.CurveRenderer
+                        ShapePath {
+                            strokeColor: "transparent"; fillColor: "#50c9e2ff"
+                            startX: 0; startY: hero.height*0.42
+                            PathCubic { x: hero.width-2; y: hero.height*0.85; control1X: hero.width*0.25; control1Y: hero.height*0.4; control2X: hero.width*0.35; control2Y: hero.height*0.92 }
+                            PathLine { x: hero.width-2; y: hero.height-24 }
+                            PathQuad { x: hero.width-24; y: hero.height-2; controlX: hero.width-2; controlY: hero.height-2 }
+                            PathLine { x: 23; y: hero.height-2 }
+                            PathQuad { x: 0; y: hero.height-24; controlX: 0; controlY: hero.height-2 }
+                            PathLine { x: 0; y: hero.height*0.42 }
+                        }
+                        ShapePath {
+                            strokeColor: "transparent"; fillColor: "#4cded4ff"
+                            startX: hero.width-2; startY: hero.height*0.63
+                            PathCubic { x: 0; y: hero.height*0.94; control1X: hero.width*0.7; control1Y: hero.height*0.64; control2X: hero.width*0.5; control2Y: hero.height*0.92 }
+                            PathLine { x: 0; y: hero.height-24 }
+                            PathQuad { x: 23; y: hero.height-2; controlX: 0; controlY: hero.height-2 }
+                            PathLine { x: hero.width-24; y: hero.height-2 }
+                            PathQuad { x: hero.width-2; y: hero.height-24; controlX: hero.width-2; controlY: hero.height-2 }
+                            PathLine { x: hero.width-2; y: hero.height*0.63 }
+                        }
+                    }
+                    Image {
+                        objectName: "pearlMascot"
+                        anchors.centerIn: parent; width: parent.width*0.85; height: parent.height*0.94
+                        source: s.pearlArt+"mascot/miner-transparent.png"
+                        sourceClipRect: Qt.rect(190,140,980,1030)
+                        fillMode: Image.PreserveAspectFit; smooth: true; mipmap: true
+                        Accessible.name: "MINER mascot"; Accessible.role: Accessible.Graphic
+                    }
+                }
                 ColumnLayout {
-                    width: parent.width; spacing: 12
-                    RowLayout {
-                        Layout.fillWidth: true
-                        CopyText { text: "MINER"; color: win.ink; font.pixelSize: 30; font.weight: Font.DemiBold }
-                        Item { Layout.fillWidth: true }
-                        Rectangle { width: 7; height: 7; radius: 3.5; color: s.phase === "error" ? "#e95065" : s.phase === "running" ? win.accent : win.muted }
-                        CopyText { text: s.phase === "running" || s.phase === "idle" || s.phase === "error" ? s.text[s.phase] : s.completed + "/5"; color: win.muted; font.pixelSize: 13 }
-                    }
-                    CopyText { text: "Dig your way out."; color: win.muted; font.pixelSize: 14 }
-                    Item {
-                        id: scene
-                        objectName: "caveScene"
-                        Layout.fillWidth: true; Layout.preferredHeight: win.height < 560 ? 145 : 292
-                        property bool digging: s.busy && win.motionAllowed
-                        Item {
-                            id: artwork
-                            width: 560; height: 280
-                            anchors.centerIn: parent
-                            scale: Math.min(scene.width/width, scene.height/height)
-                            Shape {
-                                anchors.fill: parent; antialiasing: true; preferredRendererType: Shape.CurveRenderer
-                                ShapePath {
-                                    strokeWidth: 1; strokeColor: "#344353"; fillColor: "#080f19"
-                                    startX: 268; startY: 74
-                                    PathCubic { x: 265; y: 151; control1X: 287; control1Y: 112; control2X: 226; control2Y: 119 }
-                                    PathCubic { x: 460; y: 193; control1X: 354; control1Y: 132; control2X: 446; control2Y: 126 }
-                                    PathCubic { x: 330; y: 242; control1X: 474; control1Y: 238; control2X: 414; control2Y: 245 }
-                                    PathCubic { x: 155; y: 200; control1X: 236; control1Y: 247; control2X: 148; control2Y: 247 }
-                                    PathCubic { x: 241; y: 152; control1X: 159; control1Y: 163; control2X: 191; control2Y: 142 }
-                                    PathCubic { x: 249; y: 74; control1X: 216; control1Y: 120; control2X: 263; control2Y: 106 }
-                                    PathLine { x: 268; y: 74 }
-                                }
-                            }
-                            Image { source: s.art + "school.png"; x: 192; y: -3; width: 176; height: 101; fillMode: Image.PreserveAspectFit; smooth: true; mipmap: true }
-                            Rectangle { x: 182; y: 235; width: 250; height: 2; radius: 1; color: "#896e4b"; opacity: 0.32 }
-                            Image {
-                                source: s.art + "skylight-beam.png"; x: miner.x-12; y: 140; width: 140; height: 108
-                                fillMode: Image.PreserveAspectFit; smooth: true; mipmap: true
-                                opacity: s.phase === "running" ? 0.75 : 0
-                                Behavior on opacity { NumberAnimation { duration: s.reduced ? 0 : 260 } }
-                            }
-                            Image {
-                                id: miner
-                                source: s.art + "mascot-runtime-256.png"; x: 288 + s.completed*9; y: 133; width: 114; height: 114
-                                fillMode: Image.PreserveAspectFit; smooth: true; mipmap: true; transformOrigin: Item.Bottom
-                                rotation: s.phase === "running" ? -6 : 0
-                                Behavior on x { NumberAnimation { duration: s.reduced ? 0 : 360; easing.type: Easing.InOutCubic } }
-                                SequentialAnimation on rotation {
-                                    running: scene.digging; loops: Animation.Infinite
-                                    NumberAnimation { to: 4; duration: 285; easing.type: Easing.InOutSine }
-                                    NumberAnimation { to: -4; duration: 285; easing.type: Easing.InOutSine }
-                                    onStopped: miner.rotation = s.phase === "running" ? -6 : 0
-                                }
-                            }
-                            Repeater {
-                                model: 5
-                                Rectangle {
-                                    required property int index
-                                    property real travel: 0
-                                    width: 3 + index%3; height: width; color: "#d7ad78"
-                                    x: miner.x+95 + travel*(12+index*3); y: 193 + travel*(24+index*4)
-                                    opacity: scene.digging ? 1-travel : 0
-                                    NumberAnimation on travel { from: 0; to: 1; duration: 430+index*57; loops: Animation.Infinite; running: scene.digging }
-                                }
-                            }
-                        }
-                    }
-                    CopyText { id: statusText; objectName: "statusLabel"; Layout.fillWidth: true; text: s.text[s.phase] || s.phase; color: win.ink; font.pixelSize: 19; font.weight: Font.DemiBold; wrapMode: Text.WordWrap }
+                    Layout.fillWidth: true; spacing: 4
+                    CopyText { id: statusText; objectName: "statusLabel"; Layout.fillWidth: true; text: s.text[s.phase] || s.phase; horizontalAlignment: Text.AlignHCenter; font.pixelSize: 25; font.weight: Font.ExtraBold; wrapMode: Text.WordWrap }
                     CopyText {
-                        Layout.fillWidth: true; color: win.muted; font.pixelSize: 14; wrapMode: Text.WordWrap
-                        text: s.phase === "error" || s.phase === "interrupted" ? s.text.recovery : s.phase === "running" ? s.text.hint : s.busy ? s.text.opening : s.text.help
+                        Layout.fillWidth: true; color: win.muted; font.pixelSize: 14; wrapMode: Text.WordWrap; horizontalAlignment: Text.AlignHCenter
+                        text: s.phase === "error" || s.phase === "interrupted" ? s.text.recovery : s.phase === "disconnected" ? s.text.disconnected_hint : s.phase === "running" ? s.text.hint : s.busy ? s.text.opening : s.text.help
                     }
-                    RowLayout {
-                        Layout.fillWidth: true; spacing: 6
-                        Repeater {
-                            model: 5
-                            Rectangle { required property int index; Layout.fillWidth: true; height: 4; radius: 2; color: index < s.completed ? win.accent : win.muted; opacity: index < s.completed ? 1 : 0.25; Behavior on color { ColorAnimation { duration: s.reduced ? 0 : 160 } } }
-                        }
-                        CopyText { objectName: "progressLabel"; text: s.completed+"/5"; color: win.muted; font.pixelSize: 13; Layout.leftMargin: 6 }
+                }
+                RowLayout {
+                    Layout.fillWidth: true; spacing: 8
+                    Repeater { model: 5; Rectangle { required property int index; Layout.fillWidth: true; height: 8; radius: 4; color: index < s.completed ? win.accent : s.contrast ? systemPalette.mid : "#c3cce2" } }
+                    CopyText { objectName: "progressLabel"; text: s.completed+"/5"; color: win.muted; font.pixelSize: 14; font.weight: Font.DemiBold; Layout.leftMargin: 5 }
+                }
+                TextArea { objectName: "errorDetails"; Layout.fillWidth: true; visible: s.detail.length>0; text: s.text.details+"\n"+s.detail; readOnly: true; selectByMouse: true; wrapMode: TextEdit.Wrap; font.pixelSize: 13 }
+            }
+        }
+        Rectangle {
+            id: controls; objectName: "controlPlate"
+            Layout.fillWidth: true; Layout.preferredHeight: 52 + (win.flush ? 0 : 12) + 43
+            color: win.flush ? "#28ffffff" : "transparent"; radius: win.flush ? 6 : 0
+            border.width: win.flush ? 1 : 0; border.color: s.contrast ? systemPalette.windowText : "#c7d0e4"
+            ColumnLayout {
+                anchors.fill: parent; anchors.margins: win.flush ? 1 : 0; spacing: win.flush ? 0 : 12
+                PearlButton { id: startButton; objectName: "startButton"; Layout.fillWidth: true; Layout.preferredHeight: 52; kind: "start"; text: "START"; labelSize: 27; integrated: win.flush; enabled: s.canStart; Accessible.name: s.text.start; onClicked: backend.begin() }
+                RowLayout {
+                    Layout.fillWidth: true; Layout.preferredHeight: 43; spacing: win.flush ? 0 : 8
+                    PearlButton { id: stopButton; objectName: "stopButton"; Layout.fillWidth: true; Layout.preferredWidth: 1; Layout.minimumWidth: 0; Layout.fillHeight: true; text: "STOP"; integrated: win.flush; enabled: s.canStop; Accessible.name: s.text.stop; onClicked: backend.end() }
+                    PearlButton {
+                        objectName: "killButton"; Layout.fillWidth: true; Layout.preferredWidth: 1; Layout.minimumWidth: 0; Layout.fillHeight: true; kind: "kill"; text: "KILL SWITCH"; integrated: win.flush; enabled: s.canKill
+                        Accessible.description: s.text.kill_hint
+                        ToolTip.visible: hovered; ToolTip.text: s.text.kill_hint; ToolTip.delay: 500
+                        onClicked: backend.kill()
                     }
-                    TextArea { objectName: "errorDetails"; Layout.fillWidth: true; visible: s.detail.length > 0; text: s.text.details+"\n"+s.detail; readOnly: true; wrapMode: TextEdit.Wrap; selectByMouse: true; font.pixelSize: 13 }
                 }
             }
-            Button { id: startButton; objectName: "startButton"; Layout.fillWidth: true; Layout.preferredHeight: 46; text: s.text.start; highlighted: true; enabled: s.canStart; font.weight: Font.DemiBold; onClicked: backend.begin() }
-            Button { id: stopButton; objectName: "stopButton"; Layout.fillWidth: true; Layout.preferredHeight: 38; text: s.phase === "error" || s.phase === "interrupted" ? s.text.retry : s.text.stop; enabled: s.canStop; onClicked: backend.end() }
-            RowLayout {
-                Layout.fillWidth: true
-                CopyText { Layout.fillWidth: true; text: "WARP Local Proxy · 127.0.0.1:40000"; color: win.muted; font.pixelSize: 11; wrapMode: Text.WordWrap }
-                Button { objectName: "settingsButton"; text: s.text.settings; onClicked: backend.settings(true) }
+            Rectangle { visible: win.flush; x: 1; y: 52; width: parent.width-2; height: 1; color: "#cbd4e7" }
+            Rectangle { visible: win.flush; x: parent.width/2; y: 53; width: 1; height: parent.height-54; color: "#e9c3cd" }
+        }
+        RowLayout {
+            Layout.fillWidth: true; Layout.preferredHeight: 32; spacing: 8
+            CopyText { Layout.fillWidth: true; text: "WARP Local Proxy · 127.0.0.1:40000"; color: win.ink; font.pixelSize: 12; wrapMode: Text.WordWrap }
+            PearlButton {
+                objectName: "settingsButton"; text: s.text.settings; labelSize: 13; Layout.preferredWidth: 78; Layout.preferredHeight: 32
+                contentItem: RowLayout { spacing: 5; Image { visible: !s.contrast; source: s.pearlArt+"icons/settings.svg"; Layout.preferredWidth: 18; Layout.preferredHeight: 18; sourceSize: Qt.size(36,36); smooth: true } CopyText { text: s.text.settings; font.pixelSize: 13; color: win.ink } }
+                onClicked: backend.settings(true)
             }
         }
     }
-    Item {
-        id: overlay; anchors.fill: parent; clip: true
-        Rectangle { id: wave; width: Math.hypot(win.width,win.height)*2; height: width; radius: width/2; scale: 0; opacity: 0 }
-        ParallelAnimation {
-            id: waveAnim
-            NumberAnimation { target: wave; property: "scale"; from: 0; to: 1; duration: 520; easing.type: Easing.OutCubic }
-            NumberAnimation { target: wave; property: "opacity"; from: 0.25; to: 0; duration: 520 }
-        }
-        Rectangle { anchors.fill: parent; color: "#101826"; opacity: success.opacity*0.12 }
-        Column {
-            id: success; anchors.centerIn: parent; spacing: 12; opacity: 0; scale: 0.76
-            Rectangle {
-                anchors.horizontalCenter: parent.horizontalCenter; width: 64; height: 64; radius: 32; color: win.accent
-                Shape { anchors.centerIn: parent; width: 32; height: 28; antialiasing: true; preferredRendererType: Shape.CurveRenderer; ShapePath { strokeColor: "#0b2d19"; strokeWidth: 4; fillColor: "transparent"; capStyle: ShapePath.RoundCap; joinStyle: ShapePath.RoundJoin; startX: 3; startY: 14; PathLine { x: 12; y: 23 } PathLine { x: 29; y: 4 } } }
-            }
-            CopyText { text: s.text.running; color: win.ink; font.pixelSize: 18; font.weight: Font.DemiBold }
-        }
-        SequentialAnimation {
-            id: successAnim
-            ParallelAnimation { NumberAnimation { target: success; property: "opacity"; from: 0; to: 1; duration: 210 } NumberAnimation { target: success; property: "scale"; from: 0.76; to: 1; duration: 310; easing.type: Easing.OutBack } }
-            PauseAnimation { duration: 620 }
-            NumberAnimation { target: success; property: "opacity"; to: 0; duration: 240 }
-            onStopped: { win.successActive = false; success.opacity = 0 }
-        }
-    }
-    CopyText { visible: s.validation; anchors.left: parent.left; anchors.bottom: parent.bottom; padding: 4; text: "UI VALIDATION · simulated states · no live WARP"; color: "#142337"; font.pixelSize: 10; background: Rectangle { color: "#ffd54a" } }
+    CopyText { visible: s.validation; anchors.left: parent.left; anchors.bottom: parent.bottom; padding: 3; text: "UI VALIDATION · simulated states · no live WARP"; font.pixelSize: 10; color: "#142337"; background: Rectangle { color: "#ffd54a" } }
     ApplicationWindow {
-        font.family: s.fontFamily; font.pixelSize: 14
         id: preferences; objectName: "settingsWindow"; visible: s.settingsOpen
-        title: s.text.settings; width: Math.min(440, Screen.desktopAvailableWidth); height: Math.min(600, Screen.desktopAvailableHeight)
+        font.family: s.fontFamily; font.pixelSize: 14
+        title: s.text.settings; width: Math.min(440,Screen.desktopAvailableWidth); height: Math.min(600,Screen.desktopAvailableHeight)
         minimumWidth: 360; minimumHeight: 380
         flags: Qt.Dialog | Qt.WindowTitleHint | Qt.WindowCloseButtonHint
         transientParent: win; color: win.color
@@ -194,21 +230,20 @@ ApplicationWindow {
                 ScrollBar.horizontal.policy: ScrollBar.AlwaysOff
                 ColumnLayout {
                     width: parent.width; spacing: 12
-                    CopyText { text: s.text.settings; color: win.ink; font.pixelSize: 24; font.weight: Font.DemiBold }
+                    CopyText { text: s.text.settings; font.pixelSize: 24; font.weight: Font.DemiBold }
                     CopyText { text: s.text.language; color: win.muted }
-                    ComboBox { objectName: "languageCombo"; Layout.fillWidth: true; model: ["한국어","English"]; currentIndex: s.language === "ko" ? 0 : 1; onActivated: backend.setLanguage(currentIndex === 0 ? "ko" : "en") }
+                    ComboBox { objectName: "languageCombo"; Layout.fillWidth: true; model: ["한국어","English"]; currentIndex: s.language === "ko" ? 0 : 1; onActivated: backend.setLanguage(currentIndex===0 ? "ko" : "en") }
                     CopyText { text: s.text.theme; color: win.muted }
-                    ComboBox { Layout.fillWidth: true; model: [s.text.system,s.text.light,s.text.dark]; currentIndex: ["system","light","dark"].indexOf(s.theme); enabled: !s.contrast; onActivated: backend.setTheme(["system","light","dark"][currentIndex]) }
+                    CopyText { text: s.text.pearl }
+                    CopyText { text: s.text.layout; color: win.muted }
+                    ComboBox { objectName: "layoutCombo"; Layout.fillWidth: true; model: [s.text.rounded,s.text.flush]; currentIndex: win.flush ? 1 : 0; onActivated: backend.setLayout(currentIndex===0 ? "rounded" : "flush") }
                     CheckBox { text: s.text.reduce; checked: s.reduced; enabled: !s.systemReduced; onToggled: backend.setReduced(checked) }
                     CopyText { text: s.text.about; color: win.muted }
                     RowLayout {
                         Image { source: s.art+"developer-avatar.png"; Layout.preferredWidth: 60; Layout.preferredHeight: 60; smooth: true; mipmap: true }
-                        ColumnLayout { CopyText { text: "Punkthats*it · @hexagon0401"; color: win.ink } CopyText { text: s.version; color: win.muted; font.pixelSize: 11 } }
+                        ColumnLayout { CopyText { text: "Punkthats*it · @hexagon0401" } CopyText { text: s.version; color: win.muted; font.pixelSize: 11 } }
                     }
-                    RowLayout {
-                        Button { text: "GitHub"; onClicked: backend.github() }
-                        Button { text: s.text.log; onClicked: backend.logs() }
-                    }
+                    RowLayout { Button { text: "GitHub"; onClicked: backend.github() } Button { text: s.text.log; onClicked: backend.logs() } }
                 }
             }
             Button { Layout.alignment: Qt.AlignRight; text: s.text.close; onClicked: backend.settings(false) }

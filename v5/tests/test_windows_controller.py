@@ -89,3 +89,66 @@ class WindowsLifecycleTests(unittest.TestCase):
                     controller.session(d,'engine',threading.Event(),lambda *a:None)
                 job.assign.assert_called_once_with(child);job.close.assert_called_once();restore.assert_not_called()
             self.assertTrue((Path(d)/'session.json').exists())
+
+    def test_emergency_disconnects_warp_without_restoring_full_tunnel(self):
+        with tempfile.TemporaryDirectory() as d:
+            kill=threading.Event();kill.set();events=[]
+            with patch.object(controller,'is_admin',return_value=True),patch.object(controller.warp,'restore') as restore,patch.object(controller.warp,'deactivate') as disconnect:
+                controller.session(d,'engine',threading.Event(),lambda *a:events.append(a),True,kill)
+                disconnect.assert_called_once();restore.assert_not_called()
+            self.assertEqual(events[-1],('disconnected',0));self.assertFalse((Path(d)/'session.json').exists())
+
+    def test_emergency_during_activation_does_not_start_engine(self):
+        with tempfile.TemporaryDirectory() as d:
+            stop=threading.Event();kill=threading.Event()
+            def activate(*a,**k):stop.set();kill.set()
+            with patch.object(controller,'is_admin',return_value=True),patch.object(controller.warp,'activate',side_effect=activate),patch.object(controller.warp,'deactivate') as disconnect,patch.object(controller.warp,'restore') as restore,patch.object(controller.subprocess,'Popen') as spawn:
+                controller.session(d,'engine',stop,lambda *a:None,False,kill)
+                disconnect.assert_called_once();restore.assert_not_called();spawn.assert_not_called()
+
+    def test_emergency_cleans_up_after_activation_error(self):
+        with tempfile.TemporaryDirectory() as d:
+            kill=threading.Event();kill.set()
+            with patch.object(controller,'is_admin',return_value=True),patch.object(controller.warp,'activate',side_effect=ValueError('proxy failed')),patch.object(controller.warp,'deactivate') as disconnect:
+                controller.session(d,'engine',threading.Event(),lambda *a:None,False,kill)
+                disconnect.assert_called_once()
+
+    def test_emergency_requested_during_restore_wins_serially(self):
+        with tempfile.TemporaryDirectory() as d:
+            kill=threading.Event();calls=[]
+            def restore():calls.append('restore');kill.set();raise ValueError('restore interrupted')
+            with patch.object(controller,'is_admin',return_value=True),patch.object(controller.warp,'restore',side_effect=restore),patch.object(controller.warp,'deactivate',side_effect=lambda:calls.append('disconnect')):
+                controller.session(d,'engine',threading.Event(),lambda *a:None,True,kill)
+            self.assertEqual(calls,['restore','disconnect'])
+
+    def test_failed_emergency_disconnect_never_claims_success(self):
+        with tempfile.TemporaryDirectory() as d:
+            kill=threading.Event();kill.set();events=[]
+            with patch.object(controller,'is_admin',return_value=True),patch.object(controller.warp,'deactivate',side_effect=ValueError('disconnect failed')):
+                with self.assertRaisesRegex(ValueError,'disconnect failed'):
+                    controller.session(d,'engine',threading.Event(),lambda *a:events.append(a),True,kill)
+            self.assertTrue((Path(d)/'session.json').exists());self.assertNotIn(('disconnected',0),events)
+
+    def test_late_emergency_never_labels_restore_as_disconnection(self):
+        with tempfile.TemporaryDirectory() as d:
+            kill=threading.Event();events=[];original=Path.unlink
+            def unlink(path,*a,**k):
+                result=original(path,*a,**k)
+                if path.name=='session.json':kill.set()
+                return result
+            with patch.object(controller,'is_admin',return_value=True),patch.object(controller.warp,'restore'),patch.object(controller.warp,'deactivate') as disconnect,patch.object(Path,'unlink',unlink):
+                controller.session(d,'engine',threading.Event(),lambda *a:events.append(a),True,kill)
+                disconnect.assert_not_called()
+            self.assertEqual(events[-1],('restored',0))
+
+    def test_emergency_stops_engine_before_disconnect(self):
+        with tempfile.TemporaryDirectory() as d:
+            stop=threading.Event();kill=threading.Event();calls=[]
+            child=MagicMock();child.poll.return_value=None
+            def emit(phase,count):
+                if phase=='engine_start':stop.set();kill.set()
+            def stopped(proc):
+                if proc is child:calls.append('engine stopped');child.poll.return_value=0
+            with patch.object(controller,'is_admin',return_value=True),patch.object(controller.warp,'activate'),patch.object(controller,'doctor',return_value={'preflight_ok':True}),patch.object(controller.subprocess,'Popen',return_value=child),patch.object(controller.subprocess,'CREATE_NEW_PROCESS_GROUP',512,create=True),patch('windows.process.Job'),patch.object(controller,'stop_engine',side_effect=stopped),patch.object(controller.warp,'deactivate',side_effect=lambda:calls.append('warp disconnected')):
+                controller.session(d,'engine',stop,emit,False,kill)
+            self.assertEqual(calls,['engine stopped','warp disconnected'])

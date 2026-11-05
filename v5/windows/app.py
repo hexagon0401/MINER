@@ -25,9 +25,9 @@ DATA=Path(os.environ.get('LOCALAPPDATA',str(Path.home())))/'MINER'/'Beta1'
 class Worker(QThread):
     progress=Signal(str,int);failed=Signal(str)
     def __init__(self,restore=False):
-        super().__init__();self.stop_event=threading.Event();self.restore=restore
+        super().__init__();self.stop_event=threading.Event();self.emergency_event=threading.Event();self.restore=restore
     def run(self):
-        try:session(DATA,ROOT/'engine/sing-box.exe',self.stop_event,lambda p,c:self.progress.emit(p,c),self.restore)
+        try:session(DATA,ROOT/'engine/sing-box.exe',self.stop_event,lambda p,c:self.progress.emit(p,c),self.restore,self.emergency_event)
         except Exception as exc:self.failed.emit(str(exc))
 
 
@@ -35,7 +35,7 @@ class Bridge(QObject):
     changed=Signal();effect=Signal(str);closeRequested=Signal()
     def __init__(self,testing=False):
         super().__init__();self.testing=testing;self.worker=None;self.closing=False;self.detail='';self.count=0
-        self.settings_open=False;self.fixture_busy=False
+        self.settings_open=False;self.fixture_busy=False;self.pending_kill=False;self.effects_supported=False
         DATA.mkdir(parents=True,exist_ok=True)
         try:
             cfg=json.loads((DATA/'settings.json').read_text(encoding='utf-8'))
@@ -43,7 +43,9 @@ class Bridge(QObject):
         except (OSError,ValueError):cfg={}
         language=cfg.get('language');theme=cfg.get('theme')
         self.language=language if isinstance(language,str) and language in WORDS else 'ko'
-        self.theme=theme if theme in ('system','light','dark') else 'system'
+        self.theme='pearl'
+        layout=cfg.get('control_layout')
+        self.control_layout=layout if layout in ('rounded','flush') else 'rounded'
         self.reduced=cfg.get('reduce_motion') is True
         self.appearance=windows_appearance();self.dirty=(DATA/'session.json').exists()
         self.phase='interrupted' if self.dirty else 'idle'
@@ -57,19 +59,21 @@ class Bridge(QObject):
         active=bool(self.worker and self.worker.isRunning())
         system_dark=QGuiApplication.styleHints().colorScheme()==Qt.ColorScheme.Dark
         return {'text':WORDS[self.language],'language':self.language,'theme':self.theme,
-            'dark':self.theme=='dark' or (self.theme=='system' and system_dark),
+            'dark':False,'controlLayout':self.control_layout,'effectsSupported':self.effects_supported,
             'reduced':self.reduced or self.appearance['reduced'],'systemReduced':self.appearance['reduced'],
             'contrast':self.appearance['contrast'],'phase':self.phase,'completed':self.count,
             'detail':self.detail,'canStart':not self.dirty and not active,
-            'canStop':self.dirty and self.phase!='restoring',
-            'busy':(active or self.fixture_busy) and self.phase not in ('running','restoring','error','restored'),
-            'settingsOpen':self.settings_open,'fontFamily':self.korean_font if self.language=='ko' else self.font_family,'version':LABEL,
+            'canStop':self.dirty and self.phase not in ('restoring','disconnecting'),
+            'canKill':self.phase not in ('disconnecting','disconnected'),
+            'busy':(active or self.fixture_busy) and self.phase not in ('running','restoring','disconnecting','error','restored','disconnected'),
+            'settingsOpen':self.settings_open,'latinFontFamily':self.font_family,'fontFamily':self.korean_font if self.language=='ko' else self.font_family,'version':LABEL,
             'art':QUrl.fromLocalFile(str(ART.resolve())+os.sep).toString(),
+            'pearlArt':QUrl.fromLocalFile(str((ART/'pearl' if (ART/'pearl').exists() else ROOT/'windows/pearl').resolve())+os.sep).toString(),
             'validation':self.testing}
 
     def save(self):
         from schoolnet.runtime import write_json
-        try:write_json(DATA/'settings.json',{'language':self.language,'theme':self.theme,'reduce_motion':self.reduced})
+        try:write_json(DATA/'settings.json',{'language':self.language,'theme':self.theme,'reduce_motion':self.reduced,'control_layout':self.control_layout})
         except (OSError,ValueError) as exc:self.detail=str(exc)
         self.changed.emit()
 
@@ -83,14 +87,21 @@ class Bridge(QObject):
         self.worker.failed.connect(self.failure);self.worker.finished.connect(self.finished)
         self.worker.start();self.changed.emit()
     def update_state(self,phase,count):
-        if self.worker and self.worker.stop_event.is_set() and phase!='restored':phase='restoring';count=0
+        if self.worker and self.worker.stop_event.is_set() and phase not in ('restored','disconnected'):
+            phase='disconnecting' if self.worker.emergency_event.is_set() else 'restoring';count=0
         previous=self.phase;self.detail='';self.phase=phase;self.count=count
-        if phase=='restored':self.dirty=False
+        if phase=='disconnected':self.dirty=False;self.pending_kill=False
+        elif phase=='restored':
+            if self.pending_kill:self.phase='disconnecting'
+            else:self.dirty=False
         self.changed.emit()
         if phase=='running' and previous!='running':self.effect.emit('success')
     def failure(self,message):
-        self.detail=message;self.phase='error';self.closing=False;self.changed.emit();self.effect.emit('cancel')
+        self.detail=message;self.phase='error';self.pending_kill=False;self.closing=False;self.changed.emit();self.effect.emit('cancel')
     def finished(self):
+        if self.worker and self.worker.isRunning():return
+        if self.pending_kill:
+            self.launch_kill();return
         self.changed.emit()
         if self.closing and not self.dirty:self.closeRequested.emit()
     @Slot()
@@ -104,7 +115,7 @@ class Bridge(QObject):
         if self.testing:return True
         if self.dirty or (self.worker and self.worker.isRunning()):
             self.closing=True
-            if self.phase!='restoring':self.end()
+            if self.phase not in ('restoring','disconnecting'):self.end()
             return False
         return True
     @Slot(str)
@@ -115,7 +126,7 @@ class Bridge(QObject):
             self.save()
     def apply_appearance(self):
         hints=QGuiApplication.styleHints()
-        scheme={'system':Qt.ColorScheme.Unknown,'dark':Qt.ColorScheme.Dark,'light':Qt.ColorScheme.Light}[self.theme]
+        scheme=Qt.ColorScheme.Unknown if self.appearance['contrast'] else Qt.ColorScheme.Light
         hints.setColorScheme(scheme)
         if sys.platform=='win32' and hasattr(self,'window'):
             try:
@@ -123,11 +134,30 @@ class Bridge(QObject):
                 fn=ctypes.windll.dwmapi.DwmSetWindowAttribute
                 fn.argtypes=[ctypes.c_void_p,ctypes.c_uint,ctypes.c_void_p,ctypes.c_uint]
                 fn(int(self.window.winId()),20,ctypes.byref(dark),ctypes.sizeof(dark))
+                for attribute,value in ((33,2),(35,0x00FFF8F6),(34,0x00E9D8D0)):
+                    v=ctypes.c_int(-1 if self.appearance["contrast"] and attribute in (34,35) else value);fn(int(self.window.winId()),attribute,ctypes.byref(v),ctypes.sizeof(v))
             except (AttributeError,OSError):pass
 
     @Slot(str)
     def setTheme(self,value):
-        if value in ('system','light','dark'):self.theme=value;self.apply_appearance();self.save()
+        if value=='pearl':self.theme=value;self.apply_appearance();self.save()
+    @Slot(str)
+    def setLayout(self,value):
+        if value in ('rounded','flush'):self.control_layout=value;self.save()
+
+    @Slot()
+    def kill(self):
+        if not self.state['canKill'] or self.testing:return
+        self.dirty=True;self.pending_kill=True;self.phase='disconnecting';self.changed.emit()
+        if self.worker and self.worker.isRunning():
+            self.worker.emergency_event.set();self.worker.stop_event.set()
+        else:self.launch_kill()
+
+    def launch_kill(self):
+        self.worker=Worker(True);self.worker.emergency_event.set()
+        self.worker.progress.connect(self.update_state);self.worker.failed.connect(self.failure);self.worker.finished.connect(self.finished)
+        self.worker.start();self.changed.emit()
+
     @Slot(bool)
     def setReduced(self,value):self.reduced=value;self.save()
     @Slot(bool)
@@ -158,7 +188,9 @@ def create_app(testing=False):
     engine.load(QUrl.fromLocalFile(str(qml.resolve())))
     if not engine.rootObjects():raise RuntimeError('Windows Qt Quick scene failed to load')
     window=engine.rootObjects()[0]
-    bridge.window=window;bridge.apply_appearance()
+    bridge.window=window
+    bridge.effects_supported=window.rendererInterface().graphicsApi() not in (QSGRendererInterface.GraphicsApi.Software,QSGRendererInterface.GraphicsApi.Unknown)
+    bridge.changed.emit();bridge.apply_appearance()
     return app,engine,bridge,window
 
 

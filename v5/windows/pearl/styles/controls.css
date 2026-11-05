@@ -1,0 +1,66 @@
+/* Attach this after theme.css. Keep the real app state in the application layer. */
+.miner-controls { display: grid; }
+.miner-controls button {
+  appearance: none;
+  min-height: 44px;
+  cursor: pointer;
+  font: 750 17px/1 "Segoe UI Variable", "Segoe UI", sans-serif;
+  letter-spacing: 0.01em;
+  text-align: center;
+  transition: filter 120ms ease;
+}
+.miner-controls button:hover:not(:disabled) { filter: brightness(0.987); }
+.miner-controls button:focus-visible { outline: 2px solid #4577bf; outline-offset: 2px; }
+.miner-controls button:disabled { cursor: not-allowed; opacity: 0.58; }
+
+.miner-control-start { color: white; background: linear-gradient(120deg, var(--miner-start-light), var(--miner-start-dark)); }
+.miner-control-stop { color: var(--miner-button-ink); background: linear-gradient(145deg, #f8faff, #e9eefb); }
+.miner-control-kill {
+  color: var(--miner-kill-ink);
+  background: linear-gradient(125deg, var(--miner-kill-light), var(--miner-kill-dark));
+}
+
+/* A. Rounded raised buttons */
+.miner-controls--rounded { gap: 12px; }
+.miner-controls--rounded > .miner-control-start {
+  min-height: 52px;
+  border: 1px solid #54ec68;
+  border-radius: 10px;
+  box-shadow: 0 5px 10px rgba(29, 129, 65, 0.10);
+}
+.miner-controls--rounded .miner-control-pair { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.miner-controls--rounded .miner-control-stop,
+.miner-controls--rounded .miner-control-kill { min-height: 43px; border-radius: 10px; }
+.miner-controls--rounded .miner-control-stop { border: 1px solid #cdd6e7; box-shadow: 0 3px 7px rgba(82, 103, 139, 0.10); }
+.miner-controls--rounded .miner-control-kill { border: 1px solid var(--miner-kill-border); box-shadow: 0 3px 7px rgba(143, 84, 99, 0.08); }
+
+/* B. Flush rectangular controls, a single plate fused into the window. */
+.miner-controls--flush {
+  gap: 0;
+  overflow: hidden;
+  border: 1px solid #c7d0e4;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.14);
+  box-shadow: none;
+}
+.miner-controls--flush > .miner-control-start {
+  min-height: 53px;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+}
+.miner-controls--flush .miner-control-pair { display: grid; grid-template-columns: 1fr 1fr; gap: 0; }
+.miner-controls--flush .miner-control-stop,
+.miner-controls--flush .miner-control-kill { min-height: 46px; border: 0; border-radius: 0; box-shadow: none; }
+.miner-controls--flush .miner-control-pair { border-top: 1px solid #cbd4e7; }
+.miner-controls--flush .miner-control-kill { border-left: 1px solid var(--miner-kill-border); }
+
+/* Example structure for either variant:
+<div class="miner-controls miner-controls--rounded"> <!-- or miner-controls--flush -->
+  <button class="miner-control-start">START</button>
+  <div class="miner-control-pair">
+    <button class="miner-control-stop">STOP</button>
+    <button class="miner-control-kill">KILL SWITCH</button>
+  </div>
+</div>
+*/

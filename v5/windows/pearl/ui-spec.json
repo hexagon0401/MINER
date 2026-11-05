@@ -1,0 +1,30 @@
+{
+  "name": "MINER",
+  "platform": "Windows 11",
+  "theme": "pearl-white",
+  "visual_mockup_only": true,
+  "reference_size_px": [1137, 1383],
+  "suggested_window_size_dip": [560, 680],
+  "mockups": {
+    "rounded": "mockups/PearlWhite-Soft-Red-Kill.png",
+    "flush": "mockups/PearlWhite-Flush-Controls.png"
+  },
+  "assets": {
+    "miner": "mascot/miner-transparent.png",
+    "wordmark": "mascot/MINER-wordmark-transparent.png",
+    "settings": "icons/settings.svg",
+    "window_controls": ["icons/minimize.svg", "icons/maximize.svg", "icons/close.svg"]
+  },
+  "styles": ["styles/theme.css", "styles/controls.css"],
+  "status": {
+    "idle_title": "탈옥 준비",
+    "idle_description": "개인용 WARP를 먼저 설치하고 등록해 주세요.",
+    "progress_segments": 5,
+    "initial_progress": 0
+  },
+  "buttons": ["START", "STOP", "KILL SWITCH"],
+  "subtitle": "Dig your way out.",
+  "footer_proxy_text": "WARP Local Proxy · 127.0.0.1:40000",
+  "animations": false,
+  "network_behavior_included": false
+}

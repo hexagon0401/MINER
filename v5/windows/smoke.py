@@ -46,8 +46,22 @@ def run(output):
         assert w.findChild(QObject,'stopButton').property('enabled')
         checks.append('errors gate restart and preserve explicit restoration')
         state('idle',0,False)
-        for theme in ('light','dark'):b.setTheme(theme);capture(theme)
-        b.setLanguage('en');wait(app,.05);assert w.findChild(QObject,'startButton').property('text')=='Start';capture('english')
+        assert b.state['theme']=='pearl' and b.state['controlLayout']=='rounded'
+        logo=w.findChild(QObject,'pearlWordmark')
+        center=logo.mapToScene(logo.boundingRect().center())
+        assert abs(center.x()-w.width()/2)<2, 'Wordmark must be centered'
+        stop_button=w.findChild(QObject,'stopButton');kill_button=w.findChild(QObject,'killButton')
+        assert abs(stop_button.width()-kill_button.width())<2, 'STOP and KILL must have equal widths'
+        start=w.findChild(QObject,'startButton')
+        pos=start.mapToScene(start.boundingRect().topLeft());img=image();ratio=img.width()/w.width()
+        pixel=img.pixelColor(int((pos.x()+16)*ratio),int((pos.y()+16)*ratio))
+        assert pixel.green()>140 and pixel.red()<130, 'START gradient must actually render'
+        for layout in ('rounded','flush'):
+            b.setLayout(layout);capture(layout)
+            assert w.property('flush')==(layout=='flush')
+        b.setLayout('rounded');capture('pearl')
+        checks.append('Pearl White A/B layouts, centered supplied logo, green button and equal action widths')
+        b.setLanguage('en');wait(app,.05);assert w.findChild(QObject,'startButton').property('text')=='START';capture('english')
         b.setLanguage('ko');b.settings(True);wait(app,.2)
         settings=w.findChild(QObject,'settingsWindow');assert settings and settings.isVisible()
         b.setLanguage('en');wait(app,.05);assert settings.title()=='Settings'
@@ -56,52 +70,69 @@ def run(output):
         b.settings(False);wait(app,.1)
         checks.append('Fluent settings, Korean-English copy, theme and persisted preferences')
         w.setWidth(480);w.setHeight(440);wait(app,.1)
-        for name in ('startButton','stopButton','settingsButton'):
+        for name in ('startButton','stopButton','killButton','settingsButton'):
             item=w.findChild(QObject,name)
             pos=item.mapToScene(item.boundingRect().bottomRight())
             assert item.isVisible() and pos.x()<=w.width()+1 and pos.y()<=w.height()+1,(name,pos,w.size())
-        capture('compact');w.setWidth(584);w.setHeight(704)
+        capture('compact');w.setWidth(560);w.setHeight(680)
         checks.append('small windows keep primary Windows actions accessible')
         b.setReduced(True);wait(app,.05);assert not w.property('motionAllowed')
         b.effect.emit('success');wait(app,.05);assert not w.property('successActive')
         b.setReduced(False)
-        # Server sessions often disable OS animations. Only override the in-memory
-        # test bridge for the motion recording; never change Windows settings.
-        capture_override=bool(b.appearance['reduced'])
-        b.appearance['reduced']=False;b.changed.emit()
-        checks.append('Windows reduce-motion preference prevents success transitions')
+        assert not w.property('motionAllowed'), 'Supplied Pearl White hero must remain static'
+        checks.append('static supplied mascot and no digging or progress timers')
+        # Exercise the UI's late-Kill race without any worker or CLI executing.
+        import threading
+        from unittest.mock import patch
+        class FakeSignal:
+            def connect(self,*a):pass
+        class FakeWorker:
+            def __init__(self,restore=False):
+                self.stop_event=threading.Event();self.emergency_event=threading.Event()
+                self.progress=FakeSignal();self.failed=FakeSignal();self.finished=FakeSignal();self.running=False
+            def start(self):self.running=True
+            def isRunning(self):return self.running
+        with patch.object(ui,'Worker',FakeWorker):
+            b.testing=False;b.dirty=True;b.phase='restoring';b.worker=FakeWorker();b.worker.running=True
+            original=b.worker;b.kill()
+            assert original.stop_event.is_set() and original.emergency_event.is_set()
+            original.running=False;b.update_state('restored',0)
+            assert b.dirty and b.phase=='disconnecting' and b.pending_kill
+            b.finished();assert b.worker is not original and b.worker.emergency_event.is_set()
+            b.update_state('disconnected',0);b.worker.running=False;b.finished()
+            assert not b.dirty and not b.pending_kill and b.state['canStart']
+            b.testing=True;b.worker=None
+        checks.append('late Kill during Stop queues one explicit disconnect; no false WARP-off claim')
+        b.changed.emit();state('disconnected',0,False);capture('disconnected')
         label=w.findChild(QObject,'statusLabel')
         text_render=w.property('nativeTextMode')
         assert text_render==0, 'Body text must use distance-field antialiasing'
         api=str(w.rendererInterface().graphicsApi())
         checks.append('scene graph, text antialiasing and language-specific Windows fonts recorded')
-        b.setTheme('dark');state('idle',0,False);frames=[]
-        capture_motion=not (out.name.startswith('scale-') or out.name=='installed')
-        for index in range(55 if capture_motion else 1):
-            if index==1:b.effect.emit('start')
-            if index==2:
-                assert w.property('motionAllowed'), 'Window must be active for animation capture'
-            if index==6:state('proxy_connect',1)
-            if index==17:state('engine_start',4)
-            if index==28:state('running',5)
-            if index==44:state('restoring',0);b.effect.emit('stop')
-            if index==52:state('restored',0,False)
-            wait(app,.1)
+        b.setLayout('rounded');state('idle',0,False);frames=[]
+        # Static concept: a short state walkthrough, not a new mining animation.
+        storyboard=[('idle',0),('proxy_connect',1),('engine_start',4),('running',5),('restoring',0),('restored',0),('disconnecting',0),('disconnected',0)]
+        capture_walkthrough=not (out.name.startswith('scale-') or out.name=='installed')
+        for phase,count in (storyboard if capture_walkthrough else storyboard[:1]):
+            state(phase,count,phase not in ('idle','restored','disconnected'));wait(app,.08)
             from PySide6.QtCore import QBuffer,QIODevice
             buf=QBuffer();buf.open(QIODevice.WriteOnly);image().save(buf,'PNG')
             frames.append(Image.open(io.BytesIO(bytes(buf.data()))).convert('RGB'))
-        frames[0].save(out/'windows-ui-motion.gif',save_all=True,append_images=frames[1:],duration=100,loop=0)
+        frames[0].save(out/'windows-ui-motion.gif',save_all=True,append_images=frames[1:],duration=700,loop=0)
         state('idle',0,False);w.showMinimized();wait(app,.1);assert not w.property('motionAllowed');w.showNormal()
-        checks.append('minimizing pauses repeating effects')
+        checks.append('minimizing preserves the static, timer-free Pearl White scene')
         tokens=('ReferenceError:','TypeError:','Cannot assign','Unable to assign','Error decoding')
         if getattr(ui.sys,'frozen',False):tokens+=('Cannot open:',)
         errors=[m for m in messages if any(x in m for x in tokens)]
         assert not errors,errors
         result={'ok':True,'checks':checks,'network_actions':0,'state_source':'injected UI fixtures',
-            'animation_preference_overridden_for_capture':capture_override,
+            'theme':'Pearl White','default_controls':'A rounded floating','fallback_controls':'B flush integrated',
+            'kill_switch':'Stop owned engine then disconnect WARP; regular internet retained',
+            'animation_preference_overridden_for_capture':False,
             'software_adapter_preferred':os.environ.get('QSG_RHI_PREFER_SOFTWARE_RENDERER')=='1',
             'capture_render_loop':os.environ.get('QSG_RENDER_LOOP','default'),
-            'foreground_override_for_capture':True,
+            'foreground_override_for_capture':False,
+            'floating_shadows_active':b.state['effectsSupported'],
             'ui_engine':'Qt Quick RHI','control_style':QQuickStyle.name(),'graphics_api':api,
             'text_render_type':'QtTextRendering (high-quality distance fields)', 'text_render_type_value':text_render,'font':b.state['fontFamily'],
             'scale_factor':os.environ.get('QT_SCALE_FACTOR','system')}

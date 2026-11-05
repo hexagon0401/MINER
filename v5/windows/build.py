@@ -36,6 +36,7 @@ def main():
     with Image.open(art/'avatar-source') as avatar: avatar.convert('RGBA').save(art/'developer-avatar.png')
     with Image.open(art/'AppIcon.png') as icon:
         icon.save(work/'MINER.ico',sizes=[(16,16),(32,32),(48,48),(64,64),(128,128),(256,256)])
+    shutil.copytree(BASE/'windows/pearl',art/'pearl',dirs_exist_ok=True)
     for asset in ('full-window-strata.png','skylight-beam.png'):
         shutil.copyfile(BASE/'macos/delta/assets'/asset,art/asset)
     engine=install(work/'engine','windows-amd64')
@@ -84,7 +85,8 @@ def main():
     import platform
     report={'test_os':platform.platform(),'version':VERSION,'base':'MINER Beta 1.1','architecture':'x64',
       'authenticode_signed':False,'ui':ui,'native_tun':native,'installer_verified':True,'upgrade_verified':True,'unicode_path_verified':True,
-      'ui_engine':'Qt Quick RHI + FluentWinUI3','network_engine':'sing-box 1.12.0 Windows TUN',
+      'ui_theme':'Pearl White','default_controls':'A rounded floating','alternative_controls':'B flush integrated',
+      'supplied_asset_sha256':{name:hashlib.sha256((art/'pearl/mascot'/name).read_bytes()).hexdigest() for name in ('miner-transparent.png','MINER-wordmark-transparent.png')},'ui_engine':'Qt Quick RHI + Fluent controls and functional Pearl buttons','network_engine':'sing-box 1.12.0 Windows TUN',
       'ui_scale_factors':[1,1.25,1.5,2],'windows_11_live_tested':False,'vanguard_tested':False,
       'uninstaller_verified':True,'school_network_tested':False,'warp_live_tested':False}
     for path in [setup]:
@@ -99,7 +101,7 @@ def main():
             if f.is_file() and f.suffix in ('.png','.gif','.json') and 'test-profile' not in f.parts:
                 z.write(f,f.relative_to(output))
     shutil.copyfile(output/'windows-ui-motion.gif',BASE/'dist-windows'/f'{STEM}-Preview.gif')
-    for filename in ('idle','proxy_connect','running','restored','error','settings'):
+    for filename in ('idle','proxy_connect','running','restored','disconnected','error','settings','rounded','flush'):
         shutil.copyfile(output/f'windows-ui-{filename}.png',BASE/'dist-windows'/f'{STEM}-{filename}.png')
     print(json.dumps(report,indent=2))
 

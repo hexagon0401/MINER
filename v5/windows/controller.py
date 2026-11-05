@@ -39,7 +39,8 @@ def stop_engine(child):
         raise ValueError('Engine forced to stop. Check Windows routes and DNS before reconnecting.')
 
 
-def session(directory, engine, stop, emit, restore_only=False):
+def session(directory, engine, stop, emit, restore_only=False, emergency=None):
+    emergency = emergency or threading.Event()
     if not is_admin():
         raise ValueError('Administrator permission is required. Restart MINER as administrator.')
     child = None
@@ -51,40 +52,63 @@ def session(directory, engine, stop, emit, restore_only=False):
         job = None
         write_json(marker, {"version": 1, "unfinished": True})
         try:
-            if not restore_only:
-                warp.activate(profile.proxy_port, notify=emit)
-                if not stop.is_set():
-                    emit('engine_check', 3)
-                    result = doctor(directory, str(engine))
-                    if not result['preflight_ok']:
-                        raise ValueError('Windows preflight failed')
-                    emit('engine_start', 4)
-                    with (directory / 'engine.log').open('w', encoding='utf-8') as log:
-                        from windows.process import Job
-                        job = Job()
-                        child = subprocess.Popen([str(engine), 'run', '-c', str(directory / 'sing-box.json')],
-                            stdout=log, stderr=subprocess.STDOUT,
-                            creationflags=subprocess.CREATE_NEW_PROCESS_GROUP)
-                        job.assign(child)
-                        deadline = time.monotonic() + 20
-                        ready = False
-                        while child.poll() is None and not stop.wait(.15):
-                            if not ready:
-                                text = (directory / 'engine.log').read_text(encoding='utf-8', errors='replace')
-                                if 'sing-box started' in text and 'inbound/tun' in text:
-                                    ready = True
-                                    emit('running', 5)
-                                elif time.monotonic() >= deadline:
-                                    raise ValueError('TUN readiness timed out. See engine.log')
-                        if not stop.is_set():
-                            raise ValueError('Network engine exited unexpectedly. See engine.log')
-            # Only an explicit Stop/Close (or restore-only retry) restores full WARP.
-            emit('restoring', 0)
-            stop_engine(child)
+            try:
+                if not restore_only:
+                    warp.activate(profile.proxy_port, notify=emit)
+                    if not stop.is_set():
+                        emit('engine_check', 3)
+                        result = doctor(directory, str(engine))
+                        if not result['preflight_ok']:
+                            raise ValueError('Windows preflight failed')
+                        emit('engine_start', 4)
+                        with (directory / 'engine.log').open('w', encoding='utf-8') as log:
+                            from windows.process import Job
+                            job = Job()
+                            child = subprocess.Popen([str(engine), 'run', '-c', str(directory / 'sing-box.json')],
+                                stdout=log, stderr=subprocess.STDOUT,
+                                creationflags=subprocess.CREATE_NEW_PROCESS_GROUP)
+                            job.assign(child)
+                            deadline = time.monotonic() + 20
+                            ready = False
+                            while child.poll() is None and not stop.wait(.15):
+                                if not ready:
+                                    text = (directory / 'engine.log').read_text(encoding='utf-8', errors='replace')
+                                    if 'sing-box started' in text and 'inbound/tun' in text:
+                                        ready = True
+                                        emit('running', 5)
+                                    elif time.monotonic() >= deadline:
+                                        raise ValueError('TUN readiness timed out. See engine.log')
+                            if not stop.is_set():
+                                raise ValueError('Network engine exited unexpectedly. See engine.log')
+            except Exception:
+                if not emergency.is_set():
+                    raise
+            # Normal Stop restores WARP. Emergency Stop explicitly disconnects it.
+            emit('disconnecting' if emergency.is_set() else 'restoring', 0)
+            cleanup_error = None
+            try:
+                stop_engine(child)
+            except Exception as exc:
+                cleanup_error = exc
             child = None
-            warp.restore()
+            disconnected = False
+            if emergency.is_set():
+                warp.deactivate()
+                disconnected = True
+            else:
+                try:
+                    warp.restore()
+                except Exception:
+                    if not emergency.is_set():
+                        raise
+                # A Kill click during restoration wins, without concurrent CLI commands.
+                if emergency.is_set():
+                    warp.deactivate()
+                    disconnected = True
+            if cleanup_error is not None:
+                raise cleanup_error
             marker.unlink(missing_ok=True)
-            emit('restored', 0)
+            emit('disconnected' if disconnected else 'restored', 0)
         finally:
             try:
                 stop_engine(child)
