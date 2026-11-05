@@ -1,0 +1,513 @@
+test_default_routes_only_selected_tcp_through_proxy (test_config.ProfileTests.test_default_routes_only_selected_tcp_through_proxy) ... ok
+test_dns_is_verified_doh_inside_warp (test_config.ProfileTests.test_dns_is_verified_doh_inside_warp) ... ok
+test_embedded_web_helpers_match_without_tunneling_safari_or_game_bundle (test_config.ProfileTests.test_embedded_web_helpers_match_without_tunneling_safari_or_game_bundle) ... ok
+test_every_client_selector_has_tcp_proxy_and_explicit_quic_rejection (test_config.ProfileTests.test_every_client_selector_has_tcp_proxy_and_explicit_quic_rejection) ... ok
+test_game_has_explicit_priority_on_both_platforms (test_config.ProfileTests.test_game_has_explicit_priority_on_both_platforms) ... ok
+test_no_udp_socks_assumption (test_config.ProfileTests.test_no_udp_socks_assumption) ... ok
+test_optional_kernel_exclusion_only_exact_observed_hosts (test_config.ProfileTests.test_optional_kernel_exclusion_only_exact_observed_hosts) ... ok
+test_output_is_independent_and_interface_selection_is_exclusive (test_config.ProfileTests.test_output_is_independent_and_interface_selection_is_exclusive) ... ok
+test_rejects_invalid_configuration_and_game_overlap (test_config.ProfileTests.test_rejects_invalid_configuration_and_game_overlap) ... ok
+test_missing_original_background_is_not_silently_replaced (test_dmg_layout.DmgLayoutTests.test_missing_original_background_is_not_silently_replaced) ... ok
+test_real_app_and_applications_have_fixed_cavern_positions (test_dmg_layout.DmgLayoutTests.test_real_app_and_applications_have_fixed_cavern_positions) ... ok
+test_architecture_mapping (test_installer.InstallerTests.test_architecture_mapping) ... ok
+test_modified_download_rejected_before_unpacking (test_installer.InstallerTests.test_modified_download_rejected_before_unpacking) ... ok
+test_verified_archive_extracts_only_named_binary (test_installer.InstallerTests.test_verified_archive_extracts_only_named_binary) ... ok
+test_windows_zip_layout (test_installer.InstallerTests.test_windows_zip_layout) ... ok
+test_ascii_resources_survive_normalization (test_macos_packaging.PackagingTests.test_ascii_resources_survive_normalization) ... ok
+test_rejects_both_unicode_filename_normalizations_before_signing (test_macos_packaging.PackagingTests.test_rejects_both_unicode_filename_normalizations_before_signing) ... ok
+test_bad_upgrade_does_not_replace_existing_runtime (test_macos_service.ServiceTests.test_bad_upgrade_does_not_replace_existing_runtime) ... skipped 'macOS service/signing contracts use POSIX permissions; tested on POSIX CI'
+test_failed_stop_prevents_deletion (test_macos_service.ServiceTests.test_failed_stop_prevents_deletion) ... skipped 'macOS service/signing contracts use POSIX permissions; tested on POSIX CI'
+test_managed_upgrade_preserves_profile_and_logs (test_macos_service.ServiceTests.test_managed_upgrade_preserves_profile_and_logs) ... skipped 'macOS service/signing contracts use POSIX permissions; tested on POSIX CI'
+test_mutations_require_admin_and_macos (test_macos_service.ServiceTests.test_mutations_require_admin_and_macos) ... skipped 'macOS service/signing contracts use POSIX permissions; tested on POSIX CI'
+test_preserves_unmanaged_directory (test_macos_service.ServiceTests.test_preserves_unmanaged_directory) ... skipped 'macOS service/signing contracts use POSIX permissions; tested on POSIX CI'
+test_refuses_app_from_disk_image_before_network_commands (test_macos_service.ServiceTests.test_refuses_app_from_disk_image_before_network_commands) ... skipped 'macOS service/signing contracts use POSIX permissions; tested on POSIX CI'
+test_status_does_not_claim_functional_readiness (test_macos_service.ServiceTests.test_status_does_not_claim_functional_readiness) ... skipped 'macOS service/signing contracts use POSIX permissions; tested on POSIX CI'
+test_symlink_directory_is_rejected (test_macos_service.ServiceTests.test_symlink_directory_is_rejected) ... skipped 'macOS service/signing contracts use POSIX permissions; tested on POSIX CI'
+test_uninstall_stops_before_removing_only_managed_tree (test_macos_service.ServiceTests.test_uninstall_stops_before_removing_only_managed_tree) ... skipped 'macOS service/signing contracts use POSIX permissions; tested on POSIX CI'
+test_inside_out_signing_with_hardened_runtime_and_timestamp (test_macos_signing.SigningTests.test_inside_out_signing_with_hardened_runtime_and_timestamp) ... skipped 'macOS service/signing contracts use POSIX permissions; tested on POSIX CI'
+test_keychain_cleanup_rejects_unrelated_files (test_macos_signing.SigningTests.test_keychain_cleanup_rejects_unrelated_files) ... skipped 'macOS service/signing contracts use POSIX permissions; tested on POSIX CI'
+test_missing_signing_and_notary_credentials_fail_explicitly (test_macos_signing.SigningTests.test_missing_signing_and_notary_credentials_fail_explicitly) ... skipped 'macOS service/signing contracts use POSIX permissions; tested on POSIX CI'
+test_private_notary_file_is_temporary_and_not_an_argument_value (test_macos_signing.SigningTests.test_private_notary_file_is_temporary_and_not_an_argument_value) ... skipped 'macOS service/signing contracts use POSIX permissions; tested on POSIX CI'
+test_rejected_notarization_never_staples (test_macos_signing.SigningTests.test_rejected_notarization_never_staples) ... skipped 'macOS service/signing contracts use POSIX permissions; tested on POSIX CI'
+test_requires_developer_id_not_apple_development (test_macos_signing.SigningTests.test_requires_developer_id_not_apple_development) ... skipped 'macOS service/signing contracts use POSIX permissions; tested on POSIX CI'
+test_zip_submission_does_not_attempt_staple_zip (test_macos_signing.SigningTests.test_zip_submission_does_not_attempt_staple_zip) ... skipped 'macOS service/signing contracts use POSIX permissions; tested on POSIX CI'
+test_bounded_probe_inputs (test_probe.ProbeTests.test_bounded_probe_inputs) ... ok
+test_distribution_is_named_and_failure_aware (test_probe.ProbeTests.test_distribution_is_named_and_failure_aware) ... ok
+test_eof_and_auth_rejection (test_probe.ProbeTests.test_eof_and_auth_rejection) ... ok
+test_proxy_failure_is_not_success_or_udp_loss (test_probe.ProbeTests.test_proxy_failure_is_not_success_or_udp_loss) ... ok
+test_real_socks_negotiation_and_tcp_comparison (test_probe.ProbeTests.test_real_socks_negotiation_and_tcp_comparison) ... ok
+test_both_platforms_with_actual_pinned_engine (test_runtime.EngineIntegrationTests.test_both_platforms_with_actual_pinned_engine) ... ok
+test_real_engine_socks_chain_without_tun_or_route_changes (test_runtime.EngineIntegrationTests.test_real_engine_socks_chain_without_tun_or_route_changes) ... ok
+test_engine_version_rejected_before_execution (test_runtime.RuntimeTests.test_engine_version_rejected_before_execution) ... ok
+test_init_preserves_existing_profile_and_render_regenerates (test_runtime.RuntimeTests.test_init_preserves_existing_profile_and_render_regenerates) ... Error: profile already exists; edit profile.json and use render
+ok
+test_profile_lock_is_exclusive_and_released (test_runtime.RuntimeTests.test_profile_lock_is_exclusive_and_released) ... ok
+test_proxy_port_mismatch_rejected (test_runtime.RuntimeTests.test_proxy_port_mismatch_rejected) ... ok
+test_termination_reaches_child_and_releases_lock (test_runtime.RuntimeTests.test_termination_reaches_child_and_releases_lock) ... skipped 'POSIX process signaling integration'
+test_warp_full_tunnel_and_unknown_output_rejected (test_runtime.RuntimeTests.test_warp_full_tunnel_and_unknown_output_rejected) ... ok
+test_warp_proxy_mode_recognized_without_dumping_settings (test_runtime.RuntimeTests.test_warp_proxy_mode_recognized_without_dumping_settings) ... ok
+test_button_sequence_disconnects_full_tunnel_before_proxy_connect (test_warp.WarpTests.test_button_sequence_disconnects_full_tunnel_before_proxy_connect) ... ok
+test_explicit_disconnect_does_not_change_to_full_tunnel (test_warp.WarpTests.test_explicit_disconnect_does_not_change_to_full_tunnel) ... ok
+test_failed_trace_disconnects_new_proxy_and_never_selects_full_tunnel (test_warp.WarpTests.test_failed_trace_disconnects_new_proxy_and_never_selects_full_tunnel) ... ok
+test_healthy_proxy_is_idempotent_without_disconnect (test_warp.WarpTests.test_healthy_proxy_is_idempotent_without_disconnect) ... ok
+test_packaged_app_adds_ca_trust_without_disabling_tls (test_warp.WarpTests.test_packaged_app_adds_ca_trust_without_disabling_tls) ... ok
+test_progress_follows_real_checks (test_warp.WarpTests.test_progress_follows_real_checks) ... ok
+test_restore_explicit_udp_mode_and_validate (test_warp.WarpTests.test_restore_explicit_udp_mode_and_validate) ... ok
+test_restore_unsupported_mode_does_not_disconnect (test_warp.WarpTests.test_restore_unsupported_mode_does_not_disconnect) ... ok
+test_restore_wrong_dns_mode_is_not_success (test_warp.WarpTests.test_restore_wrong_dns_mode_is_not_success) ... ok
+test_status_does_not_treat_disconnected_as_connected (test_warp.WarpTests.test_status_does_not_treat_disconnected_as_connected) ... ok
+test_trace_uses_remote_hostname_tls_and_does_not_return_ip (test_warp.WarpTests.test_trace_uses_remote_hostname_tls_and_does_not_return_ip) ... ok
+test_unsupported_cli_fails_before_network_mutation (test_warp.WarpTests.test_unsupported_cli_fails_before_network_mutation) ... ok
+test_cancel_during_warp_setup_restores_without_starting_tun (test_windows_controller.WindowsLifecycleTests.test_cancel_during_warp_setup_restores_without_starting_tun) ... ok
+test_explicit_restore_retry_does_not_activate_proxy (test_windows_controller.WindowsLifecycleTests.test_explicit_restore_retry_does_not_activate_proxy) ... ok
+test_forced_stop_is_reported_as_failure (test_windows_controller.WindowsLifecycleTests.test_forced_stop_is_reported_as_failure) ... ok
+test_non_admin_cannot_change_warp (test_windows_controller.WindowsLifecycleTests.test_non_admin_cannot_change_warp) ... ok
+test_profile_preserves_edits_and_rejects_other_platform (test_windows_controller.WindowsLifecycleTests.test_profile_preserves_edits_and_rejects_other_platform) ... ok
+test_proxy_failure_never_starts_engine_or_restores_full_tunnel (test_windows_controller.WindowsLifecycleTests.test_proxy_failure_never_starts_engine_or_restores_full_tunnel) ... ok
+test_restore_failure_keeps_recovery_marker (test_windows_controller.WindowsLifecycleTests.test_restore_failure_keeps_recovery_marker) ... ok
+test_successful_restore_clears_recovery_marker_and_ignores_bad_profile (test_windows_controller.WindowsLifecycleTests.test_successful_restore_clears_recovery_marker_and_ignores_bad_profile) ... ok
+
+----------------------------------------------------------------------
+Ran 67 tests in 2.969s
+
+OK (skipped=17)
+Created C:\Users\runneradmin\AppData\Local\Temp\tmp3bmtw8pe; no network settings changed
+Rendered sing-box.json; no network settings changed
+216 INFO: PyInstaller: 6.22.3, contrib hooks: 2026.9
+216 INFO: Python: 3.12.10
+240 INFO: Platform: Windows-2025Server-10.0.26100-SP0
+240 INFO: Python environment: C:\hostedtoolcache\windows\Python\3.12.10\x64
+240 INFO: wrote D:\a\MINER\MINER\v5\windows\work\MINER.spec
+247 INFO: Removing temporary files and cleaning cache in C:\Users\runneradmin\AppData\Local\pyinstaller
+247 INFO: Module search paths (PYTHONPATH):
+['D:\\a\\MINER\\MINER\\v5',
+ 'C:\\hostedtoolcache\\windows\\Python\\3.12.10\\x64\\python312.zip',
+ 'C:\\hostedtoolcache\\windows\\Python\\3.12.10\\x64\\DLLs',
+ 'C:\\hostedtoolcache\\windows\\Python\\3.12.10\\x64\\Lib',
+ 'C:\\hostedtoolcache\\windows\\Python\\3.12.10\\x64',
+ 'C:\\hostedtoolcache\\windows\\Python\\3.12.10\\x64\\Lib\\site-packages',
+ 'D:\\a\\MINER\\MINER\\v5']
+397 INFO: Appending 'binaries' from .spec
+397 INFO: Appending 'datas' from .spec
+399 INFO: checking Analysis
+399 INFO: Building Analysis because Analysis-00.toc is non existent
+399 INFO: Looking for Python shared library...
+399 INFO: Using Python shared library: C:\hostedtoolcache\windows\Python\3.12.10\x64\python312.dll
+399 INFO: Running Analysis Analysis-00.toc
+399 INFO: Target bytecode optimization level: 0
+399 INFO: Initializing module dependency graph...
+409 INFO: Initializing module graph hook caches...
+417 INFO: Analyzing modules for base_library.zip ...
+1215 INFO: Processing standard module hook 'hook-encodings.py' from 'C:\\hostedtoolcache\\windows\\Python\\3.12.10\\x64\\Lib\\site-packages\\PyInstaller\\hooks'
+1462 INFO: Processing standard module hook 'hook-math.py' from 'C:\\hostedtoolcache\\windows\\Python\\3.12.10\\x64\\Lib\\site-packages\\PyInstaller\\hooks'
+1602 INFO: Processing standard module hook 'hook-heapq.py' from 'C:\\hostedtoolcache\\windows\\Python\\3.12.10\\x64\\Lib\\site-packages\\PyInstaller\\hooks'
+2361 INFO: Processing standard module hook 'hook-pickle.py' from 'C:\\hostedtoolcache\\windows\\Python\\3.12.10\\x64\\Lib\\site-packages\\PyInstaller\\hooks'
+3477 INFO: Caching module dependency graph...
+3511 INFO: Analyzing D:\a\MINER\MINER\v5\windows\app.py
+3546 INFO: Processing standard module hook 'hook-_ctypes.py' from 'C:\\hostedtoolcache\\windows\\Python\\3.12.10\\x64\\Lib\\site-packages\\PyInstaller\\hooks'
+3580 INFO: Processing standard module hook 'hook-webbrowser.py' from 'C:\\hostedtoolcache\\windows\\Python\\3.12.10\\x64\\Lib\\site-packages\\PyInstaller\\hooks'
+3590 INFO: Processing standard module hook 'hook-PySide6.py' from 'C:\\hostedtoolcache\\windows\\Python\\3.12.10\\x64\\Lib\\site-packages\\PyInstaller\\hooks'
+3709 INFO: Processing standard module hook 'hook-shiboken6.py' from 'C:\\hostedtoolcache\\windows\\Python\\3.12.10\\x64\\Lib\\site-packages\\PyInstaller\\hooks'
+3786 INFO: Processing standard module hook 'hook-PySide6.QtNetwork.py' from 'C:\\hostedtoolcache\\windows\\Python\\3.12.10\\x64\\Lib\\site-packages\\PyInstaller\\hooks'
+5597 INFO: Processing standard module hook 'hook-PySide6.QtCore.py' from 'C:\\hostedtoolcache\\windows\\Python\\3.12.10\\x64\\Lib\\site-packages\\PyInstaller\\hooks'
+8437 INFO: Processing standard module hook 'hook-PySide6.QtGui.py' from 'C:\\hostedtoolcache\\windows\\Python\\3.12.10\\x64\\Lib\\site-packages\\PyInstaller\\hooks'
+21112 INFO: Processing standard module hook 'hook-PySide6.QtWidgets.py' from 'C:\\hostedtoolcache\\windows\\Python\\3.12.10\\x64\\Lib\\site-packages\\PyInstaller\\hooks'
+22986 INFO: Processing standard module hook 'hook-platform.py' from 'C:\\hostedtoolcache\\windows\\Python\\3.12.10\\x64\\Lib\\site-packages\\PyInstaller\\hooks'
+23010 INFO: Processing standard module hook 'hook-PIL.py' from 'C:\\hostedtoolcache\\windows\\Python\\3.12.10\\x64\\Lib\\site-packages\\PyInstaller\\hooks'
+23067 INFO: Processing standard module hook 'hook-PIL.Image.py' from 'C:\\hostedtoolcache\\windows\\Python\\3.12.10\\x64\\Lib\\site-packages\\PyInstaller\\hooks'
+23227 INFO: Processing pre-safe-import-module hook 'hook-typing_extensions.py' from 'C:\\hostedtoolcache\\windows\\Python\\3.12.10\\x64\\Lib\\site-packages\\PyInstaller\\hooks\\pre_safe_import_module'
+23229 INFO: SetuptoolsInfo: initializing cached setuptools info...
+23583 INFO: Processing standard module hook 'hook-xml.py' from 'C:\\hostedtoolcache\\windows\\Python\\3.12.10\\x64\\Lib\\site-packages\\PyInstaller\\hooks'
+23597 INFO: Processing standard module hook 'hook-xml.etree.cElementTree.py' from 'C:\\hostedtoolcache\\windows\\Python\\3.12.10\\x64\\Lib\\site-packages\\PyInstaller\\hooks'
+23696 INFO: Processing standard module hook 'hook-PIL.ImageFilter.py' from 'C:\\hostedtoolcache\\windows\\Python\\3.12.10\\x64\\Lib\\site-packages\\PyInstaller\\hooks'
+23830 INFO: Processing module hooks (post-graph stage)...
+23995 INFO: Processing standard module hook 'hook-PIL.SpiderImagePlugin.py' from 'C:\\hostedtoolcache\\windows\\Python\\3.12.10\\x64\\Lib\\site-packages\\PyInstaller\\hooks'
+24181 INFO: Performing binary vs. data reclassification (143 entries)
+24195 INFO: Looking for ctypes DLLs
+24208 INFO: Analyzing run-time hooks ...
+24210 INFO: Including run-time hook 'pyi_rth_inspect.py' from 'C:\\hostedtoolcache\\windows\\Python\\3.12.10\\x64\\Lib\\site-packages\\PyInstaller\\hooks\\rthooks'
+24210 INFO: Including run-time hook 'pyi_rth_pyside6.py' from 'C:\\hostedtoolcache\\windows\\Python\\3.12.10\\x64\\Lib\\site-packages\\PyInstaller\\hooks\\rthooks'
+24212 INFO: Processing pre-find-module-path hook 'hook-_pyi_rth_utils.py' from 'C:\\hostedtoolcache\\windows\\Python\\3.12.10\\x64\\Lib\\site-packages\\PyInstaller\\hooks\\pre_find_module_path'
+24214 INFO: Processing standard module hook 'hook-_pyi_rth_utils.py' from 'C:\\hostedtoolcache\\windows\\Python\\3.12.10\\x64\\Lib\\site-packages\\PyInstaller\\hooks'
+24218 INFO: Creating base_library.zip...
+24232 INFO: Looking for dynamic libraries
+24349 INFO: Extra DLL search directories (AddDllDirectory): ['C:\\hostedtoolcache\\windows\\Python\\3.12.10\\x64\\Lib\\site-packages\\shiboken6']
+24349 INFO: Extra DLL search directories (PATH): ['C:\\hostedtoolcache\\windows\\Python\\3.12.10\\x64\\Lib\\site-packages\\PySide6']
+25275 INFO: Warnings written to D:\a\MINER\MINER\v5\windows\work\pyinstaller\MINER\warn-MINER.txt
+25287 INFO: Graph cross-reference written to D:\a\MINER\MINER\v5\windows\work\pyinstaller\MINER\xref-MINER.html
+25301 INFO: checking PYZ
+25301 INFO: Building PYZ because PYZ-00.toc is non existent
+25301 INFO: Building PYZ (ZlibArchive) D:\a\MINER\MINER\v5\windows\work\pyinstaller\MINER\PYZ-00.pyz
+25461 INFO: Building PYZ (ZlibArchive) D:\a\MINER\MINER\v5\windows\work\pyinstaller\MINER\PYZ-00.pyz completed successfully.
+25471 INFO: checking PKG
+25471 INFO: Building PKG because PKG-00.toc is non existent
+25471 INFO: Building PKG (CArchive) MINER.pkg
+25512 INFO: Building PKG (CArchive) MINER.pkg completed successfully.
+25513 INFO: Bootloader C:\hostedtoolcache\windows\Python\3.12.10\x64\Lib\site-packages\PyInstaller\bootloader\Windows-64bit-intel\runw.exe
+25513 INFO: checking EXE
+25513 INFO: Building EXE because EXE-00.toc is non existent
+25513 INFO: Building EXE from EXE-00.toc
+25513 INFO: Copying bootloader EXE to D:\a\MINER\MINER\v5\windows\work\pyinstaller\MINER\MINER.exe
+25526 INFO: Copying icon to EXE
+25528 INFO: Copying 0 resources to EXE
+25528 INFO: Embedding manifest in EXE
+25530 INFO: Appending PKG archive to EXE
+25531 INFO: Fixing EXE headers
+25576 INFO: Building EXE from EXE-00.toc completed successfully.
+25578 INFO: checking COLLECT
+25579 INFO: Building COLLECT because COLLECT-00.toc is non existent
+25580 INFO: Building COLLECT COLLECT-00.toc
+25812 INFO: Building COLLECT COLLECT-00.toc completed successfully.
+25816 INFO: Build complete! The results are available in: D:\a\MINER\MINER\v5\dist-windows
+Inno Setup 6 Command-Line Compiler
+Copyright (C) 1997-2026 Jordan Russell. All rights reserved.
+Portions Copyright (C) 2000-2026 Martijn Laan. All rights reserved.
+Portions Copyright (C) 2001-2004 Alex Yackimoff. All rights reserved.
+https://www.innosetup.com
+
+Compiler engine version: Inno Setup 6.7.1
+Non-commercial use only
+
+Preprocessing
+   Reading file: c:\program files (x86)\inno setup 6\ISPPBuiltins.iss
+Parsing [Setup] section, line 11
+Parsing [Setup] section, line 12
+Parsing [Setup] section, line 13
+Parsing [Setup] section, line 14
+Parsing [Setup] section, line 15
+Parsing [Setup] section, line 16
+Parsing [Setup] section, line 17
+Parsing [Setup] section, line 18
+Parsing [Setup] section, line 19
+Parsing [Setup] section, line 20
+Parsing [Setup] section, line 21
+Parsing [Setup] section, line 22
+Parsing [Setup] section, line 23
+Parsing [Setup] section, line 24
+Parsing [Setup] section, line 25
+Parsing [Setup] section, line 26
+Parsing [Setup] section, line 27
+Parsing [Setup] section, line 28
+Parsing [Setup] section, line 29
+Parsing [Setup] section, line 30
+Parsing [Setup] section, line 31
+Reading file (WizardImageFile)
+Reading file (WizardSmallImageFile)
+Preparing Setup program executable
+   Verification successful
+   Updating icons (Setup.e32)
+   Updating version info (Setup.e32)
+Determining language code pages
+Parsing [Languages] section, line 33
+   Reading file: c:\program files (x86)\inno setup 6\Default.isl
+Parsing [Languages] section, line 34
+   Reading file: c:\program files (x86)\inno setup 6\Languages\Korean.isl
+   Messages in script file
+Reading default messages from Default.isl
+Parsing [Languages] section, line 33
+   Reading file: c:\program files (x86)\inno setup 6\Default.isl
+Parsing [Languages] section, line 34
+   Reading file: c:\program files (x86)\inno setup 6\Languages\Korean.isl
+Parsing [LangOptions], [Messages], and [CustomMessages] sections
+   Messages in script file
+Reading [Code] section
+Parsing [Tasks] section, line 41
+Parsing [Icons] section, line 38
+Parsing [Icons] section, line 39
+Parsing [Files] section, line 36
+Compiling [Code] section
+Creating setup files
+   Verification successful
+   Updating icons (Setup.exe)
+   Compressing: D:\a\MINER\MINER\v5\windows\..\dist-windows\MINER\MINER.exe
+   Compressing: D:\a\MINER\MINER\v5\windows\..\dist-windows\MINER\_internal\api-ms-win-core-console-l1-1-0.dll
+   Compressing: D:\a\MINER\MINER\v5\windows\..\dist-windows\MINER\_internal\api-ms-win-core-datetime-l1-1-0.dll
+   Compressing: D:\a\MINER\MINER\v5\windows\..\dist-windows\MINER\_internal\api-ms-win-core-debug-l1-1-0.dll
+   Compressing: D:\a\MINER\MINER\v5\windows\..\dist-windows\MINER\_internal\api-ms-win-core-errorhandling-l1-1-0.dll
+   Compressing: D:\a\MINER\MINER\v5\windows\..\dist-windows\MINER\_internal\api-ms-win-core-fibers-l1-1-0.dll
+   Compressing: D:\a\MINER\MINER\v5\windows\..\dist-windows\MINER\_internal\api-ms-win-core-fibers-l1-1-1.dll
+   Compressing: D:\a\MINER\MINER\v5\windows\..\dist-windows\MINER\_internal\api-ms-win-core-file-l1-1-0.dll
+   Compressing: D:\a\MINER\MINER\v5\windows\..\dist-windows\MINER\_internal\api-ms-win-core-file-l1-2-0.dll
+   Compressing: D:\a\MINER\MINER\v5\windows\..\dist-windows\MINER\_internal\api-ms-win-core-file-l2-1-0.dll
+   Compressing: D:\a\MINER\MINER\v5\windows\..\dist-windows\MINER\_internal\api-ms-win-core-handle-l1-1-0.dll
+   Compressing: D:\a\MINER\MINER\v5\windows\..\dist-windows\MINER\_internal\api-ms-win-core-heap-l1-1-0.dll
+   Compressing: D:\a\MINER\MINER\v5\windows\..\dist-windows\MINER\_internal\api-ms-win-core-interlocked-l1-1-0.dll
+   Compressing: D:\a\MINER\MINER\v5\windows\..\dist-windows\MINER\_internal\api-ms-win-core-kernel32-legacy-l1-1-1.dll
+   Compressing: D:\a\MINER\MINER\v5\windows\..\dist-windows\MINER\_internal\api-ms-win-core-libraryloader-l1-1-0.dll
+   Compressing: D:\a\MINER\MINER\v5\windows\..\dist-windows\MINER\_internal\api-ms-win-core-localization-l1-2-0.dll
+   Compressing: D:\a\MINER\MINER\v5\windows\..\dist-windows\MINER\_internal\api-ms-win-core-memory-l1-1-0.dll
+   Compressing: D:\a\MINER\MINER\v5\windows\..\dist-windows\MINER\_internal\api-ms-win-core-namedpipe-l1-1-0.dll
+   Compressing: D:\a\MINER\MINER\v5\windows\..\dist-windows\MINER\_internal\api-ms-win-core-processenvironment-l1-1-0.dll
+   Compressing: D:\a\MINER\MINER\v5\windows\..\dist-windows\MINER\_internal\api-ms-win-core-processthreads-l1-1-0.dll
+   Compressing: D:\a\MINER\MINER\v5\windows\..\dist-windows\MINER\_internal\api-ms-win-core-processthreads-l1-1-1.dll
+   Compressing: D:\a\MINER\MINER\v5\windows\..\dist-windows\MINER\_internal\api-ms-win-core-profile-l1-1-0.dll
+   Compressing: D:\a\MINER\MINER\v5\windows\..\dist-windows\MINER\_internal\api-ms-win-core-rtlsupport-l1-1-0.dll
+   Compressing: D:\a\MINER\MINER\v5\windows\..\dist-windows\MINER\_internal\api-ms-win-core-string-l1-1-0.dll
+   Compressing: D:\a\MINER\MINER\v5\windows\..\dist-windows\MINER\_internal\api-ms-win-core-synch-l1-1-0.dll
+   Compressing: D:\a\MINER\MINER\v5\windows\..\dist-windows\MINER\_internal\api-ms-win-core-synch-l1-2-0.dll
+   Compressing: D:\a\MINER\MINER\v5\windows\..\dist-windows\MINER\_internal\api-ms-win-core-sysinfo-l1-1-0.dll
+   Compressing: D:\a\MINER\MINER\v5\windows\..\dist-windows\MINER\_internal\api-ms-win-core-sysinfo-l1-2-0.dll
+   Compressing: D:\a\MINER\MINER\v5\windows\..\dist-windows\MINER\_internal\api-ms-win-core-timezone-l1-1-0.dll
+   Compressing: D:\a\MINER\MINER\v5\windows\..\dist-windows\MINER\_internal\api-ms-win-core-util-l1-1-0.dll
+   Compressing: D:\a\MINER\MINER\v5\windows\..\dist-windows\MINER\_internal\api-ms-win-crt-conio-l1-1-0.dll
+   Compressing: D:\a\MINER\MINER\v5\windows\..\dist-windows\MINER\_internal\api-ms-win-crt-convert-l1-1-0.dll
+   Compressing: D:\a\MINER\MINER\v5\windows\..\dist-windows\MINER\_internal\api-ms-win-crt-environment-l1-1-0.dll
+   Compressing: D:\a\MINER\MINER\v5\windows\..\dist-windows\MINER\_internal\api-ms-win-crt-filesystem-l1-1-0.dll
+   Compressing: D:\a\MINER\MINER\v5\windows\..\dist-windows\MINER\_internal\api-ms-win-crt-heap-l1-1-0.dll
+   Compressing: D:\a\MINER\MINER\v5\windows\..\dist-windows\MINER\_internal\api-ms-win-crt-locale-l1-1-0.dll
+   Compressing: D:\a\MINER\MINER\v5\windows\..\dist-windows\MINER\_internal\api-ms-win-crt-math-l1-1-0.dll
+   Compressing: D:\a\MINER\MINER\v5\windows\..\dist-windows\MINER\_internal\api-ms-win-crt-process-l1-1-0.dll
+   Compressing: D:\a\MINER\MINER\v5\windows\..\dist-windows\MINER\_internal\api-ms-win-crt-runtime-l1-1-0.dll
+   Compressing: D:\a\MINER\MINER\v5\windows\..\dist-windows\MINER\_internal\api-ms-win-crt-stdio-l1-1-0.dll
+   Compressing: D:\a\MINER\MINER\v5\windows\..\dist-windows\MINER\_internal\api-ms-win-crt-string-l1-1-0.dll
+   Compressing: D:\a\MINER\MINER\v5\windows\..\dist-windows\MINER\_internal\api-ms-win-crt-time-l1-1-0.dll
+   Compressing: D:\a\MINER\MINER\v5\windows\..\dist-windows\MINER\_internal\api-ms-win-crt-utility-l1-1-0.dll
+   Compressing: D:\a\MINER\MINER\v5\windows\..\dist-windows\MINER\_internal\base_library.zip
+   Compressing: D:\a\MINER\MINER\v5\windows\..\dist-windows\MINER\_internal\cacert.pem
+   Compressing: D:\a\MINER\MINER\v5\windows\..\dist-windows\MINER\_internal\libcrypto-3-x64.dll
+   Compressing: D:\a\MINER\MINER\v5\windows\..\dist-windows\MINER\_internal\libcrypto-3.dll
+   Compressing: D:\a\MINER\MINER\v5\windows\..\dist-windows\MINER\_internal\libffi-8.dll
+   Compressing: D:\a\MINER\MINER\v5\windows\..\dist-windows\MINER\_internal\libssl-3-x64.dll
+   Compressing: D:\a\MINER\MINER\v5\windows\..\dist-windows\MINER\_internal\libssl-3.dll
+   Compressing: D:\a\MINER\MINER\v5\windows\..\dist-windows\MINER\_internal\pyexpat.pyd
+   Compressing: D:\a\MINER\MINER\v5\windows\..\dist-windows\MINER\_internal\python3.dll
+   Compressing: D:\a\MINER\MINER\v5\windows\..\dist-windows\MINER\_internal\python312.dll
+   Compressing: D:\a\MINER\MINER\v5\windows\..\dist-windows\MINER\_internal\select.pyd
+   Compressing: D:\a\MINER\MINER\v5\windows\..\dist-windows\MINER\_internal\ucrtbase.dll
+   Compressing: D:\a\MINER\MINER\v5\windows\..\dist-windows\MINER\_internal\unicodedata.pyd
+   Compressing: D:\a\MINER\MINER\v5\windows\..\dist-windows\MINER\_internal\VCRUNTIME140.dll
+   Compressing: D:\a\MINER\MINER\v5\windows\..\dist-windows\MINER\_internal\VCRUNTIME140_1.dll
+   Compressing: D:\a\MINER\MINER\v5\windows\..\dist-windows\MINER\_internal\_bz2.pyd
+   Compressing: D:\a\MINER\MINER\v5\windows\..\dist-windows\MINER\_internal\_ctypes.pyd
+   Compressing: D:\a\MINER\MINER\v5\windows\..\dist-windows\MINER\_internal\_decimal.pyd
+   Compressing: D:\a\MINER\MINER\v5\windows\..\dist-windows\MINER\_internal\_elementtree.pyd
+   Compressing: D:\a\MINER\MINER\v5\windows\..\dist-windows\MINER\_internal\_hashlib.pyd
+   Compressing: D:\a\MINER\MINER\v5\windows\..\dist-windows\MINER\_internal\_lzma.pyd
+   Compressing: D:\a\MINER\MINER\v5\windows\..\dist-windows\MINER\_internal\_socket.pyd
+   Compressing: D:\a\MINER\MINER\v5\windows\..\dist-windows\MINER\_internal\_ssl.pyd
+   Compressing: D:\a\MINER\MINER\v5\windows\..\dist-windows\MINER\_internal\_wmi.pyd
+   Compressing: D:\a\MINER\MINER\v5\windows\..\dist-windows\MINER\_internal\art\app-icon-ministry-sejong.png
+   Compressing: D:\a\MINER\MINER\v5\windows\..\dist-windows\MINER\_internal\art\app-icon-ministry.png
+   Compressing: D:\a\MINER\MINER\v5\windows\..\dist-windows\MINER\_internal\art\AppIcon.png
+   Compressing: D:\a\MINER\MINER\v5\windows\..\dist-windows\MINER\_internal\art\avatar-source
+   Compressing: D:\a\MINER\MINER\v5\windows\..\dist-windows\MINER\_internal\art\check-fallback.svg
+   Compressing: D:\a\MINER\MINER\v5\windows\..\dist-windows\MINER\_internal\art\copy-ko.json
+   Compressing: D:\a\MINER\MINER\v5\windows\..\dist-windows\MINER\_internal\art\developer-avatar.png
+   Compressing: D:\a\MINER\MINER\v5\windows\..\dist-windows\MINER\_internal\art\developer-profile.json
+   Compressing: D:\a\MINER\MINER\v5\windows\..\dist-windows\MINER\_internal\art\full-window-strata.png
+   Compressing: D:\a\MINER\MINER\v5\windows\..\dist-windows\MINER\_internal\art\mascot-approved.png
+   Compressing: D:\a\MINER\MINER\v5\windows\..\dist-windows\MINER\_internal\art\mascot-runtime-256.png
+   Compressing: D:\a\MINER\MINER\v5\windows\..\dist-windows\MINER\_internal\art\rock.png
+   Compressing: D:\a\MINER\MINER\v5\windows\..\dist-windows\MINER\_internal\art\rock.svg
+   Compressing: D:\a\MINER\MINER\v5\windows\..\dist-windows\MINER\_internal\art\school.png
+   Compressing: D:\a\MINER\MINER\v5\windows\..\dist-windows\MINER\_internal\art\school.svg
+   Compressing: D:\a\MINER\MINER\v5\windows\..\dist-windows\MINER\_internal\art\spotlight.png
+   Compressing: D:\a\MINER\MINER\v5\windows\..\dist-windows\MINER\_internal\art\spotlight.svg
+   Compressing: D:\a\MINER\MINER\v5\windows\..\dist-windows\MINER\_internal\art\storyboard-reference.png
+   Compressing: D:\a\MINER\MINER\v5\windows\..\dist-windows\MINER\_internal\art\tokens.json
+   Compressing: D:\a\MINER\MINER\v5\windows\..\dist-windows\MINER\_internal\art\tunnel.png
+   Compressing: D:\a\MINER\MINER\v5\windows\..\dist-windows\MINER\_internal\art\tunnel.svg
+   Compressing: D:\a\MINER\MINER\v5\windows\..\dist-windows\MINER\_internal\engine\sing-box.exe
+   Compressing: D:\a\MINER\MINER\v5\windows\..\dist-windows\MINER\_internal\PIL\_avif.cp312-win_amd64.pyd
+   Compressing: D:\a\MINER\MINER\v5\windows\..\dist-windows\MINER\_internal\PIL\_imaging.cp312-win_amd64.pyd
+   Compressing: D:\a\MINER\MINER\v5\windows\..\dist-windows\MINER\_internal\PIL\_imagingcms.cp312-win_amd64.pyd
+   Compressing: D:\a\MINER\MINER\v5\windows\..\dist-windows\MINER\_internal\PIL\_imagingmath.cp312-win_amd64.pyd
+   Compressing: D:\a\MINER\MINER\v5\windows\..\dist-windows\MINER\_internal\PIL\_imagingtk.cp312-win_amd64.pyd
+   Compressing: D:\a\MINER\MINER\v5\windows\..\dist-windows\MINER\_internal\PIL\_webp.cp312-win_amd64.pyd
+   Compressing: D:\a\MINER\MINER\v5\windows\..\dist-windows\MINER\_internal\PySide6\MSVCP140.dll
+   Compressing: D:\a\MINER\MINER\v5\windows\..\dist-windows\MINER\_internal\PySide6\MSVCP140_1.dll
+   Compressing: D:\a\MINER\MINER\v5\windows\..\dist-windows\MINER\_internal\PySide6\MSVCP140_2.dll
+   Compressing: D:\a\MINER\MINER\v5\windows\..\dist-windows\MINER\_internal\PySide6\opengl32sw.dll
+   Compressing: D:\a\MINER\MINER\v5\windows\..\dist-windows\MINER\_internal\PySide6\pyside6.abi3.dll
+   Compressing: D:\a\MINER\MINER\v5\windows\..\dist-windows\MINER\_internal\PySide6\Qt6Core.dll
+   Compressing: D:\a\MINER\MINER\v5\windows\..\dist-windows\MINER\_internal\PySide6\Qt6Gui.dll
+   Compressing: D:\a\MINER\MINER\v5\windows\..\dist-windows\MINER\_internal\PySide6\Qt6Network.dll
+   Compressing: D:\a\MINER\MINER\v5\windows\..\dist-windows\MINER\_internal\PySide6\Qt6OpenGL.dll
+   Compressing: D:\a\MINER\MINER\v5\windows\..\dist-windows\MINER\_internal\PySide6\Qt6Pdf.dll
+   Compressing: D:\a\MINER\MINER\v5\windows\..\dist-windows\MINER\_internal\PySide6\Qt6Qml.dll
+   Compressing: D:\a\MINER\MINER\v5\windows\..\dist-windows\MINER\_internal\PySide6\Qt6QmlMeta.dll
+   Compressing: D:\a\MINER\MINER\v5\windows\..\dist-windows\MINER\_internal\PySide6\Qt6QmlModels.dll
+   Compressing: D:\a\MINER\MINER\v5\windows\..\dist-windows\MINER\_internal\PySide6\Qt6QmlWorkerScript.dll
+   Compressing: D:\a\MINER\MINER\v5\windows\..\dist-windows\MINER\_internal\PySide6\Qt6Quick.dll
+   Compressing: D:\a\MINER\MINER\v5\windows\..\dist-windows\MINER\_internal\PySide6\Qt6Svg.dll
+   Compressing: D:\a\MINER\MINER\v5\windows\..\dist-windows\MINER\_internal\PySide6\Qt6VirtualKeyboard.dll
+   Compressing: D:\a\MINER\MINER\v5\windows\..\dist-windows\MINER\_internal\PySide6\Qt6Widgets.dll
+   Compressing: D:\a\MINER\MINER\v5\windows\..\dist-windows\MINER\_internal\PySide6\QtCore.pyd
+   Compressing: D:\a\MINER\MINER\v5\windows\..\dist-windows\MINER\_internal\PySide6\QtGui.pyd
+   Compressing: D:\a\MINER\MINER\v5\windows\..\dist-windows\MINER\_internal\PySide6\QtNetwork.pyd
+   Compressing: D:\a\MINER\MINER\v5\windows\..\dist-windows\MINER\_internal\PySide6\QtWidgets.pyd
+   Compressing: D:\a\MINER\MINER\v5\windows\..\dist-windows\MINER\_internal\PySide6\VCRUNTIME140.dll
+   Compressing: D:\a\MINER\MINER\v5\windows\..\dist-windows\MINER\_internal\PySide6\VCRUNTIME140_1.dll
+   Compressing: D:\a\MINER\MINER\v5\windows\..\dist-windows\MINER\_internal\PySide6\plugins\generic\qtuiotouchplugin.dll
+   Compressing: D:\a\MINER\MINER\v5\windows\..\dist-windows\MINER\_internal\PySide6\plugins\iconengines\qsvgicon.dll
+   Compressing: D:\a\MINER\MINER\v5\windows\..\dist-windows\MINER\_internal\PySide6\plugins\imageformats\qgif.dll
+   Compressing: D:\a\MINER\MINER\v5\windows\..\dist-windows\MINER\_internal\PySide6\plugins\imageformats\qicns.dll
+   Compressing: D:\a\MINER\MINER\v5\windows\..\dist-windows\MINER\_internal\PySide6\plugins\imageformats\qico.dll
+   Compressing: D:\a\MINER\MINER\v5\windows\..\dist-windows\MINER\_internal\PySide6\plugins\imageformats\qjpeg.dll
+   Compressing: D:\a\MINER\MINER\v5\windows\..\dist-windows\MINER\_internal\PySide6\plugins\imageformats\qpdf.dll
+   Compressing: D:\a\MINER\MINER\v5\windows\..\dist-windows\MINER\_internal\PySide6\plugins\imageformats\qsvg.dll
+   Compressing: D:\a\MINER\MINER\v5\windows\..\dist-windows\MINER\_internal\PySide6\plugins\imageformats\qtga.dll
+   Compressing: D:\a\MINER\MINER\v5\windows\..\dist-windows\MINER\_internal\PySide6\plugins\imageformats\qtiff.dll
+   Compressing: D:\a\MINER\MINER\v5\windows\..\dist-windows\MINER\_internal\PySide6\plugins\imageformats\qwbmp.dll
+   Compressing: D:\a\MINER\MINER\v5\windows\..\dist-windows\MINER\_internal\PySide6\plugins\imageformats\qwebp.dll
+   Compressing: D:\a\MINER\MINER\v5\windows\..\dist-windows\MINER\_internal\PySide6\plugins\networkinformation\qnetworklistmanager.dll
+   Compressing: D:\a\MINER\MINER\v5\windows\..\dist-windows\MINER\_internal\PySide6\plugins\platforminputcontexts\qtvirtualkeyboardplugin.dll
+   Compressing: D:\a\MINER\MINER\v5\windows\..\dist-windows\MINER\_internal\PySide6\plugins\platforms\qdirect2d.dll
+   Compressing: D:\a\MINER\MINER\v5\windows\..\dist-windows\MINER\_internal\PySide6\plugins\platforms\qminimal.dll
+   Compressing: D:\a\MINER\MINER\v5\windows\..\dist-windows\MINER\_internal\PySide6\plugins\platforms\qoffscreen.dll
+   Compressing: D:\a\MINER\MINER\v5\windows\..\dist-windows\MINER\_internal\PySide6\plugins\platforms\qwindows.dll
+   Compressing: D:\a\MINER\MINER\v5\windows\..\dist-windows\MINER\_internal\PySide6\plugins\styles\qmodernwindowsstyle.dll
+   Compressing: D:\a\MINER\MINER\v5\windows\..\dist-windows\MINER\_internal\PySide6\plugins\tls\qcertonlybackend.dll
+   Compressing: D:\a\MINER\MINER\v5\windows\..\dist-windows\MINER\_internal\PySide6\plugins\tls\qopensslbackend.dll
+   Compressing: D:\a\MINER\MINER\v5\windows\..\dist-windows\MINER\_internal\PySide6\plugins\tls\qschannelbackend.dll
+   Compressing: D:\a\MINER\MINER\v5\windows\..\dist-windows\MINER\_internal\PySide6\translations\qtbase_ar.qm
+   Compressing: D:\a\MINER\MINER\v5\windows\..\dist-windows\MINER\_internal\PySide6\translations\qtbase_bg.qm
+   Compressing: D:\a\MINER\MINER\v5\windows\..\dist-windows\MINER\_internal\PySide6\translations\qtbase_ca.qm
+   Compressing: D:\a\MINER\MINER\v5\windows\..\dist-windows\MINER\_internal\PySide6\translations\qtbase_cs.qm
+   Compressing: D:\a\MINER\MINER\v5\windows\..\dist-windows\MINER\_internal\PySide6\translations\qtbase_da.qm
+   Compressing: D:\a\MINER\MINER\v5\windows\..\dist-windows\MINER\_internal\PySide6\translations\qtbase_de.qm
+   Compressing: D:\a\MINER\MINER\v5\windows\..\dist-windows\MINER\_internal\PySide6\translations\qtbase_en.qm
+   Compressing: D:\a\MINER\MINER\v5\windows\..\dist-windows\MINER\_internal\PySide6\translations\qtbase_es.qm
+   Compressing: D:\a\MINER\MINER\v5\windows\..\dist-windows\MINER\_internal\PySide6\translations\qtbase_fa.qm
+   Compressing: D:\a\MINER\MINER\v5\windows\..\dist-windows\MINER\_internal\PySide6\translations\qtbase_fi.qm
+   Compressing: D:\a\MINER\MINER\v5\windows\..\dist-windows\MINER\_internal\PySide6\translations\qtbase_fr.qm
+   Compressing: D:\a\MINER\MINER\v5\windows\..\dist-windows\MINER\_internal\PySide6\translations\qtbase_gd.qm
+   Compressing: D:\a\MINER\MINER\v5\windows\..\dist-windows\MINER\_internal\PySide6\translations\qtbase_he.qm
+   Compressing: D:\a\MINER\MINER\v5\windows\..\dist-windows\MINER\_internal\PySide6\translations\qtbase_hr.qm
+   Compressing: D:\a\MINER\MINER\v5\windows\..\dist-windows\MINER\_internal\PySide6\translations\qtbase_hu.qm
+   Compressing: D:\a\MINER\MINER\v5\windows\..\dist-windows\MINER\_internal\PySide6\translations\qtbase_it.qm
+   Compressing: D:\a\MINER\MINER\v5\windows\..\dist-windows\MINER\_internal\PySide6\translations\qtbase_ja.qm
+   Compressing: D:\a\MINER\MINER\v5\windows\..\dist-windows\MINER\_internal\PySide6\translations\qtbase_ka.qm
+   Compressing: D:\a\MINER\MINER\v5\windows\..\dist-windows\MINER\_internal\PySide6\translations\qtbase_ko.qm
+   Compressing: D:\a\MINER\MINER\v5\windows\..\dist-windows\MINER\_internal\PySide6\translations\qtbase_lg.qm
+   Compressing: D:\a\MINER\MINER\v5\windows\..\dist-windows\MINER\_internal\PySide6\translations\qtbase_lv.qm
+   Compressing: D:\a\MINER\MINER\v5\windows\..\dist-windows\MINER\_internal\PySide6\translations\qtbase_nl.qm
+   Compressing: D:\a\MINER\MINER\v5\windows\..\dist-windows\MINER\_internal\PySide6\translations\qtbase_nn.qm
+   Compressing: D:\a\MINER\MINER\v5\windows\..\dist-windows\MINER\_internal\PySide6\translations\qtbase_pl.qm
+   Compressing: D:\a\MINER\MINER\v5\windows\..\dist-windows\MINER\_internal\PySide6\translations\qtbase_pt_BR.qm
+   Compressing: D:\a\MINER\MINER\v5\windows\..\dist-windows\MINER\_internal\PySide6\translations\qtbase_ru.qm
+   Compressing: D:\a\MINER\MINER\v5\windows\..\dist-windows\MINER\_internal\PySide6\translations\qtbase_sk.qm
+   Compressing: D:\a\MINER\MINER\v5\windows\..\dist-windows\MINER\_internal\PySide6\translations\qtbase_tr.qm
+   Compressing: D:\a\MINER\MINER\v5\windows\..\dist-windows\MINER\_internal\PySide6\translations\qtbase_uk.qm
+   Compressing: D:\a\MINER\MINER\v5\windows\..\dist-windows\MINER\_internal\PySide6\translations\qtbase_zh_CN.qm
+   Compressing: D:\a\MINER\MINER\v5\windows\..\dist-windows\MINER\_internal\PySide6\translations\qtbase_zh_TW.qm
+   Compressing: D:\a\MINER\MINER\v5\windows\..\dist-windows\MINER\_internal\PySide6\translations\qt_ar.qm
+   Compressing: D:\a\MINER\MINER\v5\windows\..\dist-windows\MINER\_internal\PySide6\translations\qt_bg.qm
+   Compressing: D:\a\MINER\MINER\v5\windows\..\dist-windows\MINER\_internal\PySide6\translations\qt_ca.qm
+   Compressing: D:\a\MINER\MINER\v5\windows\..\dist-windows\MINER\_internal\PySide6\translations\qt_cs.qm
+   Compressing: D:\a\MINER\MINER\v5\windows\..\dist-windows\MINER\_internal\PySide6\translations\qt_da.qm
+   Compressing: D:\a\MINER\MINER\v5\windows\..\dist-windows\MINER\_internal\PySide6\translations\qt_de.qm
+   Compressing: D:\a\MINER\MINER\v5\windows\..\dist-windows\MINER\_internal\PySide6\translations\qt_en.qm
+   Compressing: D:\a\MINER\MINER\v5\windows\..\dist-windows\MINER\_internal\PySide6\translations\qt_es.qm
+   Compressing: D:\a\MINER\MINER\v5\windows\..\dist-windows\MINER\_internal\PySide6\translations\qt_fa.qm
+   Compressing: D:\a\MINER\MINER\v5\windows\..\dist-windows\MINER\_internal\PySide6\translations\qt_fi.qm
+   Compressing: D:\a\MINER\MINER\v5\windows\..\dist-windows\MINER\_internal\PySide6\translations\qt_fr.qm
+   Compressing: D:\a\MINER\MINER\v5\windows\..\dist-windows\MINER\_internal\PySide6\translations\qt_gd.qm
+   Compressing: D:\a\MINER\MINER\v5\windows\..\dist-windows\MINER\_internal\PySide6\translations\qt_gl.qm
+   Compressing: D:\a\MINER\MINER\v5\windows\..\dist-windows\MINER\_internal\PySide6\translations\qt_he.qm
+   Compressing: D:\a\MINER\MINER\v5\windows\..\dist-windows\MINER\_internal\PySide6\translations\qt_help_ar.qm
+   Compressing: D:\a\MINER\MINER\v5\windows\..\dist-windows\MINER\_internal\PySide6\translations\qt_help_bg.qm
+   Compressing: D:\a\MINER\MINER\v5\windows\..\dist-windows\MINER\_internal\PySide6\translations\qt_help_ca.qm
+   Compressing: D:\a\MINER\MINER\v5\windows\..\dist-windows\MINER\_internal\PySide6\translations\qt_help_cs.qm
+   Compressing: D:\a\MINER\MINER\v5\windows\..\dist-windows\MINER\_internal\PySide6\translations\qt_help_da.qm
+   Compressing: D:\a\MINER\MINER\v5\windows\..\dist-windows\MINER\_internal\PySide6\translations\qt_help_de.qm
+   Compressing: D:\a\MINER\MINER\v5\windows\..\dist-windows\MINER\_internal\PySide6\translations\qt_help_en.qm
+   Compressing: D:\a\MINER\MINER\v5\windows\..\dist-windows\MINER\_internal\PySide6\translations\qt_help_es.qm
+   Compressing: D:\a\MINER\MINER\v5\windows\..\dist-windows\MINER\_internal\PySide6\translations\qt_help_fr.qm
+   Compressing: D:\a\MINER\MINER\v5\windows\..\dist-windows\MINER\_internal\PySide6\translations\qt_help_gl.qm
+   Compressing: D:\a\MINER\MINER\v5\windows\..\dist-windows\MINER\_internal\PySide6\translations\qt_help_hr.qm
+   Compressing: D:\a\MINER\MINER\v5\windows\..\dist-windows\MINER\_internal\PySide6\translations\qt_help_hu.qm
+   Compressing: D:\a\MINER\MINER\v5\windows\..\dist-windows\MINER\_internal\PySide6\translations\qt_help_it.qm
+   Compressing: D:\a\MINER\MINER\v5\windows\..\dist-windows\MINER\_internal\PySide6\translations\qt_help_ja.qm
+   Compressing: D:\a\MINER\MINER\v5\windows\..\dist-windows\MINER\_internal\PySide6\translations\qt_help_ka.qm
+   Compressing: D:\a\MINER\MINER\v5\windows\..\dist-windows\MINER\_internal\PySide6\translations\qt_help_ko.qm
+   Compressing: D:\a\MINER\MINER\v5\windows\..\dist-windows\MINER\_internal\PySide6\translations\qt_help_nl.qm
+   Compressing: D:\a\MINER\MINER\v5\windows\..\dist-windows\MINER\_internal\PySide6\translations\qt_help_nn.qm
+   Compressing: D:\a\MINER\MINER\v5\windows\..\dist-windows\MINER\_internal\PySide6\translations\qt_help_pl.qm
+   Compressing: D:\a\MINER\MINER\v5\windows\..\dist-windows\MINER\_internal\PySide6\translations\qt_help_pt_BR.qm
+   Compressing: D:\a\MINER\MINER\v5\windows\..\dist-windows\MINER\_internal\PySide6\translations\qt_help_ru.qm
+   Compressing: D:\a\MINER\MINER\v5\windows\..\dist-windows\MINER\_internal\PySide6\translations\qt_help_sk.qm
+   Compressing: D:\a\MINER\MINER\v5\windows\..\dist-windows\MINER\_internal\PySide6\translations\qt_help_sl.qm
+   Compressing: D:\a\MINER\MINER\v5\windows\..\dist-windows\MINER\_internal\PySide6\translations\qt_help_tr.qm
+   Compressing: D:\a\MINER\MINER\v5\windows\..\dist-windows\MINER\_internal\PySide6\translations\qt_help_uk.qm
+   Compressing: D:\a\MINER\MINER\v5\windows\..\dist-windows\MINER\_internal\PySide6\translations\qt_help_zh_CN.qm
+   Compressing: D:\a\MINER\MINER\v5\windows\..\dist-windows\MINER\_internal\PySide6\translations\qt_help_zh_TW.qm
+   Compressing: D:\a\MINER\MINER\v5\windows\..\dist-windows\MINER\_internal\PySide6\translations\qt_hr.qm
+   Compressing: D:\a\MINER\MINER\v5\windows\..\dist-windows\MINER\_internal\PySide6\translations\qt_hu.qm
+   Compressing: D:\a\MINER\MINER\v5\windows\..\dist-windows\MINER\_internal\PySide6\translations\qt_it.qm
+   Compressing: D:\a\MINER\MINER\v5\windows\..\dist-windows\MINER\_internal\PySide6\translations\qt_ja.qm
+   Compressing: D:\a\MINER\MINER\v5\windows\..\dist-windows\MINER\_internal\PySide6\translations\qt_ka.qm
+   Compressing: D:\a\MINER\MINER\v5\windows\..\dist-windows\MINER\_internal\PySide6\translations\qt_ko.qm
+   Compressing: D:\a\MINER\MINER\v5\windows\..\dist-windows\MINER\_internal\PySide6\translations\qt_lg.qm
+   Compressing: D:\a\MINER\MINER\v5\windows\..\dist-windows\MINER\_internal\PySide6\translations\qt_lt.qm
+   Compressing: D:\a\MINER\MINER\v5\windows\..\dist-windows\MINER\_internal\PySide6\translations\qt_lv.qm
+   Compressing: D:\a\MINER\MINER\v5\windows\..\dist-windows\MINER\_internal\PySide6\translations\qt_nl.qm
+   Compressing: D:\a\MINER\MINER\v5\windows\..\dist-windows\MINER\_internal\PySide6\translations\qt_nn.qm
+   Compressing: D:\a\MINER\MINER\v5\windows\..\dist-windows\MINER\_internal\PySide6\translations\qt_pl.qm
+   Compressing: D:\a\MINER\MINER\v5\windows\..\dist-windows\MINER\_internal\PySide6\translations\qt_pt_BR.qm
+   Compressing: D:\a\MINER\MINER\v5\windows\..\dist-windows\MINER\_internal\PySide6\translations\qt_pt_PT.qm
+   Compressing: D:\a\MINER\MINER\v5\windows\..\dist-windows\MINER\_internal\PySide6\translations\qt_ru.qm
+   Compressing: D:\a\MINER\MINER\v5\windows\..\dist-windows\MINER\_internal\PySide6\translations\qt_sk.qm
+   Compressing: D:\a\MINER\MINER\v5\windows\..\dist-windows\MINER\_internal\PySide6\translations\qt_sl.qm
+   Compressing: D:\a\MINER\MINER\v5\windows\..\dist-windows\MINER\_internal\PySide6\translations\qt_sv.qm
+   Compressing: D:\a\MINER\MINER\v5\windows\..\dist-windows\MINER\_internal\PySide6\translations\qt_tr.qm
+   Compressing: D:\a\MINER\MINER\v5\windows\..\dist-windows\MINER\_internal\PySide6\translations\qt_uk.qm
+   Compressing: D:\a\MINER\MINER\v5\windows\..\dist-windows\MINER\_internal\PySide6\translations\qt_zh_CN.qm
+   Compressing: D:\a\MINER\MINER\v5\windows\..\dist-windows\MINER\_internal\PySide6\translations\qt_zh_TW.qm
+   Compressing: D:\a\MINER\MINER\v5\windows\..\dist-windows\MINER\_internal\shiboken6\MSVCP140.dll
+   Compressing: D:\a\MINER\MINER\v5\windows\..\dist-windows\MINER\_internal\shiboken6\Shiboken.pyd
+   Compressing: D:\a\MINER\MINER\v5\windows\..\dist-windows\MINER\_internal\shiboken6\shiboken6.abi3.dll
+   Compressing: D:\a\MINER\MINER\v5\windows\..\dist-windows\MINER\_internal\shiboken6\VCRUNTIME140.dll
+   Compressing: D:\a\MINER\MINER\v5\windows\..\dist-windows\MINER\_internal\shiboken6\VCRUNTIME140_1.dll
+   Compressing Setup program executable
+   Updating version info (Setup.exe)
+   Updating manifest (Setup.exe)
+
+
+Successful compile (31.547 sec). Resulting Setup program filename is:
+D:\a\MINER\MINER\v5\dist-windows\MINER-v5.0.0-beta.1.1-windows.3-Windows-x64-Setup.exe
+Installed verified sing-box 1.12.0: D:\a\MINER\MINER\v5\windows\work\engine\sing-box.exe
+{
+  "test_os": "Windows-2025Server-10.0.26100-SP0",
+  "version": "5.0.0-beta.1.1-windows.3",
+  "base": "MINER Beta 1.1",
+  "architecture": "x64",
+  "authenticode_signed": false,
+  "ui": {
+    "ok": true,
+    "checks": [
+      "Beta icon, scene, mascot and offline avatar decode",
+      "state-driven progress and Windows action gating",
+      "long errors preserve Stop restoration and readable diagnostics",
+      "live Korean-English settings, About and persistent preferences",
+      "compact window keeps primary actions visible",
+      "reduced motion has no recurring scene or wave animation",
+      "digging bounded to 30fps and paused when inactive"
+    ],
+    "network_actions": 0,
+    "state_source": "injected UI fixtures",
+    "os": "nt",
+    "scale_factor": "system"
+  },
+  "native_tun": {
+    "adapter_created": true,
+    "graceful_stop": true,
+    "auto_route": false,
+    "job_kills_remaining_child": true
+  },
+  "installer_verified": true,
+  "upgrade_verified": true,
+  "unicode_path_verified": true,
+  "ui_scale_factors": [
+    1,
+    1.25,
+    1.5,
+    2
+  ],
+  "windows_11_live_tested": false,
+  "vanguard_tested": false,
+  "uninstaller_verified": true,
+  "school_network_tested": false,
+  "warp_live_tested": false,
+  "sha256": "81bea219094a3857cf7b40c6bad3057a974237c905997cc9145cc9c4c4a2113a"
+}

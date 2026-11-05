@@ -1,0 +1,16 @@
+{
+  "ok": true,
+  "checks": [
+    "Beta icon, scene, mascot and offline avatar decode",
+    "state-driven progress and Windows action gating",
+    "long errors preserve Stop restoration and readable diagnostics",
+    "live Korean-English settings, About and persistent preferences",
+    "compact window keeps primary actions visible",
+    "reduced motion has no recurring scene or wave animation",
+    "digging bounded to 30fps and paused when inactive"
+  ],
+  "network_actions": 0,
+  "state_source": "injected UI fixtures",
+  "os": "nt",
+  "scale_factor": "2"
+}

@@ -1,0 +1,44 @@
+{
+  "test_os": "Windows-2025Server-10.0.26100-SP0",
+  "version": "5.0.0-beta.1.1-windows.3",
+  "base": "MINER Beta 1.1",
+  "architecture": "x64",
+  "authenticode_signed": false,
+  "ui": {
+    "ok": true,
+    "checks": [
+      "Beta icon, scene, mascot and offline avatar decode",
+      "state-driven progress and Windows action gating",
+      "long errors preserve Stop restoration and readable diagnostics",
+      "live Korean-English settings, About and persistent preferences",
+      "compact window keeps primary actions visible",
+      "reduced motion has no recurring scene or wave animation",
+      "digging bounded to 30fps and paused when inactive"
+    ],
+    "network_actions": 0,
+    "state_source": "injected UI fixtures",
+    "os": "nt",
+    "scale_factor": "system"
+  },
+  "native_tun": {
+    "adapter_created": true,
+    "graceful_stop": true,
+    "auto_route": false,
+    "job_kills_remaining_child": true
+  },
+  "installer_verified": true,
+  "upgrade_verified": true,
+  "unicode_path_verified": true,
+  "ui_scale_factors": [
+    1,
+    1.25,
+    1.5,
+    2
+  ],
+  "windows_11_live_tested": false,
+  "vanguard_tested": false,
+  "uninstaller_verified": true,
+  "school_network_tested": false,
+  "warp_live_tested": false,
+  "sha256": "81bea219094a3857cf7b40c6bad3057a974237c905997cc9145cc9c4c4a2113a"
+}
