@@ -9,9 +9,9 @@
 클라이언트는 WARP로, 게임은 직접 연결로.
 학교 네트워크의 접속 제한과 게임 지연 문제에서 출발한 분리 라우팅 앱입니다.
 
-![Beta 1.1](https://img.shields.io/badge/STATUS-ALPHA_UNIVERSAL_BETA_1-0EFB2E?style=flat-square&labelColor=0C1421)
+![Beta 1.1](https://img.shields.io/badge/RELEASE-ALPHA_v1-0EFB2E?style=flat-square&labelColor=0C1421)
 ![macOS](https://img.shields.io/badge/macOS-Apple_Silicon-E6E8E6?style=flat-square&logo=apple&logoColor=white&labelColor=0C1421)
-![Windows](https://img.shields.io/badge/Windows-x64_BETA-0078D4?style=flat-square&logo=windows&logoColor=white&labelColor=0C1421)
+![Windows](https://img.shields.io/badge/Windows-x64-0078D4?style=flat-square&logo=windows&logoColor=white&labelColor=0C1421)
 ![Cloudflare WARP](https://img.shields.io/badge/Cloudflare-WARP-F38020?style=flat-square&logo=cloudflare&logoColor=white&labelColor=0C1421)
 ![Python](https://img.shields.io/badge/Python-3776AB?style=flat-square&logo=python&logoColor=white)
 ![Swift](https://img.shields.io/badge/Swift-F05138?style=flat-square&logo=swift&logoColor=white)
@@ -23,6 +23,8 @@
 ---
 
 ## 개요
+
+**ALPHA는 MINER의 큰 버전 코드명이며, 개발 단계 표시가 아닙니다.** `v1`은 ALPHA 세대의 첫 릴리스입니다. 현재는 WARP Local Proxy와 분리 라우팅으로 클라이언트 접속 제한을 우회하고 게임 지연을 줄이는 데 초점을 둡니다. 스쿨넷의 제한을 더 폭넓게 극복하는 것이 장기 목표이며, 향후 대규모 구현 세대가 바뀌면 새로운 코드명을 사용할 계획입니다.
 
 학교에서는 리그 오브 레전드(LoL)를 비롯한 게임의 접속과 플레이를 네트워크에서 제한합니다. MINER는 이러한 제한을 기술적으로 파훼하고, 대한민국 교육청을 통해 학교에 제공되는 **스쿨넷 환경의 게임 접속 차단을 회피·돌파하는 것**을 목표로 시작한 프로젝트입니다.
 
@@ -49,19 +51,21 @@ MINER는 **클라이언트 통신은 WARP로, 게임 플레이 통신은 직접 
 
 ## 다운로드
 
-**MINER ALPHA universial Beta 1** · [통합 프리릴리스 보기](https://github.com/hexagon0401/MINER/releases/tag/miner-alpha-universal-beta.1)
+[![MINER ALPHA v1 출시 기념 배너](docs/assets/miner-alpha-v1-release-banner.png)](https://github.com/hexagon0401/MINER/releases/tag/miner-alpha-v1)
 
-[![Apple Silicon DMG](https://img.shields.io/badge/macOS-Apple_Silicon_DMG-0EFB2E?style=for-the-badge&logo=apple&logoColor=white&labelColor=0C1421)](https://github.com/hexagon0401/MINER/releases/download/miner-alpha-universal-beta.1/MINER-Alpha-Universal-Beta1-macOS-AppleSilicon.dmg)
-[![Intel DMG](https://img.shields.io/badge/macOS-Intel_DMG-E6E8E6?style=for-the-badge&logo=apple&logoColor=white&labelColor=0C1421)](https://github.com/hexagon0401/MINER/releases/download/miner-alpha-universal-beta.1/MINER-Alpha-Universal-Beta1-macOS-Intel.dmg)
-[![Windows EXE](https://img.shields.io/badge/Windows-x64_EXE-0078D4?style=for-the-badge&logo=windows&logoColor=white&labelColor=0C1421)](https://github.com/hexagon0401/MINER/releases/download/miner-alpha-universal-beta.1/MINER-Alpha-Universal-Beta1-Windows-x64-Setup.exe)
+**MINER ALPHA v1** · [최신 정식 릴리스 보기](https://github.com/hexagon0401/MINER/releases/tag/miner-alpha-v1)
 
-| 컴퓨터 | 설치 파일 | 앱 버전 |
+[![Apple Silicon DMG](https://img.shields.io/badge/macOS-Apple_Silicon_DMG-0EFB2E?style=for-the-badge&logo=apple&logoColor=white&labelColor=0C1421)](https://github.com/hexagon0401/MINER/releases/download/miner-alpha-v1/MINER-ALPHA-v1-macOS-AppleSilicon.dmg)
+[![Intel DMG](https://img.shields.io/badge/macOS-Intel_DMG-E6E8E6?style=for-the-badge&logo=apple&logoColor=white&labelColor=0C1421)](https://github.com/hexagon0401/MINER/releases/download/miner-alpha-v1/MINER-ALPHA-v1-macOS-Intel.dmg)
+[![Windows EXE](https://img.shields.io/badge/Windows-x64_EXE-0078D4?style=for-the-badge&logo=windows&logoColor=white&labelColor=0C1421)](https://github.com/hexagon0401/MINER/releases/download/miner-alpha-v1/MINER-ALPHA-v1-Windows-x64-Setup.exe)
+
+| 컴퓨터 | 설치 파일 | 구성 |
 | :-- | :-- | :-- |
-| Mac · Apple Silicon (M 시리즈) | [DMG 다운로드](https://github.com/hexagon0401/MINER/releases/download/miner-alpha-universal-beta.1/MINER-Alpha-Universal-Beta1-macOS-AppleSilicon.dmg) | 베타 1.1 · SwiftUI |
-| Mac · Intel | [DMG 다운로드](https://github.com/hexagon0401/MINER/releases/download/miner-alpha-universal-beta.1/MINER-Alpha-Universal-Beta1-macOS-Intel.dmg) | 베타 1.1 · SwiftUI |
-| Windows · x64 | [EXE 다운로드](https://github.com/hexagon0401/MINER/releases/download/miner-alpha-universal-beta.1/MINER-Alpha-Universal-Beta1-Windows-x64-Setup.exe) | 베타 1 · Pearl White build 8 |
+| Mac · Apple Silicon (M 시리즈) | [DMG 다운로드](https://github.com/hexagon0401/MINER/releases/download/miner-alpha-v1/MINER-ALPHA-v1-macOS-AppleSilicon.dmg) | macOS 기본 UI · SwiftUI |
+| Mac · Intel | [DMG 다운로드](https://github.com/hexagon0401/MINER/releases/download/miner-alpha-v1/MINER-ALPHA-v1-macOS-Intel.dmg) | macOS 기본 UI · SwiftUI |
+| Windows · x64 | [EXE 다운로드](https://github.com/hexagon0401/MINER/releases/download/miner-alpha-v1/MINER-ALPHA-v1-Windows-x64-Setup.exe) | Windows Pearl White · A/B 버튼 |
 
-플랫폼별로 **별도 설치 파일**을 제공합니다. Mac과 Windows는 각각의 UI를 유지합니다. [체크섬](https://github.com/hexagon0401/MINER/releases/download/miner-alpha-universal-beta.1/SHA256SUMS.txt) · [플랫폼별 버전·출처](https://github.com/hexagon0401/MINER/releases/download/miner-alpha-universal-beta.1/release-manifest.json) · [Windows 소스](https://github.com/hexagon0401/MINER/tree/windows-beta1)
+검증된 현재 빌드를 승격한 **ALPHA v1 정식 릴리스**입니다. 플랫폼별로 **별도 설치 파일**을 제공합니다. Mac과 Windows는 각각의 UI를 유지합니다. [체크섬](https://github.com/hexagon0401/MINER/releases/download/miner-alpha-v1/SHA256SUMS.txt) · [플랫폼별 버전·출처](https://github.com/hexagon0401/MINER/releases/download/miner-alpha-v1/release-manifest.json) · [Windows 소스](https://github.com/hexagon0401/MINER/tree/windows-beta1)
 
 | 구분 | 현재 상태 |
 | :-- | :-- |
