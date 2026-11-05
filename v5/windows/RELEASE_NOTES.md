@@ -26,3 +26,14 @@ Windows 10 1809 이상 / Windows 11의 x64 PC용입니다. 개인용 Cloudflare 
 스크린샷과 GIF는 실제 EXE 렌더링이지만 연결 상태는 **검사용 주입 값**입니다. 실제 WARP나 LoL 연결 성공을 의미하지 않습니다. Windows Server CI 검사와 Windows 11 실기 검증을 구분해 제공하며 Windows 11·학교망·게임·Vanguard 실기 테스트는 수행하지 않았습니다.
 
 진행률은 실제 완료 단계만 반영하는 5개 막대로 표시합니다. Windows 어두운 테마에서는 지원되는 시스템의 제목 표시줄 색상도 맞춥니다. UI 검증 PNG·GIF에는 테스트용 연결 상태임을 화면에 표시합니다.
+
+## Windows build 5 — Qt Quick / Fluent
+
+- Qt Widgets 화면을 Qt Quick RHI 장면 그래프와 FluentWinUI3 스타일 컨트롤로 전환
+- Windows 기본 창·UAC·단축키 유지, 시스템/밝은/어두운 테마 적용
+- Segoe UI 계열 글꼴, 배율 독립적인 윤곽선 기반 글꼴 안티앨리어싱, 벡터 도형과 부드러운 이미지 축소
+- Python 프레임 타이머를 제거하고 QML에서 채굴·파동·성공 효과를 처리
+- 비활성·최소화·동작 줄이기에서 반복 효과 중단
+- 네트워크 엔진과 연결·복구 계약 유지
+
+실제 렌더러와 글꼴·스타일은 검증 JSON에 기록합니다. Windows Server CI 검사이며 Windows 11 실기·실제 게임과 GPU 성능은 미검증입니다. UI 캡처의 연결 상태는 검사용 값입니다.

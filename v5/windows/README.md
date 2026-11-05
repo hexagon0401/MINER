@@ -41,3 +41,13 @@ python windows/build.py
 Mac 디자인 에셋을 재사용하되 캐릭터 비율을 유지합니다. 밝은/어두운/시스템 테마, 고대비, 작은 창과 화면 배율에 대응하며 설정창도 언어 변경을 즉시 반영합니다. 채굴 효과는 최대 30fps이고 비활성·최소화·연결 완료 시 멈춥니다. 시작·중지 파동과 성공 체크는 실제 백엔드 상태와 분리되어 진행률을 조작하지 않습니다.
 
 배포 스크린샷과 GIF는 **실제 패키징 EXE의 UI 검증 화면**입니다. 표시한 연결 상태는 테스트 주입 값이며 WARP나 게임 접속 성공의 증거가 아닙니다. Windows Server CI에서 검사하며 Windows 11 실기·학교망·LoL·Vanguard는 미검증입니다.
+
+## Windows UI 엔진 — build 5
+
+화면은 Qt Widgets에서 **Qt Quick RHI + FluentWinUI3 스타일**로 전환했습니다. Mac은 SwiftUI를 유지하고 Windows는 Windows 기본 제목 표시줄과 Fluent 컨트롤, Ctrl+,와 UAC를 사용합니다. FluentWinUI3는 Qt의 Windows 스타일이며 Windows App SDK 자체로 재작성한 앱이라는 뜻은 아닙니다.
+
+Windows 화면은 D3D11 장면 그래프에서 움직입니다. 글꼴은 Segoe UI Variable Text → Segoe UI → 시스템 대체 글꼴을 사용하고, 글자 윤곽선을 기반으로 하는 CurveTextRendering으로 배율에 독립적인 안티앨리어싱을 적용합니다. 운영체제의 ClearType 설정을 강제로 변경하지 않습니다. PNG 에셋에는 부드러운 축소와 mipmap을 적용하고, 땅굴과 체크 표시는 벡터로 렌더링합니다.
+
+시작·중지 파동, 단계에 따른 캐릭터 이동, 채굴·입자·빛·성공 전환은 QML 애니메이션 엔진이 처리하며 Python 프레임 타이머는 사용하지 않습니다. 연결 완료·비활성·최소화·동작 줄이기에서는 반복 효과를 정지합니다. 실행 결과는 기존 백엔드 단계만 반영합니다.
+
+네트워크 엔진은 검증된 **sing-box 1.12.0 Windows TUN**을 유지합니다. UI 교체가 게임 통신 경로를 바꾸지 않습니다. 렌더러·스타일·텍스트 모드·실제 선택한 글꼴은 검증 JSON과 렌더러 로그에 기록합니다. Windows Server CI의 그래픽 장치는 실제 Windows 11 PC의 GPU와 다를 수 있으며 하드웨어 가속 성능을 검증했다는 뜻은 아닙니다.

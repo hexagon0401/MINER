@@ -1,88 +1,102 @@
-"""Packaged EXE UI captures. All connection states here are injected, not live WARP."""
+"""Actual Qt Quick EXE captures; network states are explicitly injected fixtures."""
 import io
 import json
 import os
 from pathlib import Path
 import time
 
-from PySide6.QtCore import Qt, QTimer
-from PySide6.QtWidgets import QApplication, QLabel, QComboBox
 from PIL import Image
+from PySide6.QtCore import QObject, qInstallMessageHandler
+from PySide6.QtQuickControls2 import QQuickStyle
 import windows.app as ui
 
 
 def wait(app,seconds):
     until=time.monotonic()+seconds
-    while time.monotonic()<until:
-        app.processEvents();time.sleep(.01)
+    while time.monotonic()<until:app.processEvents();time.sleep(.01)
 
 
 def run(output):
     out=Path(output);out.mkdir(parents=True,exist_ok=True)
-    # Never read/write a user's real profile, recovery marker or UI preferences.
     ui.DATA=out/'test-profile';ui.DATA.mkdir(exist_ok=True)
-    app=QApplication.instance() or QApplication([])
-    w=ui.Window();w.show();w.activateWindow();wait(app,.2)
-    watermark=QLabel('UI VALIDATION · simulated states · no live WARP',w)
-    watermark.setStyleSheet('background:#ffd54a;color:#142337;font-size:10px;padding:3px;');watermark.adjustSize();watermark.show()
-    checks=[]
-    assert watermark.isVisible()
-    for asset in ['school.png','mascot-runtime-256.png','AppIcon.png','developer-avatar.png','full-window-strata.png']:
-        assert not ui.QPixmap(str(ui.ART/asset)).isNull(),asset
-    checks.append('Beta icon, scene, mascot and offline avatar decode')
-    def shot(name):
-        watermark.move(8,max(0,w.height()-watermark.height()-2));watermark.raise_();app.processEvents()
-        assert w.grab().save(str(out/f'windows-ui-{name}.png'))
-    for phase,count in [('idle',0),('proxy_connect',1),('running',5),('restoring',0),('restored',0)]:
-        w.dirty=phase not in ('idle','restored');w.update_state(phase,count);wait(app,.15)
-        assert f'{count}/5' in w.steps.text();shot(phase)
-    checks.append('state-driven progress and Windows action gating')
-    w.dirty=True;w.failure('Fixture: proxy verification failed. '+('Long diagnostic details. '*15));shot('error')
-    assert not w.start.isEnabled() and w.stop.isEnabled()
-    checks.append('long errors preserve Stop restoration and readable diagnostics')
-    w.dirty=False;w.detail='';w.update_state('idle',0)
-    for theme in ('light','dark'):
-        w.theme=theme;w.apply_theme();shot(theme)
-    w.lang='en';w.refresh();assert w.start.text()=='Start';shot('english')
-    w.lang='ko';w.refresh();assert w.start.text()=='시작'
-    w.preferences();wait(app,.1)
-    dialog=w.dialog;assert dialog
-    combos=dialog.findChildren(QComboBox);combos[0].setCurrentIndex(1);wait(app,.05)
-    assert dialog.windowTitle()=='Settings'
-    combos[0].setCurrentIndex(0);wait(app,.05);assert dialog.windowTitle()=='설정'
-    assert dialog.grab().save(str(out/'windows-ui-settings.png'));dialog.close();wait(app,.05)
-    checks.append('live Korean-English settings, About and persistent preferences')
-    w.resize(480,440);wait(app,.1)
-    for button in (w.start,w.stop,w.settings):
-        assert button.isVisible() and w.rect().contains(button.mapTo(w,button.rect().bottomRight()))
-    shot('compact');w.resize(560,680)
-    checks.append('compact window keeps primary actions visible')
-    w.reduced=True;w.cave.busy=True;w.sync_motion();assert not w.cave.timer.isActive()
-    w.motion.play('start',w.start.pos(),True);assert not w.motion.anim.state()==ui.QVariantAnimation.Running
-    checks.append('reduced motion has no recurring scene or wave animation')
-    w.reduced=False;w.cave.active=True;w.cave.reduced=False;w.cave.busy=True;w.cave.sync()
-    assert w.cave.timer.interval()>=33
-    w.cave.active=False;w.cave.sync();assert not w.cave.timer.isActive()
-    checks.append('digging bounded to 30fps and paused when inactive')
-    # Record the actual renderer over time; this sequence still uses fixture states.
-    w.theme='dark';w.apply_theme();w.cave.busy=False;w.update_state('idle',0)
-    frames=[]
-    for index in range(50):
-        if index==1:w.motion.play('start',w.start.mapTo(w,w.start.rect().center()),False)
-        if index==7:w.update_state('proxy_connect',1);w.cave.busy=True;w.cave.active=True;w.cave.sync()
-        if index==16:w.update_state('engine_start',4);w.cave.busy=True;w.cave.active=True;w.cave.sync()
-        if index==24:w.cave.busy=False;w.cave.sync();w.update_state('running',5)
-        if index==40:w.update_state('restoring',0);w.motion.play('stop',w.stop.mapTo(w,w.stop.rect().center()),False)
-        if index==47:w.update_state('restored',0)
-        wait(app,.12);watermark.raise_();app.processEvents()
-        image=w.grab().toImage()
-        # Save through PNG to avoid depending on a platform QImage memory layout.
-        from PySide6.QtCore import QBuffer,QIODevice
-        buffer=QBuffer();buffer.open(QIODevice.WriteOnly);image.save(buffer,'PNG')
-        frames.append(Image.open(io.BytesIO(bytes(buffer.data()))).convert('RGB'))
-    frames[0].save(out/'windows-ui-motion.gif',save_all=True,append_images=frames[1:],duration=120,loop=0)
-    w.cave.busy=False;w.cave.sync();w.motion.cancel();w.dirty=False;w.close()
-    result={'ok':True,'checks':checks,'network_actions':0,'state_source':'injected UI fixtures',
-        'os':os.name,'scale_factor':os.environ.get('QT_SCALE_FACTOR','system')}
-    (out/'windows-ui.json').write_text(json.dumps(result,indent=2),encoding='utf-8')
-    return result
+    messages=[]
+    previous=qInstallMessageHandler(lambda mode,context,message:messages.append(message))
+    try:
+        app,engine,b,w=ui.create_app(True);wait(app,.4)
+        assert w.isVisible()
+        assert w.findChild(QObject,'startButton') is not None
+        checks=[]
+        def image():
+            shot=w.grabWindow()
+            assert not shot.isNull(),'Qt Quick scene graph produced no image'
+            return shot
+        def capture(name):
+            wait(app,.08);assert image().save(str(out/f'windows-ui-{name}.png'))
+        def state(phase,count,dirty=True):
+            b.dirty=dirty;b.fixture_busy=phase in ('proxy_connect','engine_start');b.update_state(phase,count);wait(app,.08)
+            assert w.findChild(QObject,'progressLabel').property('text')==f'{count}/5'
+        for phase,count in [('idle',0),('proxy_connect',1),('running',5),('restoring',0),('restored',0)]:
+            state(phase,count,phase not in ('idle','restored'));capture(phase)
+        checks.append('real Qt Quick scene renders all backend states without network actions')
+        b.dirty=True;b.failure('Fixture: proxy verification failed. '+('Long diagnostic. '*15));capture('error')
+        assert not w.findChild(QObject,'startButton').property('enabled')
+        assert w.findChild(QObject,'stopButton').property('enabled')
+        checks.append('errors gate restart and preserve explicit restoration')
+        state('idle',0,False)
+        for theme in ('light','dark'):b.setTheme(theme);capture(theme)
+        b.setLanguage('en');wait(app,.05);assert w.findChild(QObject,'startButton').property('text')=='Start';capture('english')
+        b.setLanguage('ko');b.settings(True);wait(app,.2)
+        settings=w.findChild(QObject,'settingsWindow');assert settings and settings.isVisible()
+        b.setLanguage('en');wait(app,.05);assert settings.title()=='Settings'
+        b.setLanguage('ko');wait(app,.05);assert settings.title()=='설정'
+        assert settings.grabWindow().save(str(out/'windows-ui-settings.png'))
+        b.settings(False);wait(app,.1)
+        checks.append('Fluent settings, Korean-English copy, theme and persisted preferences')
+        w.setWidth(480);w.setHeight(440);wait(app,.1)
+        for name in ('startButton','stopButton','settingsButton'):
+            item=w.findChild(QObject,name)
+            pos=item.mapToScene(item.boundingRect().bottomRight())
+            assert item.isVisible() and pos.x()<=w.width()+1 and pos.y()<=w.height()+1,(name,pos,w.size())
+        capture('compact');w.setWidth(584);w.setHeight(704)
+        checks.append('small windows keep primary Windows actions accessible')
+        b.setReduced(True);wait(app,.05);assert not w.property('motionAllowed')
+        b.effect.emit('success');wait(app,.05);assert not w.property('successActive')
+        b.setReduced(False)
+        checks.append('Windows reduce-motion preference prevents success transitions')
+        label=w.findChild(QObject,'statusLabel')
+        text_render=w.property('nativeTextMode')
+        assert text_render==2, 'Text must use resolution-independent curve rendering'
+        api=str(w.rendererInterface().graphicsApi())
+        checks.append('scene graph, curve antialiasing and Windows font metadata recorded')
+        b.setTheme('dark');state('idle',0,False);frames=[]
+        for index in range(55):
+            if index==1:b.effect.emit('start')
+            if index==6:state('proxy_connect',1)
+            if index==17:state('engine_start',4)
+            if index==28:state('running',5)
+            if index==44:state('restoring',0);b.effect.emit('stop')
+            if index==52:state('restored',0,False)
+            wait(app,.1)
+            from PySide6.QtCore import QBuffer,QIODevice
+            buf=QBuffer();buf.open(QIODevice.WriteOnly);image().save(buf,'PNG')
+            frames.append(Image.open(io.BytesIO(bytes(buf.data()))).convert('RGB'))
+        frames[0].save(out/'windows-ui-motion.gif',save_all=True,append_images=frames[1:],duration=100,loop=0)
+        state('idle',0,False);w.showMinimized();wait(app,.1);assert not w.property('motionAllowed');w.showNormal()
+        checks.append('minimizing pauses repeating effects')
+        tokens=('ReferenceError:','TypeError:','Cannot assign','Unable to assign','Error decoding')
+        if getattr(ui.sys,'frozen',False):tokens+=('Cannot open:',)
+        errors=[m for m in messages if any(x in m for x in tokens)]
+        assert not errors,errors
+        result={'ok':True,'checks':checks,'network_actions':0,'state_source':'injected UI fixtures',
+            'ui_engine':'Qt Quick RHI','control_style':QQuickStyle.name(),'graphics_api':api,
+            'text_render_type':'CurveTextRendering', 'text_render_type_value':text_render,'font':b.font_family,
+            'scale_factor':os.environ.get('QT_SCALE_FACTOR','system')}
+        (out/'windows-ui.json').write_text(json.dumps(result,indent=2),encoding='utf-8')
+        (out/'qml-renderer.log').write_text('\n'.join(messages),encoding='utf-8')
+        b.dirty=False;w.close()
+        import shiboken6
+        shiboken6.delete(w);shiboken6.delete(engine);app.processEvents()
+        return result
+    finally:
+        (out/'qml-renderer.log').write_text('\n'.join(messages),encoding='utf-8')
+        qInstallMessageHandler(previous)

@@ -36,7 +36,8 @@ def main():
     with Image.open(art/'avatar-source') as avatar: avatar.convert('RGBA').save(art/'developer-avatar.png')
     with Image.open(art/'AppIcon.png') as icon:
         icon.save(work/'MINER.ico',sizes=[(16,16),(32,32),(48,48),(64,64),(128,128),(256,256)])
-    shutil.copyfile(BASE/'macos/delta/assets/full-window-strata.png',art/'full-window-strata.png')
+    for asset in ('full-window-strata.png','skylight-beam.png'):
+        shutil.copyfile(BASE/'macos/delta/assets'/asset,art/asset)
     engine=install(work/'engine','windows-amd64')
     config=work/'check.json'; config.write_text(json.dumps(build_config(Profile(platform='windows'))))
     execute(engine,'check','-c',config)
@@ -49,6 +50,7 @@ def main():
         '--name','MINER','--icon',work/'MINER.ico','--distpath',BASE/'dist-windows',
         '--workpath',work/'pyinstaller','--specpath',work,
         '--paths',BASE,'--hidden-import','windows.smoke',
+        '--add-data',f'{BASE / "windows/qml"};qml',
         '--add-data',f'{art};art','--add-binary',f'{engine};engine',
         '--add-data',f'{__import__("certifi").where()};.',
         BASE/'windows/app.py')
@@ -58,6 +60,7 @@ def main():
     output=Path(os.environ.get('RUNNER_TEMP',str(work)))/'miner-windows-diagnostics'
     output.mkdir(parents=True,exist_ok=True)
     exe=BASE/'dist-windows/MINER/MINER.exe'
+    os.environ['QSG_INFO']='1'
     execute(exe,'--self-test',output)
     for scale in ('1.25','1.5','2'):
         os.environ['QT_SCALE_FACTOR']=scale
@@ -81,6 +84,7 @@ def main():
     import platform
     report={'test_os':platform.platform(),'version':VERSION,'base':'MINER Beta 1.1','architecture':'x64',
       'authenticode_signed':False,'ui':ui,'native_tun':native,'installer_verified':True,'upgrade_verified':True,'unicode_path_verified':True,
+      'ui_engine':'Qt Quick RHI + FluentWinUI3','network_engine':'sing-box 1.12.0 Windows TUN',
       'ui_scale_factors':[1,1.25,1.5,2],'windows_11_live_tested':False,'vanguard_tested':False,
       'uninstaller_verified':True,'school_network_tested':False,'warp_live_tested':False}
     for path in [setup]:
