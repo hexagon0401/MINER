@@ -84,10 +84,11 @@ MINER는 **클라이언트 통신은 WARP로, 게임 플레이 통신은 직접 
 
 ```bash
 brew tap hexagon0401/miner https://github.com/hexagon0401/MINER.git
+brew trust --cask hexagon0401/miner/miner
 brew install --cask miner
 ```
 
-첫 번째 명령은 MINER 저장소를 Homebrew의 앱 배포 경로인 **tap**으로 등록합니다. 최초 등록 시 저장소 URL을 함께 입력해 주세요. Apple Silicon·Intel은 자동으로 구분합니다. tap 등록 후에는 `brew install --cask miner`로 설치할 수 있으며, `brew install --cask hexagon0401/miner/miner`는 같은 앱을 배포 경로까지 지정한 표기입니다. `--cask`는 macOS 앱 설치임을 명시합니다.
+첫 번째 명령은 MINER 저장소를 Homebrew의 앱 배포 경로인 **tap**으로 등록합니다. 최초 등록 시 저장소 URL을 함께 입력해 주세요. 두 번째 명령은 외부 tap의 **MINER cask를 신뢰 대상으로 등록**합니다. 등록 후 세 번째 명령으로 설치합니다. Apple Silicon·Intel은 자동으로 구분합니다. `brew install --cask hexagon0401/miner/miner`는 같은 앱을 배포 경로까지 지정한 표기이며, `--cask`는 macOS 앱 설치임을 명시합니다.
 
 새 정식 릴리스가 나오면 검증 후 cask가 자동 갱신됩니다. MINER에서 **중지 → WARP 복귀 확인 → 앱 종료**를 마친 뒤 업데이트합니다.
 

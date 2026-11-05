@@ -8,10 +8,13 @@
 
 ```bash
 brew tap hexagon0401/miner https://github.com/hexagon0401/MINER.git
+brew trust --cask hexagon0401/miner/miner
 brew install --cask hexagon0401/miner/miner
 ```
 
 첫 번째 명령의 저장소 URL을 생략하면 Homebrew가 기본 규칙에 따라 `hexagon0401/homebrew-miner`를 찾습니다. 기존 MINER 저장소를 사용할 때는 처음 등록할 때 위 URL을 반드시 지정합니다. 등록 이후에는 `brew install --cask hexagon0401/miner/miner`만 사용하면 됩니다. 최소 macOS는 앱 빌드 대상과 같은 Ventura(13)입니다. 개인용 Cloudflare WARP는 별도로 설치·등록합니다.
+
+최초 설치 시 `brew trust --cask hexagon0401/miner/miner`로 외부 tap의 MINER cask를 신뢰 대상으로 등록합니다. tap 전체가 아닌 이 cask만 지정합니다. 이는 Homebrew의 로드 허용 단계이며 Apple 서명·공증과는 별개입니다. [Homebrew 공식 trust 명령](https://github.com/Homebrew/brew/blob/main/Library/Homebrew/cmd/trust.rb)에서 동작을 확인할 수 있습니다.
 
 ## 사용자 준비
 
