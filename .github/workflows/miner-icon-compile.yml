@@ -13,13 +13,27 @@ jobs:
   compile:
     runs-on: macos-26
     timeout-minutes: 15
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@v4
       - name: Compile Icon Composer source
-        run: python3 packaging/icons/compile_macos.py v5/macos/design/icons/stable/MINER.icon compiled-icon
+        run: |
+          set -o pipefail
+          xcrun icontool --help > icon-tools.log 2>&1 || true
+          python3 packaging/icons/compile_macos.py v5/macos/design/icons/stable/MINER.icon compiled-icon 2>&1 | tee icon-build.log
       - uses: actions/upload-artifact@v4
         if: always()
         with:
           name: official-miner-icon
           path: compiled-icon/
           if-no-files-found: warn
+      - name: Preserve compiler output and diagnostics in Git
+        if: always()
+        run: |
+          git switch -c "miner-icon-status/${GITHUB_RUN_ID}"
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -f -- compiled-icon icon-build.log icon-tools.log
+          git commit -m 'Record native icon compiler output and diagnostics'
+          git push origin "HEAD:refs/heads/miner-icon-status/${GITHUB_RUN_ID}"
