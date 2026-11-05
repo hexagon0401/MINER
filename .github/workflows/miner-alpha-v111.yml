@@ -55,7 +55,7 @@ jobs:
         run: |
           set -o pipefail
           export SCHOOLNET_TEST_ENGINE="$PWD/local/bin/sing-box"
-          python3 -m unittest discover -s tests -v 2>&1 | tee "$RUNNER_TEMP/v111-release-tests-${{ matrix.arch }}.log"
+          python3 -c 'import subprocess,sys; subprocess.run([sys.executable,"-m","unittest","discover","-s","tests","-v"],check=True,timeout=180)' 2>&1 | tee "$RUNNER_TEMP/v111-release-tests-${{ matrix.arch }}.log"
           if [ "$SIGNING_ENABLED" = true ]; then mode=developer-id; else mode=adhoc; fi
           python3 macos/build.py --arch '${{ matrix.arch }}' --signing "$mode" 2>&1 | tee "$RUNNER_TEMP/v111-release-build-${{ matrix.arch }}.log"
       - name: Remove temporary signing keychain

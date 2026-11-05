@@ -40,11 +40,14 @@ class HelperTests(unittest.TestCase):
         finally:left.close();right.close()
 
     def test_bounded_json_protocol_rejects_truncated_and_oversized_messages(self):
-        for payload in [b"{}",b"x"*(helper.LIMIT+1)+b"\n",b"[]\n"]:
+        # Darwin socketpair buffers may be smaller than the production limit;
+        # keep boundary fixtures below that buffer instead of blocking sendall.
+        for payload in [b"{}",b"x"*65+b"\n",b"[]\n"]:
             left,right=socket.socketpair()
             try:
+                left.settimeout(2);right.settimeout(2)
                 right.sendall(payload);right.shutdown(socket.SHUT_WR)
-                with self.assertRaises(ValueError):helper.receive(left)
+                with patch.object(helper,"LIMIT",64),self.assertRaises(ValueError):helper.receive(left)
             finally:left.close();right.close()
 
 
