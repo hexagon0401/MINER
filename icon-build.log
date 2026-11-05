@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>com.apple.actool.compilation-results</key>
+	<dict>
+		<key>output-files</key>
+		<array>
+			<string>/Users/runner/work/MINER/MINER/compiled-icon/Assets.car</string>
+			<string>/Users/runner/work/MINER/MINER/compiled-icon/MINER.icns</string>
+			<string>/Users/runner/work/MINER/MINER/compiled-icon/icon-info.plist</string>
+		</array>
+	</dict>
+</dict>
+</plist>
+Traceback (most recent call last):
+  File "/Users/runner/work/MINER/MINER/packaging/icons/compile_macos.py", line 47, in <module>
+    compile_icon(args.source.resolve(), args.output.resolve())
+    ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/runner/work/MINER/MINER/packaging/icons/compile_macos.py", line 26, in compile_icon
+    raise ValueError("Native icon must include a 1024px PNG for Windows and older Macs")
+ValueError: Native icon must include a 1024px PNG for Windows and older Macs
