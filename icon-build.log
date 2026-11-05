@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>com.apple.actool.compilation-results</key>
+	<dict>
+		<key>output-files</key>
+		<array>
+			<string>/Users/runner/work/MINER/MINER/compiled-icon/Assets.car</string>
+			<string>/Users/runner/work/MINER/MINER/compiled-icon/MINER.icns</string>
+			<string>/Users/runner/work/MINER/MINER/compiled-icon/icon-info.plist</string>
+		</array>
+	</dict>
+</dict>
+</plist>
+{
+  "source": "MINER.icon",
+  "compiler": "Apple actool + iconutil",
+  "channel": "stable",
+  "info": {
+    "CFBundleIconFile": "MINER",
+    "CFBundleIconName": "MINER"
+  },
+  "sha256": "54c49e65c8b3f95fe43fd50bab2fdbfa5d4ae879671566ffbf48489a5b8cb1e2"
+}
