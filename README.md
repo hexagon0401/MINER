@@ -72,11 +72,33 @@ MINER는 **클라이언트 통신은 WARP로, 게임 플레이 통신은 직접 
 | 베타 1 유지 보수 | [`beta1-maintenance`](https://github.com/hexagon0401/MINER/tree/beta1-maintenance)에서 개발 |
 | 베타 2 | 학교 현황·진단·제보 기능의 **소스만 보관**. 배포용 DMG에 미포함 |
 | 공유 제보 서버 | 미개방 |
-| Homebrew | 준비 중 · 현재는 위 DMG로 설치 |
+| Homebrew | 자체 tap으로 설치 · 정식 릴리스의 cask 자동 갱신 |
 
 ## 설치
 
 ### macOS
+
+#### Homebrew로 설치
+
+[Homebrew](https://brew.sh/ko/)가 설치된 Mac에서 사용할 수 있습니다. 개인용 [Cloudflare WARP](https://one.one.one.one/)는 별도로 설치하고 최초 등록을 마쳐 주세요.
+
+```bash
+brew tap hexagon0401/miner https://github.com/hexagon0401/MINER.git
+brew install --cask miner
+```
+
+첫 번째 명령은 MINER 저장소를 Homebrew의 앱 배포 경로인 **tap**으로 등록합니다. 최초 등록 시 저장소 URL을 함께 입력해 주세요. Apple Silicon·Intel은 자동으로 구분합니다. tap 등록 후에는 `brew install --cask miner`로 설치할 수 있으며, `brew install --cask hexagon0401/miner/miner`는 같은 앱을 배포 경로까지 지정한 표기입니다. `--cask`는 macOS 앱 설치임을 명시합니다.
+
+새 정식 릴리스가 나오면 검증 후 cask가 자동 갱신됩니다. MINER에서 **중지 → WARP 복귀 확인 → 앱 종료**를 마친 뒤 업데이트합니다.
+
+```bash
+brew update
+brew upgrade --cask miner
+```
+
+DMG로 직접 설치한 MINER가 이미 있으면 Homebrew 설치가 중단될 수 있습니다. 앱을 중지·종료한 뒤 기존 설치와 사용자 데이터를 확인하고 전환해 주세요. Homebrew로 설치해도 아래의 최초 실행 허용 절차는 동일하게 적용됩니다. Mac에서의 Homebrew 설치·업데이트·제거 실기 검증은 아직 진행 전입니다.
+
+#### DMG로 설치
 
 1. 개인용 [Cloudflare WARP](https://one.one.one.one/)를 설치하고 최초 등록을 마칩니다.
 2. 위에서 Mac의 칩에 맞는 **Apple Silicon 또는 Intel DMG**를 다운로드해 엽니다.
