@@ -23,8 +23,9 @@ ApplicationWindow {
     color: s.contrast ? palette.window : s.dark ? "#111c2b" : "#f3f6fb"
     font.family: s.fontFamily
     font.pixelSize: 14
-    palette.highlight: "#13bb46"
-    palette.accent: "#13bb46"
+    SystemPalette { id: systemPalette }
+    palette.highlight: s.contrast ? systemPalette.highlight : "#13bb46"
+    palette.accent: s.contrast ? systemPalette.highlight : "#13bb46"
     onClosing: function(close) { close.accepted = backend.requestClose() }
     onMotionAllowedChanged: if (!motionAllowed) { waveAnim.stop(); successAnim.stop(); successActive = false }
     Shortcut { sequence: "Ctrl+,"; onActivated: backend.settings(true) }
@@ -78,7 +79,7 @@ ApplicationWindow {
                             anchors.centerIn: parent
                             scale: Math.min(scene.width/width, scene.height/height)
                             Shape {
-                                anchors.fill: parent; antialiasing: true
+                                anchors.fill: parent; antialiasing: true; preferredRendererType: Shape.CurveRenderer
                                 ShapePath {
                                     strokeWidth: 1; strokeColor: "#344353"; fillColor: "#080f19"
                                     startX: 268; startY: 74
@@ -163,7 +164,7 @@ ApplicationWindow {
             id: success; anchors.centerIn: parent; spacing: 12; opacity: 0; scale: 0.76
             Rectangle {
                 anchors.horizontalCenter: parent.horizontalCenter; width: 64; height: 64; radius: 32; color: win.accent
-                Shape { anchors.centerIn: parent; width: 32; height: 28; antialiasing: true; ShapePath { strokeColor: "#0b2d19"; strokeWidth: 4; fillColor: "transparent"; capStyle: ShapePath.RoundCap; joinStyle: ShapePath.RoundJoin; startX: 3; startY: 14; PathLine { x: 12; y: 23 } PathLine { x: 29; y: 4 } } }
+                Shape { anchors.centerIn: parent; width: 32; height: 28; antialiasing: true; preferredRendererType: Shape.CurveRenderer; ShapePath { strokeColor: "#0b2d19"; strokeWidth: 4; fillColor: "transparent"; capStyle: ShapePath.RoundCap; joinStyle: ShapePath.RoundJoin; startX: 3; startY: 14; PathLine { x: 12; y: 23 } PathLine { x: 29; y: 4 } } }
             }
             Label { text: s.text.running; color: win.ink; font.pixelSize: 18; font.weight: Font.DemiBold }
         }
@@ -178,28 +179,36 @@ ApplicationWindow {
     Label { visible: s.validation; anchors.left: parent.left; anchors.bottom: parent.bottom; padding: 4; text: "UI VALIDATION · simulated states · no live WARP"; color: "#142337"; font.pixelSize: 10; background: Rectangle { color: "#ffd54a" } }
     Window {
         id: preferences; objectName: "settingsWindow"; visible: s.settingsOpen
-        title: s.text.settings; width: 420; height: 520; minimumWidth: 360; minimumHeight: 460
+        title: s.text.settings; width: Math.min(440, Screen.desktopAvailableWidth); height: Math.min(600, Screen.desktopAvailableHeight)
+        minimumWidth: 360; minimumHeight: 380
         flags: Qt.Dialog | Qt.WindowTitleHint | Qt.WindowCloseButtonHint
         transientParent: win; color: win.color
         onClosing: backend.settings(false)
+        Shortcut { sequence: "Escape"; onActivated: backend.settings(false) }
         ColumnLayout {
             anchors.fill: parent; anchors.margins: 24; spacing: 12
-            Label { text: s.text.settings; color: win.ink; font.pixelSize: 24; font.weight: Font.DemiBold }
-            Label { text: s.text.language; color: win.muted }
-            ComboBox { objectName: "languageCombo"; Layout.fillWidth: true; model: ["한국어","English"]; currentIndex: s.language === "ko" ? 0 : 1; onActivated: backend.setLanguage(currentIndex === 0 ? "ko" : "en") }
-            Label { text: s.text.theme; color: win.muted }
-            ComboBox { Layout.fillWidth: true; model: [s.text.system,s.text.light,s.text.dark]; currentIndex: ["system","light","dark"].indexOf(s.theme); enabled: !s.contrast; onActivated: backend.setTheme(["system","light","dark"][currentIndex]) }
-            CheckBox { text: s.text.reduce; checked: s.reduced; enabled: !s.systemReduced; onToggled: backend.setReduced(checked) }
-            Label { text: s.text.about; color: win.muted }
-            RowLayout {
-                Image { source: s.art+"developer-avatar.png"; Layout.preferredWidth: 60; Layout.preferredHeight: 60; smooth: true; mipmap: true }
-                ColumnLayout { Label { text: "Punkthats*it · @hexagon0401"; color: win.ink } Label { text: s.version; color: win.muted; font.pixelSize: 11 } }
+            ScrollView {
+                Layout.fillWidth: true; Layout.fillHeight: true; clip: true; contentWidth: availableWidth
+                ScrollBar.horizontal.policy: ScrollBar.AlwaysOff
+                ColumnLayout {
+                    width: parent.width; spacing: 12
+                    Label { text: s.text.settings; color: win.ink; font.pixelSize: 24; font.weight: Font.DemiBold }
+                    Label { text: s.text.language; color: win.muted }
+                    ComboBox { objectName: "languageCombo"; Layout.fillWidth: true; model: ["한국어","English"]; currentIndex: s.language === "ko" ? 0 : 1; onActivated: backend.setLanguage(currentIndex === 0 ? "ko" : "en") }
+                    Label { text: s.text.theme; color: win.muted }
+                    ComboBox { Layout.fillWidth: true; model: [s.text.system,s.text.light,s.text.dark]; currentIndex: ["system","light","dark"].indexOf(s.theme); enabled: !s.contrast; onActivated: backend.setTheme(["system","light","dark"][currentIndex]) }
+                    CheckBox { text: s.text.reduce; checked: s.reduced; enabled: !s.systemReduced; onToggled: backend.setReduced(checked) }
+                    Label { text: s.text.about; color: win.muted }
+                    RowLayout {
+                        Image { source: s.art+"developer-avatar.png"; Layout.preferredWidth: 60; Layout.preferredHeight: 60; smooth: true; mipmap: true }
+                        ColumnLayout { Label { text: "Punkthats*it · @hexagon0401"; color: win.ink } Label { text: s.version; color: win.muted; font.pixelSize: 11 } }
+                    }
+                    RowLayout {
+                        Button { text: "GitHub"; onClicked: backend.github() }
+                        Button { text: s.text.log; onClicked: backend.logs() }
+                    }
+                }
             }
-            RowLayout {
-                Button { text: "GitHub"; onClicked: backend.github() }
-                Button { text: s.text.log; onClicked: backend.logs() }
-            }
-            Item { Layout.fillHeight: true }
             Button { Layout.alignment: Qt.AlignRight; text: s.text.close; onClicked: backend.settings(false) }
         }
     }

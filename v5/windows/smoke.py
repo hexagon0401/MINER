@@ -20,9 +20,12 @@ def run(output):
     out=Path(output);out.mkdir(parents=True,exist_ok=True)
     ui.DATA=out/'test-profile';ui.DATA.mkdir(exist_ok=True)
     messages=[]
-    previous=qInstallMessageHandler(lambda mode,context,message:messages.append(message))
+    def record(mode,context,message):
+        messages.append(message)
+        with (out/'qml-renderer.log').open('a',encoding='utf-8') as f:f.write(message+'\n')
+    previous=qInstallMessageHandler(record)
     try:
-        app,engine,b,w=ui.create_app(True);wait(app,.4)
+        app,engine,b,w=ui.create_app(True);w.requestActivate();wait(app,.4)
         assert w.isVisible()
         assert w.findChild(QObject,'startButton') is not None
         checks=[]
@@ -62,6 +65,10 @@ def run(output):
         b.setReduced(True);wait(app,.05);assert not w.property('motionAllowed')
         b.effect.emit('success');wait(app,.05);assert not w.property('successActive')
         b.setReduced(False)
+        # Server sessions often disable OS animations. Only override the in-memory
+        # test bridge for the motion recording; never change Windows settings.
+        capture_override=bool(b.appearance['reduced'])
+        b.appearance['reduced']=False;b.changed.emit()
         checks.append('Windows reduce-motion preference prevents success transitions')
         label=w.findChild(QObject,'statusLabel')
         text_render=w.property('nativeTextMode')
@@ -71,6 +78,8 @@ def run(output):
         b.setTheme('dark');state('idle',0,False);frames=[]
         for index in range(55):
             if index==1:b.effect.emit('start')
+            if index==2:
+                assert w.property('motionAllowed'), 'Window must be active for animation capture'
             if index==6:state('proxy_connect',1)
             if index==17:state('engine_start',4)
             if index==28:state('running',5)
@@ -88,6 +97,8 @@ def run(output):
         errors=[m for m in messages if any(x in m for x in tokens)]
         assert not errors,errors
         result={'ok':True,'checks':checks,'network_actions':0,'state_source':'injected UI fixtures',
+            'animation_preference_overridden_for_capture':capture_override,
+            'software_adapter_preferred':os.environ.get('QSG_RHI_PREFER_SOFTWARE_RENDERER')=='1',
             'ui_engine':'Qt Quick RHI','control_style':QQuickStyle.name(),'graphics_api':api,
             'text_render_type':'CurveTextRendering', 'text_render_type_value':text_render,'font':b.font_family,
             'scale_factor':os.environ.get('QT_SCALE_FACTOR','system')}

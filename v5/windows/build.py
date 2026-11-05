@@ -17,8 +17,8 @@ from schoolnet.config import Profile, build_config
 from windows.version import VERSION, FILE_VERSION, LABEL, TAG, STEM
 
 
-def execute(*args):
-    subprocess.run([str(a) for a in args],check=True,timeout=600)
+def execute(*args, timeout=600):
+    subprocess.run([str(a) for a in args],check=True,timeout=timeout)
 
 
 def main():
@@ -61,10 +61,10 @@ def main():
     output.mkdir(parents=True,exist_ok=True)
     exe=BASE/'dist-windows/MINER/MINER.exe'
     os.environ['QSG_INFO']='1'
-    execute(exe,'--self-test',output)
+    execute(exe,'--self-test',output,timeout=90)
     for scale in ('1.25','1.5','2'):
         os.environ['QT_SCALE_FACTOR']=scale
-        execute(exe,'--self-test',output/('scale-'+scale))
+        execute(exe,'--self-test',output/('scale-'+scale),timeout=90)
     os.environ.pop('QT_SCALE_FACTOR',None)
     ui=json.loads((output/'windows-ui.json').read_text())
     assert ui['ok']
@@ -72,7 +72,7 @@ def main():
     execute(iscc,f'/DAppBuildVersion={VERSION}',f'/DAppFileVersion={FILE_VERSION}',f'/DOutputStem={STEM}',BASE/'windows/installer.iss')
     setup=BASE/'dist-windows'/f'{STEM}-Setup.exe'
     execute(setup,'/VERYSILENT','/SUPPRESSMSGBOXES','/NORESTART',f'/DIR={work / "installed 한글 path"}')
-    execute(work/'installed 한글 path/MINER.exe','--self-test',output/'installed')
+    execute(work/'installed 한글 path/MINER.exe','--self-test',output/'installed',timeout=90)
     # Reinstall over the same installation to exercise upgrade safety.
     execute(setup,'/VERYSILENT','/SUPPRESSMSGBOXES','/NORESTART',f'/DIR={work / "installed 한글 path"}')
     execute(work/'installed 한글 path/unins000.exe','/VERYSILENT','/SUPPRESSMSGBOXES','/NORESTART')
