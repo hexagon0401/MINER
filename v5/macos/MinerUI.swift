@@ -23,6 +23,9 @@ final class MinerModel: ObservableObject {
     @Published var updateBusy = false
     @Published var updateMessage = ""
     @Published var updateAvailable = false
+    @Published var autoUpdates = UserDefaults.standard.object(forKey:"miner.autoUpdates") as? Bool ?? true {
+        didSet { UserDefaults.standard.set(autoUpdates,forKey:"miner.autoUpdates") }
+    }
     let copy: [String: Any] = {
         guard let url = Bundle.main.resourceURL?.appendingPathComponent("UIAssets/copy-ko.json"),
               let data = try? Data(contentsOf: url), let object = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else { return [:] }
@@ -240,9 +243,10 @@ struct MinerSettings: View {
             Picker(model.tr("언어","Language"),selection:$model.language) { Text("한국어").tag("ko"); Text("English").tag("en") }.pickerStyle(.segmented)
             Text(model.tr("중지·종료 시 WARP를 UDP Traffic and DNS로 복귀합니다.","Stopping or quitting restores WARP to UDP Traffic and DNS.")).font(.caption).foregroundStyle(.secondary)
             Toggle(model.tr("관리자 승인 항상 허용 · 도우미 재사용","Remember approval · reuse helper"),isOn:$model.alwaysAllow).disabled(model.busy || model.engine)
-            Text(model.tr("최초 설치·도우미 업데이트 시 한 번 승인합니다. 비밀번호를 저장하지 않으며 재부팅해도 자동 연결하지 않습니다. 해제하면 연결할 때마다 인증하며, 도우미는 앱 제거 시 함께 삭제됩니다.","Approve once when installing or updating the helper. No password is stored and no tunnel starts at login. Disable to authorize each session; uninstalling MINER removes the helper.")).font(.caption).foregroundStyle(.secondary)
+            Text(model.tr("최초 설치·도우미 업데이트 시 한 번 승인합니다. 비밀번호를 저장하지 않으며 재부팅해도 자동 연결하지 않습니다. 해제하면 연결할 때마다 인증합니다. 복구 도우미는 비정상 종료 시 DNS를 복구하며 앱 제거 시 삭제됩니다.","Approve once when installing or updating the helper. No password is stored and no tunnel starts at login. Disable to authorize each session. The recovery helper restores DNS after a crash and is removed when uninstalling MINER.")).font(.caption).foregroundStyle(.secondary)
             Divider()
             Text(model.tr("앱 업데이트","App updates")).font(.headline)
+            Toggle(model.tr("새 버전 자동 확인·알림","Automatically check and notify"),isOn:$model.autoUpdates)
             Button(model.tr("업데이트 확인","Check for updates")) { controller.checkUpdate() }.disabled(model.updateBusy || model.busy)
             if model.updateAvailable {
                 Button(model.tr("업데이트 설치","Install update")) { controller.installUpdate() }.disabled(model.updateBusy || model.busy || model.engine)

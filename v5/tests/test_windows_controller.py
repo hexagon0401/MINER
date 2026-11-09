@@ -8,6 +8,15 @@ from windows import controller
 
 
 class WindowsLifecycleTests(unittest.TestCase):
+    def setUp(self):
+        self.lease=MagicMock();self.lease.prepare.return_value=['192.0.2.53']
+        lease=patch('schoolnet.network_dns.Lease',return_value=self.lease);lease.start();self.addCleanup(lease.stop)
+        relay=MagicMock();relay.port=40001
+        relay_factory=relay;relay_factory.__enter__.return_value=relay
+        forward=patch('schoolnet.dns_forwarder.Forwarder',return_value=relay_factory);forward.start();self.addCleanup(forward.stop)
+        check=patch.object(controller,'check_engine');check.start();self.addCleanup(check.stop)
+        guard=patch('schoolnet.dns_guard.spawn',return_value=None);guard.start();self.addCleanup(guard.stop)
+
     def test_profile_preserves_edits_and_rejects_other_platform(self):
         with tempfile.TemporaryDirectory() as d:
             p=controller.prepare(d)
@@ -74,7 +83,7 @@ class WindowsLifecycleTests(unittest.TestCase):
 
     def test_engine_schema_failure_never_spawns_or_restores_implicitly(self):
         with tempfile.TemporaryDirectory() as d:
-            with patch.object(controller,'is_admin',return_value=True),patch.object(controller.warp,'activate'),patch.object(controller,'doctor',side_effect=ValueError('bad engine')),patch.object(controller.subprocess,'Popen') as spawn,patch.object(controller.warp,'restore') as restore:
+            with patch.object(controller,'is_admin',return_value=True),patch.object(controller.warp,'activate'),patch.object(controller,'check_engine',side_effect=ValueError('bad engine')),patch.object(controller.subprocess,'Popen') as spawn,patch.object(controller.warp,'restore') as restore:
                 with self.assertRaisesRegex(ValueError,'bad engine'):
                     controller.session(d,'engine',threading.Event(),lambda *a:None)
                 spawn.assert_not_called();restore.assert_not_called()
@@ -84,8 +93,8 @@ class WindowsLifecycleTests(unittest.TestCase):
         child=MagicMock();child.poll.return_value=1
         job=MagicMock()
         with tempfile.TemporaryDirectory() as d:
-            with patch.object(controller,'is_admin',return_value=True),patch.object(controller.warp,'activate'),patch.object(controller,'doctor',return_value={'preflight_ok':True}),patch.object(controller.subprocess,'Popen',return_value=child),patch.object(controller.subprocess,'CREATE_NEW_PROCESS_GROUP',512,create=True),patch('windows.process.Job',return_value=job),patch.object(controller.warp,'restore') as restore:
-                with self.assertRaisesRegex(ValueError,'unexpectedly'):
+            with patch.object(controller,'is_admin',return_value=True),patch.object(controller.warp,'activate'),patch.object(controller,'check_engine',return_value={'preflight_ok':True}),patch.object(controller.subprocess,'Popen',return_value=child),patch.object(controller.subprocess,'CREATE_NEW_PROCESS_GROUP',512,create=True),patch('windows.process.Job',return_value=job),patch.object(controller.warp,'restore') as restore:
+                with self.assertRaisesRegex(ValueError,'during startup'):
                     controller.session(d,'engine',threading.Event(),lambda *a:None)
                 job.assign.assert_called_once_with(child);job.close.assert_called_once();restore.assert_not_called()
             self.assertTrue((Path(d)/'session.json').exists())
@@ -149,6 +158,6 @@ class WindowsLifecycleTests(unittest.TestCase):
                 if phase=='engine_start':stop.set();kill.set()
             def stopped(proc):
                 if proc is child:calls.append('engine stopped');child.poll.return_value=0
-            with patch.object(controller,'is_admin',return_value=True),patch.object(controller.warp,'activate'),patch.object(controller,'doctor',return_value={'preflight_ok':True}),patch.object(controller.subprocess,'Popen',return_value=child),patch.object(controller.subprocess,'CREATE_NEW_PROCESS_GROUP',512,create=True),patch('windows.process.Job'),patch.object(controller,'stop_engine',side_effect=stopped),patch.object(controller.warp,'deactivate',side_effect=lambda:calls.append('warp disconnected')):
+            with patch.object(controller,'is_admin',return_value=True),patch.object(controller.warp,'activate'),patch.object(controller,'check_engine',return_value={'preflight_ok':True}),patch.object(controller.subprocess,'Popen',return_value=child),patch.object(controller.subprocess,'CREATE_NEW_PROCESS_GROUP',512,create=True),patch('windows.process.Job'),patch.object(controller,'stop_engine',side_effect=stopped),patch.object(controller.warp,'deactivate',side_effect=lambda:calls.append('warp disconnected')):
                 controller.session(d,'engine',stop,emit,False,kill)
             self.assertEqual(calls,['engine stopped','warp disconnected'])

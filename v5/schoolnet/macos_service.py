@@ -44,6 +44,8 @@ def status():
 
 
 def stop():
+    from .network_dns import Lease
+    Lease.recover(BASE/'profile')
     before = status()
     if before["running"]:
         subprocess.run(["/bin/launchctl", "remove", LABEL], check=True,
@@ -157,6 +159,11 @@ def start_installed(profile):
                str(base / "runtime/schoolnet-cli"), "run", "--directory", str(directory),
                "--engine", str(engine), "--managed-helper"]
     subprocess.run(command, check=True, capture_output=True, text=True, timeout=10)
+    return wait_ready(base,offset)
+
+
+def wait_ready(base,offset):
+    log=base/"engine.log"
     deadline = time.monotonic() + 20
     while time.monotonic() < deadline:
         result = status()
@@ -164,14 +171,14 @@ def start_installed(profile):
         if log.exists():
             with log.open("rb") as stream:
                 stream.seek(offset); text = stream.read().decode(errors="replace")
-        if result["running"] and "sing-box started" in text and "inbound/tun" in text: return result
+        if result["running"] and "MINER selective DNS ready" in text: return result
         if not result["running"] and text: raise ValueError("Installed engine exited during startup; inspect engine.log")
         time.sleep(.1)
     stop()
     raise ValueError("TUN readiness timed out; routing was stopped")
 
 
-def manage(operation, resources=None, profile=None):
+def manage(operation, resources=None, profile=None, owner=None):
     if platform.system() != "Darwin":
         raise ValueError("desktop service commands are macOS-only")
     if operation == "status":
@@ -186,17 +193,18 @@ def manage(operation, resources=None, profile=None):
         if status()["running"]:
             raise ValueError("MINER is already running")
         stop()
-        base = prepare(resources, profile)
+        # Even per-session authorization needs a surviving DNS recovery helper.
+        # Install within this already-authorized operation; no second prompt.
+        from .macos_helper import install
+        install(resources, profile, owner)
+        base = BASE
+        offset=(base/"engine.log").stat().st_size
         command = ["/bin/launchctl", "submit", "-l", LABEL,
                    "-o", str(base / "engine.log"), "-e", str(base / "engine.log"), "--",
                    str(base / "runtime" / "schoolnet-cli"), "run",
                    "--directory", str(base / "profile"), "--engine", str(base / "bin" / "sing-box")]
         subprocess.run(command, check=True, capture_output=True, text=True, timeout=10)
-        # A PID is not functional readiness. Report only whether startup stayed alive.
-        time.sleep(1)
-        result = status()
-        if not result["running"]:
-            raise ValueError(f"engine exited during startup; inspect {base / 'engine.log'}")
+        result=wait_ready(base,offset)
         progress("running", 5)
         print(json.dumps(result))
     elif operation == "stop":

@@ -10,10 +10,9 @@ class ProfileTests(unittest.TestCase):
         route = config["route"]
         self.assertEqual(route["final"], "direct")
         proxy_rules = [r for r in route["rules"] if r.get("outbound") == "warp"]
-        self.assertEqual(len(proxy_rules), 2)
+        self.assertEqual(len(proxy_rules), 1)
         self.assertTrue(all(r["network"] == "tcp" for r in proxy_rules))
-        self.assertIn("LeagueClient", proxy_rules[0]["process_name"])
-        self.assertNotIn("LeagueofLegends", proxy_rules[0]["process_name"])
+        self.assertEqual(["schoolnet-tun"],proxy_rules[0]["inbound"])
         self.assertNotIn("port_range", proxy_rules[0])
 
     def test_embedded_web_helpers_match_without_tunneling_safari_or_game_bundle(self):
@@ -28,14 +27,14 @@ class ProfileTests(unittest.TestCase):
             self.assertFalse(any(re.search(pattern, path) for pattern in expressions), path)
         self.assertIn("Riot Client Helper (Renderer)", Profile().clients)
 
-    def test_every_client_selector_has_tcp_proxy_and_explicit_quic_rejection(self):
-        rules = build_config(Profile())["route"]["rules"]
-        for selector in ["process_name", "process_path_regex"]:
-            tcp = next(r for r in rules if selector in r and r.get("outbound") == "warp")
-            udp = next(r for r in rules if selector in r and r.get("action") == "reject")
-            self.assertEqual(tcp[selector], udp[selector])
-            self.assertEqual(udp["method"], "default")
-            self.assertTrue(udp["no_drop"])
+    def test_synthetic_riot_tcp_is_proxied_without_renderer_process_lookup(self):
+        rules=build_config(Profile())["route"]["rules"]
+        tcp=next(r for r in rules if r.get("outbound")=="warp")
+        udp=next(r for r in rules if r.get("action")=="reject")
+        self.assertEqual(["schoolnet-tun"],tcp["inbound"])
+        self.assertEqual(tcp["inbound"],udp["inbound"])
+        self.assertNotIn('process_name',tcp)
+        self.assertEqual('default',udp['method']);self.assertTrue(udp['no_drop'])
 
     def test_game_has_explicit_priority_on_both_platforms(self):
         for platform in ["macos", "windows"]:
@@ -53,14 +52,15 @@ class ProfileTests(unittest.TestCase):
         self.assertEqual(socks["inet4_bind_address"], "127.0.0.1")
         udp_reject = next(r for r in config["route"]["rules"] if r.get("action") == "reject")
         self.assertEqual(udp_reject["network"], "udp")
-        self.assertIn("process_name", udp_reject)
+        self.assertEqual(["schoolnet-tun"],udp_reject["inbound"])
 
-    def test_dns_is_verified_doh_inside_warp(self):
+    def test_only_riot_synthetic_addresses_enter_tun_and_dns_is_remote_via_socks(self):
         server = build_config(Profile())["dns"]["servers"][0]
-        self.assertEqual(server["detour"], "warp")
-        self.assertEqual(server["type"], "https")
-        self.assertTrue(server["tls"]["enabled"])
-        self.assertNotIn("insecure", server["tls"])
+        self.assertEqual(server["type"], "fakeip")
+        config=build_config(Profile())
+        self.assertEqual(config['inbounds'][0]['route_address'],['198.18.0.0/15','fdfe:dcba:9876:1000::/64'])
+        self.assertTrue(config['experimental']['cache_file']['store_fakeip'])
+        self.assertEqual(config['log']['level'],'warn')
 
     def test_normal_browser_dns_and_tcp_are_independent_of_warp(self):
         for platform in ("macos", "windows"):
@@ -70,10 +70,11 @@ class ProfileTests(unittest.TestCase):
             self.assertEqual("direct-dns", config["route"]["default_domain_resolver"])
             direct = next(s for s in config["dns"]["servers"] if s["tag"] == "direct-dns")
             self.assertNotIn("detour", direct)
-            self.assertEqual("local", direct["type"])
+            self.assertEqual("udp", direct["type"])
+            self.assertEqual('127.0.0.1',direct['server'])
             self.assertTrue(config["dns"]["independent_cache"])
             self.assertFalse(any("Arc" in rule.get("process_name", []) for rule in config["dns"]["rules"]))
-            self.assertTrue(all("process_name" in r or "process_path_regex" in r for r in config["route"]["rules"] if r.get("action") == "reject"))
+            self.assertTrue(all(r.get("inbound")==["schoolnet-tun"] for r in config["route"]["rules"] if r.get("action") == "reject"))
 
     def test_optional_kernel_exclusion_only_exact_observed_hosts(self):
         profile = Profile(game_cidrs=["8.8.8.8/32", "2606:4700:4700::1001/128"])

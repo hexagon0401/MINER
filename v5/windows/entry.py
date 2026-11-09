@@ -8,6 +8,10 @@ import traceback
 
 def run():
     try:
+        if '--dns-guard' in sys.argv:
+            from schoolnet.dns_guard import run as guard
+            index=sys.argv.index('--dns-guard')
+            return guard(int(sys.argv[index+1]),int(sys.argv[index+2]))
         from windows.app import main
         return main()
     except BaseException:

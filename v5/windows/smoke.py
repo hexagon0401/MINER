@@ -69,6 +69,10 @@ def run(output):
         assert settings.grabWindow().save(str(out/'windows-ui-settings.png'))
         b.settings(False);wait(app,.1)
         checks.append('Fluent settings, Korean-English copy, theme and persisted preferences')
+        b.update_info={'available':True,'version':'99.0.0'};b.changed.emit();capture('update-available')
+        assert b.state['updateAvailable'] and b.state['autoUpdates']
+        b.update_info=None;b.changed.emit()
+        checks.append('automatic update preference and available-version banner render without network actions')
         w.setWidth(480);w.setHeight(440);wait(app,.1)
         for name in ('startButton','stopButton','killButton','settingsButton'):
             item=w.findChild(QObject,name)

@@ -93,16 +93,28 @@ print("fixture-ready", flush=True)
 while True: time.sleep(.05)
 ''')
             engine.chmod(0o755)
+            write_json(root/'profile.json',Profile().to_dict())
             code = f'''from schoolnet import runtime
 runtime.doctor = lambda *a: {{"preflight_ok": True, "engine": {str(engine)!r}}}
 runtime.is_admin = lambda: True
+runtime.check_engine = lambda *a: None
+from unittest.mock import MagicMock
+import schoolnet.network_dns as nd
+import schoolnet.dns_forwarder as df
+nd.Lease=lambda *a:MagicMock()
+nd.probe_dns=lambda:True
+relay=MagicMock(); relay.__enter__.return_value.port=40001
+df.Forwarder=lambda *a:relay
 raise SystemExit(runtime.run({directory!r}))
 '''
             child = subprocess.Popen([sys.executable, "-u", "-c", code], stdout=subprocess.PIPE,
                                      stderr=subprocess.PIPE, text=True)
             try:
-                self.assertIn("Engine starting", child.stdout.readline())
-                self.assertIn("fixture-ready", child.stdout.readline())
+                first=child.stdout.readline()
+                self.assertIn("Engine starting",first,child.stderr.read() if not first else '')
+                for _ in range(3):
+                    if 'fixture-ready' in child.stdout.readline():break
+                else:self.fail('fixture engine did not become ready')
                 child.send_signal(signal.SIGTERM)
                 stdout, stderr = child.communicate(timeout=5)
                 self.assertEqual(child.returncode, 0, stderr)
@@ -136,6 +148,8 @@ class EngineIntegrationTests(unittest.TestCase):
                 reservation.bind(("127.0.0.1", 0))
                 listen_port = reservation.getsockname()[1]
             config = build_config(Profile(proxy_port=proxy))
+            config['log']['level']='info'
+            config['experimental']['cache_file']['path']=str(Path(directory)/'cache.db')
             # Replace TUN with a loopback SOCKS listener. Select the generated WARP
             # outbound explicitly: process attribution still requires native TUN tests.
             config["inbounds"] = [{"type": "socks", "tag": "smoke", "listen": "127.0.0.1", "listen_port": listen_port}]

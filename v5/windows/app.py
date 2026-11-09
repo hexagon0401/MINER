@@ -7,7 +7,7 @@ import sys
 import threading
 import webbrowser
 
-from PySide6.QtCore import QObject, Property, QThread, Signal, Slot, QUrl, Qt
+from PySide6.QtCore import QObject, Property, QThread, Signal, Slot, QUrl, Qt, QTimer
 from PySide6.QtGui import QGuiApplication, QFont, QFontDatabase, QIcon
 from PySide6.QtQml import QQmlApplicationEngine
 from PySide6.QtQuick import QQuickWindow, QSGRendererInterface
@@ -60,6 +60,7 @@ class Bridge(QObject):
         layout=cfg.get('control_layout')
         self.control_layout=layout if layout in ('rounded','flush') else 'rounded'
         self.reduced=cfg.get('reduce_motion') is True
+        self.auto_updates=cfg.get('auto_updates',True) is not False
         self.appearance=windows_appearance();self.dirty=(DATA/'session.json').exists()
         self.phase='interrupted' if self.dirty else 'idle'
         available=QFontDatabase.families()
@@ -83,11 +84,12 @@ class Bridge(QObject):
             'art':QUrl.fromLocalFile(str(ART.resolve())+os.sep).toString(),
             'pearlArt':QUrl.fromLocalFile(str((ART/'pearl' if (ART/'pearl').exists() else ROOT/'windows/pearl').resolve())+os.sep).toString(),
             'validation':self.testing,'updateBusy':self.update_busy,'updateMessage':self.update_message,
-            'updateAvailable':bool(self.update_info and self.update_info.get('available'))}
+            'updateAvailable':bool(self.update_info and self.update_info.get('available')),
+            'autoUpdates':self.auto_updates,'updateVersion':self.update_info.get('version','') if self.update_info else ''}
 
     def save(self):
         from schoolnet.runtime import write_json
-        try:write_json(DATA/'settings.json',{'language':self.language,'theme':self.theme,'reduce_motion':self.reduced,'control_layout':self.control_layout})
+        try:write_json(DATA/'settings.json',{'language':self.language,'theme':self.theme,'reduce_motion':self.reduced,'control_layout':self.control_layout,'auto_updates':self.auto_updates})
         except (OSError,ValueError) as exc:self.detail=str(exc)
         self.changed.emit()
 
@@ -188,6 +190,12 @@ class Bridge(QObject):
         if self.testing or self.update_busy:return
         self.update_message=WORDS[self.language]['update_checking'];self.run_update()
 
+    @Slot(bool)
+    def setAutoUpdates(self,value):self.auto_updates=value;self.save()
+
+    def automaticUpdate(self):
+        if self.auto_updates and not self.update_busy and not self.testing:self.checkUpdate()
+
     @Slot()
     def installUpdate(self):
         if self.testing or self.update_busy or not self.update_info or not self.update_info.get('available'):return
@@ -242,6 +250,10 @@ def create_app(testing=False):
     bridge.window=window
     bridge.effects_supported=window.rendererInterface().graphicsApi() not in (QSGRendererInterface.GraphicsApi.Software,QSGRendererInterface.GraphicsApi.Unknown)
     bridge.changed.emit();bridge.apply_appearance()
+    if not testing:
+        QTimer.singleShot(4000,bridge.automaticUpdate)
+        bridge.update_timer=QTimer(bridge);bridge.update_timer.setInterval(21600000)
+        bridge.update_timer.timeout.connect(bridge.automaticUpdate);bridge.update_timer.start()
     return app,engine,bridge,window
 
 

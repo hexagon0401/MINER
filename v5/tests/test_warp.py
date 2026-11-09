@@ -113,6 +113,21 @@ class WarpTests(unittest.TestCase):
                 context.wrap_socket.assert_called_once_with(sock.__enter__.return_value, server_hostname="www.cloudflare.com")
                 dial.assert_called_once_with(("127.0.0.1", 40000), timeout=5.0)
 
+    def test_health_check_preserves_healthy_client_and_only_reconnects_disconnected_proxy(self):
+        for status, expected in [('Connected',False),('Disconnected',True)]:
+            calls,call=self.cli_fixture(mode='proxy',status=status)
+            with patch.object(warp,'resolve_cli',return_value='warp-cli'),patch.object(warp,'command',side_effect=call):
+                self.assertEqual(expected,warp.maintain_proxy()['reconnecting'])
+            self.assertNotIn(('disconnect',),calls)
+            self.assertNotIn(('mode','proxy'),calls)
+            self.assertEqual(expected,('connect',) in calls)
+
+    def test_external_full_tunnel_change_is_an_error_not_a_silent_toggle(self):
+        calls,call=self.cli_fixture(mode='full',status='Connected')
+        with patch.object(warp,'resolve_cli',return_value='warp-cli'),patch.object(warp,'command',side_effect=call),self.assertRaisesRegex(ValueError,'mode changed'):
+            warp.maintain_proxy()
+        self.assertEqual([('settings',)],calls)
+
     def test_status_does_not_treat_disconnected_as_connected(self):
         self.assertFalse(warp.connected("Status update: Disconnected"))
         self.assertTrue(warp.connected("Status update: Connected\n"))

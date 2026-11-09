@@ -19,6 +19,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     var settingsWindow: NSWindow?
     var managedWarp = false
     var updateInfo:[String:Any] = [:]
+    var updateTimer:Timer?
+    var healthTimer:Timer?
+    var healthBusy=false
+    var currentProxyPort=40000
     var buttons: [NSButton] = []
     var running = false { didSet { model.engine = running } }
     var busy = false
@@ -68,8 +72,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             runDeltaSmoke(output:URL(fileURLWithPath:CommandLine.arguments[index+1]),arch:CommandLine.arguments[index+2])
             return
         }
-        append("MINER ALPHA v1.1.1: 연결 경로와 종료 복구를 확인하세요.")
+        append("MINER ALPHA v1.2.0: 게임 중에도 MINER와 WARP Local Proxy 연결을 유지하세요.")
         refresh()
+        DispatchQueue.main.asyncAfter(deadline:.now()+4) { if self.model.autoUpdates { self.checkUpdate() } }
+        updateTimer=Timer.scheduledTimer(withTimeInterval:21600,repeats:true) { _ in if self.model.autoUpdates { self.checkUpdate() } }
+        healthTimer=Timer.scheduledTimer(withTimeInterval:15,repeats:true) { _ in self.checkSessionHealth() }
     }
 
     func append(_ text: String) {
@@ -167,6 +174,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         let data = try Data(contentsOf: dataDirectory.appendingPathComponent("profile.json"))
         let profile = try JSONSerialization.jsonObject(with: data) as? [String: Any]
         let port = profile?["proxy_port"] as? Int ?? 40000
+        currentProxyPort=port
         return ["warp", operation, "--proxy-port", String(port), "--progress"]
     }
     @objc func connectWarp() {
@@ -235,7 +243,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                 return try self.execute(["desktop", "helper-start", "--profile", self.dataDirectory.path])
             }
             return try self.execute(["desktop", "start", "--resources", self.resources.path,
-                                     "--profile", self.dataDirectory.path], administrator: true)
+                                     "--profile", self.dataDirectory.path,"--owner",String(getuid())], administrator: true)
         }, completion: { self.running = true; self.model.phase = "running"; self.model.completed = 5; self.model.warp = true })
     }
     @objc func stop() {
@@ -271,6 +279,19 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         if model.alwaysAllow && helperReady() { return try execute(["desktop","helper-stop"]) }
         return try execute(["desktop","stop"],administrator:true)
     }
+    func checkSessionHealth() {
+        guard running && !busy && !healthBusy && !model.updateBusy else { return }
+        healthBusy=true
+        DispatchQueue.global(qos:.utility).async {
+            do {
+                let status=try self.execute(["desktop","status"])
+                let info=try JSONSerialization.jsonObject(with:Data(status.utf8)) as? [String:Any] ?? [:]
+                guard info["running"] as? Bool == true else { throw NSError(domain:identifier,code:1,userInfo:[NSLocalizedDescriptionKey:"네트워크 엔진이 종료되었습니다. 일반 DNS를 복구한 뒤 다시 연결하세요."]) }
+                _ = try self.execute(["warp","maintain","--proxy-port",String(self.currentProxyPort)])
+                DispatchQueue.main.async { self.healthBusy=false }
+            } catch { DispatchQueue.main.async { self.healthBusy=false; self.model.error=self.model.redact(error.localizedDescription);self.model.phase="error" } }
+        }
+    }
     var updateArchitecture:String {
         #if arch(arm64)
         return "arm64"
@@ -288,6 +309,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                 DispatchQueue.main.async {
                     self.updateInfo = info; self.model.updateBusy = false
                     self.model.updateAvailable = info["available"] as? Bool == true
+                    NSApp.dockTile.badgeLabel=self.model.updateAvailable ? "↑" : nil
                     self.model.updateMessage = self.model.updateAvailable ? self.model.tr("새 버전: ","New release: ") + (info["version"] as? String ?? "") + self.model.tr(" · 연결을 중지한 뒤 설치하세요."," · Stop MINER before installing.") : self.model.tr("최신 버전입니다.","You are up to date.")
                 }
             } catch { DispatchQueue.main.async { self.model.updateBusy = false; self.model.updateMessage = self.model.redact(error.localizedDescription) } }

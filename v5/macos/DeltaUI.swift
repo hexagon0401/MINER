@@ -254,6 +254,12 @@ struct DeltaRoot: View {
             startButton(size).position(x:size.width/2,y:459*sy+24)
             stopButton(size).position(x:size.width/2,y:515*sy+18)
             footer.frame(width:size.width-52,height:38).position(x:size.width/2,y:583*sy)
+            if model.updateAvailable {
+                Button { controller.showSettings() } label: {
+                    Label(model.tr("새 버전 업데이트 가능 · 설정 열기","Update available · Open Settings"),systemImage:"arrow.down.circle")
+                        .font(.system(size:11,weight:.medium))
+                }.buttonStyle(.bordered).tint(deltaGreen).position(x:size.width/2,y:40*sy)
+            }
         }.foregroundStyle(Color(red:0.90,green:0.91,blue:0.90))
     }
     private var header: some View {

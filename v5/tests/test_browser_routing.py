@@ -55,6 +55,7 @@ class BrowserRoutingTests(unittest.TestCase):
             with tempfile.TemporaryDirectory() as temporary:
                 proxy_port,dns_port=port(socket.SOCK_STREAM),port(socket.SOCK_DGRAM)
                 config=build_config(Profile(proxy_port=port(socket.SOCK_STREAM)))
+                config['experimental']['cache_file']['path']=str(Path(temporary)/'cache.db')
                 # Loopback listeners exercise the generated routing/DNS rules,
                 # replacing privileged TUN and physical-interface binding only.
                 config['inbounds']=[{'type':'socks','tag':'browser-test','listen':'127.0.0.1','listen_port':proxy_port},
@@ -91,7 +92,8 @@ class BrowserRoutingTests(unittest.TestCase):
                             query.sendto(b'\x12\x34\x01\x00\x00\x01\x00\x00\x00\x00\x00\x00'+domain+b'\x00\x01\x00\x01',('127.0.0.1',dns_port))
                             try:response=query.recv(512)
                             except socket.timeout:response=b''
-                            self.assertFalse(response and response[3]&15==0,'Riot DNS must not succeed through the direct resolver')
+                            self.assertTrue(response and response[3]&15==0,'Riot names must receive a local synthetic address')
+                            self.assertEqual(response[-4:-2],b'\xc6\x12')
                         self.assertNotIn('login.riotgames.com',resolver.names)
                     finally:
                         process.terminate();process.wait(timeout=10)

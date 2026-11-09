@@ -109,6 +109,11 @@ ApplicationWindow {
             contentWidth: availableWidth
             ColumnLayout {
                 width: parent.width; spacing: 16
+                Button {
+                    objectName: "updateBanner"; visible: s.updateAvailable; Layout.fillWidth: true
+                    text: s.text.update_available+" "+s.updateVersion+" · "+s.text.update_check
+                    onClicked: backend.settings(true)
+                }
                 Item {
                     Layout.fillWidth: true; Layout.preferredHeight: 76
                     Column {
@@ -239,6 +244,7 @@ ApplicationWindow {
                     ComboBox { objectName: "layoutCombo"; Layout.fillWidth: true; model: [s.text.rounded,s.text.flush]; currentIndex: win.flush ? 1 : 0; onActivated: backend.setLayout(currentIndex===0 ? "rounded" : "flush") }
                     CheckBox { text: s.text.reduce; checked: s.reduced; enabled: !s.systemReduced; onToggled: backend.setReduced(checked) }
                     CopyText { text: s.text.updates; color: win.muted }
+                    CheckBox { text: s.text.auto_updates; checked: s.autoUpdates; onToggled: backend.setAutoUpdates(checked) }
                     RowLayout {
                         Button { objectName: "checkUpdateButton"; text: s.text.update_check; enabled: !s.updateBusy; onClicked: backend.checkUpdate() }
                         Button { objectName: "installUpdateButton"; text: s.text.update_install; visible: s.updateAvailable; enabled: !s.updateBusy && !s.canStop; onClicked: backend.installUpdate() }

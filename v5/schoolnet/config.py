@@ -27,7 +27,13 @@ GAMES = {
     "macos": ["LeagueofLegends", "League of Legends"],
     "windows": ["League of Legends.exe"],
 }
-RIOT_DOMAINS = ["riotgames.com", "riotcdn.net", "riotgames.net", "pvp.net", "leagueoflegends.com"]
+RIOT_DOMAINS = ["riotgames.com", "riotcdn.net", "riotgames.net", "pvp.net", "leagueoflegends.com",
+                "lolstatic.com", "lolstatic-a.akamaihd.net", "lolesports.com"]
+DNS_V4 = "172.30.255.2"
+DNS_V6 = "fdfe:dcba:9876::2"
+FAKE_V4 = "198.18.0.0/15"
+FAKE_V6 = "fdfe:dcba:9876:1000::/64"
+SELECTIVE_ROUTES = [FAKE_V4, FAKE_V6]
 
 
 @dataclass
@@ -38,10 +44,13 @@ class Profile:
     physical_interface: str = ""
     extra_clients: list[str] = field(default_factory=list)
     game_cidrs: list[str] = field(default_factory=list)
+    dns_forward_port: int = 40001
 
     def validate(self):
         if self.platform not in CLIENTS:
             raise ValueError("platform must be macos or windows")
+        if type(self.dns_forward_port) is not int or not 1024 <= self.dns_forward_port <= 65535:
+            raise ValueError("invalid local DNS forwarder port")
         if type(self.proxy_port) is not int or not 1024 <= self.proxy_port <= 65535:
             raise ValueError("proxy_port must be an integer in 1024..65535")
         if type(self.mtu) is not int or not 1280 <= self.mtu <= 1500:
@@ -82,41 +91,40 @@ def build_config(profile: Profile) -> dict:
         # Strict mode enforces DNS on Windows and can block ordinary interface
         # traffic. Fail-closed applies to Riot's proxy rules, not the whole host.
         "mtu": p.mtu, "auto_route": True, "strict_route": False, "stack": "system",
+        # Never install 0/0 routes. Real game/browser/Kakao IPs stay in the OS
+        # network stack; only synthetic Riot addresses reach this interface.
+        "route_address": SELECTIVE_ROUTES.copy(),
     }
     if p.game_cidrs:
         tun["route_exclude_address"] = list(p.game_cidrs)
     # WARP owns the encrypted transport. Keep its daemon outside the proxy rule.
     rules = [
-        {"process_name": ["warp-svc", "warp-svc.exe", "CloudflareWARP", "Cloudflare WARP"],
-         "action": "route", "outbound": "direct"},
         {"port": 53, "action": "hijack-dns"},
         {"process_name": GAMES[p.platform], "action": "route", "outbound": "direct"},
-        {"ip_is_private": True, "action": "route", "outbound": "direct"},
     ]
-    selectors = [{"process_name": p.clients}]
-    if CLIENT_PATHS[p.platform]:
-        selectors.append({"process_path_regex": CLIENT_PATHS[p.platform]})
-    for selector in selectors:
-        rules.append({**selector, "network": "tcp", "action": "route", "outbound": "warp"})
-    for selector in selectors:
-        # Explicit ICMP rejection lets Chromium abandon QUIC promptly and retry
-        # HTTPS/TCP through WARP. Voice/other UDP support is still not assumed.
-        rules.append({**selector, "network": "udp", "action": "reject", "method": "default", "no_drop": True})
-    dns_rules = [{**selector, "action": "route", "server": "warp-dns"} for selector in selectors]
-    # OS DNS services may own the query instead of the originating client.
-    dns_rules.append({"domain_suffix": RIOT_DOMAINS, "action": "route", "server": "warp-dns"})
+    # The kernel sends only Riot synthetic addresses here. Do not depend on
+    # renderer process names or expensive per-connection client attribution.
+    rules += [
+        {"inbound":["schoolnet-tun"],"network":"tcp","action":"route","outbound":"warp"},
+        {"inbound":["schoolnet-tun"],"network":"udp","action":"reject","method":"default","no_drop":True},
+    ]
+    dns_rules = [
+        {"domain": ["miner-health.invalid"], "action": "predefined", "rcode": "NOERROR",
+         "answer": ["miner-health.invalid. 1 IN A 127.0.0.1"]},
+        {"domain_suffix": RIOT_DOMAINS, "query_type": ["A", "AAAA"], "action": "route", "server": "riot-addresses"},
+    ]
     route = {"rules": rules, "final": "direct", "default_domain_resolver": "direct-dns"}
     if p.physical_interface:
         route["default_interface"] = p.physical_interface
     else:
         route["auto_detect_interface"] = True
     return {
-        "log": {"level": "info", "timestamp": True},
+        # Per-connection info logging was costly during download/browser bursts.
+        "log": {"level": "warn", "timestamp": True},
         "dns": {
-            "servers": [{"type": "https", "tag": "warp-dns", "server": "1.1.1.1",
-                         "server_port": 443, "path": "/dns-query", "detour": "warp",
-                         "tls": {"enabled": True, "server_name": "cloudflare-dns.com"}},
-                        {"type": "local", "tag": "direct-dns"}],
+            "servers": [{"type": "fakeip", "tag": "riot-addresses", "inet4_range": FAKE_V4, "inet6_range": FAKE_V6},
+                        {"type": "udp", "tag": "direct-dns", "server": "127.0.0.1", "server_port": p.dns_forward_port,
+                         "inet4_bind_address": "127.0.0.1"}],
             "rules": dns_rules, "final": "direct-dns", "independent_cache": True, "cache_capacity": 4096,
         },
         "inbounds": [tun],
@@ -127,4 +135,5 @@ def build_config(profile: Profile) -> dict:
              "inet4_bind_address": "127.0.0.1"},
         ],
         "route": route,
+        "experimental": {"cache_file": {"enabled": True, "path": "fakeip-cache.db", "store_fakeip": True}},
     }

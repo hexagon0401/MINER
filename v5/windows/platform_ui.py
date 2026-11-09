@@ -39,3 +39,7 @@ WORDS['ko'].update({'updates':'앱 업데이트','update_check':'업데이트 �
 WORDS['en'].update({'updates':'App updates','update_check':'Check for updates','update_install':'Install update',
     'update_checking':'Checking the latest official release.','update_downloading':'Downloading and verifying installer…',
     'update_current':'You are up to date.','update_available':'New release:','update_stop':'Stop MINER before updating.'})
+WORDS['ko']['auto_updates']='새 버전 자동 확인·알림'
+WORDS['en']['auto_updates']='Automatically check and notify'
+WORDS['ko']['hint']='게임·일반 앱 직접 연결 · 경기 중 연결 유지'
+WORDS['en']['hint']='Game and ordinary apps direct · keep MINER connected'

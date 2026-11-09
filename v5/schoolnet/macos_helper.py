@@ -93,14 +93,24 @@ def dispatch(message, uid, owner):
 def serve(owner):
     if os.geteuid() != 0 or type(owner) is not int or owner <= 0:
         raise ValueError("Helper requires root and a non-root installing user")
+    from .network_dns import Lease
+    if not service.status()['running']:Lease.recover(service.BASE/'profile')
     SOCKET.unlink(missing_ok=True)
+    last_recovery=time.monotonic()
     with socket.socket(socket.AF_UNIX, socket.SOCK_STREAM) as server:
         server.bind(str(SOCKET))
         os.chown(SOCKET, owner, -1)
         SOCKET.chmod(0o600)
         server.listen(4)
+        server.settimeout(1)
         while True:
-            connection, _ = server.accept()
+            try:connection, _ = server.accept()
+            except socket.timeout:
+                from .network_dns import JOURNAL
+                if time.monotonic()-last_recovery>=5 and (service.BASE/'profile'/JOURNAL).exists():
+                    if not service.status()['running']:Lease.recover(service.BASE/'profile')
+                    last_recovery=time.monotonic()
+                continue
             with connection:
                 connection.settimeout(5)
                 try:
@@ -139,7 +149,7 @@ def install(resources, profile, owner):
     # No engine starts at login/boot: only the authenticated control socket does.
     data = {"Label": LABEL, "ProgramArguments": [str(base / "runtime/schoolnet-cli"),
             "desktop", "helper-serve", "--owner", str(owner)], "RunAtLoad": True,
-            "KeepAlive": False, "UserName": "root", "Umask": 0o077,
+            "KeepAlive": True, "UserName": "root", "Umask": 0o077,
             "EnvironmentVariables": {"PATH":"/usr/bin:/bin:/usr/sbin:/sbin"},
             "StandardOutPath": str(base / "helper.log"), "StandardErrorPath": str(base / "helper.log")}
     PLIST.write_bytes(plistlib.dumps(data))

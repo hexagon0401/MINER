@@ -37,7 +37,7 @@ def main(argv=None):
     probe.add_argument("--proxy-port", type=int, default=40000)
     probe.add_argument("--timeout", type=float, default=3)
     warp = commands.add_parser("warp", help="configure or inspect the installed WARP Local Proxy")
-    warp.add_argument("operation", choices=["connect", "status", "disconnect", "restore"])
+    warp.add_argument("operation", choices=["connect", "status", "disconnect", "restore", "maintain"])
     warp.add_argument("--progress", action="store_true")
     warp.add_argument("--proxy-port", type=int, default=40000)
     warp.add_argument("--warp-cli")
@@ -112,15 +112,17 @@ def main(argv=None):
                     if operation == "start" and result.get("running"): progress("running", 5)
                 print(json.dumps(result)); return 0
             from schoolnet.macos_service import manage
-            return manage(args.operation, args.resources, args.profile)
+            return manage(args.operation, args.resources, args.profile, args.owner)
         elif args.command == "warp":
-            from schoolnet.warp import activate, deactivate, inspect, restore, progress
+            from schoolnet.warp import activate, deactivate, inspect, restore, progress, maintain_proxy
             if args.operation == "connect":
                 result = activate(args.proxy_port, args.warp_cli, notify=progress if args.progress else None)
             elif args.operation == "restore":
                 result = restore(args.warp_cli)
             elif args.operation == "status":
                 result = inspect(args.proxy_port, args.warp_cli)
+            elif args.operation == "maintain":
+                result = maintain_proxy(args.proxy_port,args.warp_cli)
             else:
                 result = deactivate(args.warp_cli)
             print(json.dumps(result, indent=2))

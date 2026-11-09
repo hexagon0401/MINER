@@ -88,7 +88,7 @@ def build(expected_arch, signing="adhoc", identity=None, notary_profile=None, dm
         "CFBundleName": "MINER", "CFBundleDisplayName": "MINER", "CFBundleIconFile": "AppIcon",
         "CFBundleIdentifier": "org.schoolnet.v5.alpha", "CFBundleExecutable": "MINER",
         "CFBundlePackageType": "APPL", "CFBundleShortVersionString": __release_version__,
-        "CFBundleVersion": "502111", "SchoolNetReleaseVersion": __version__, "MINERPublicReleaseVersion": __release_version__,
+        "CFBundleVersion": "502120", "SchoolNetReleaseVersion": __version__, "MINERPublicReleaseVersion": __release_version__,
         "LSMinimumSystemVersion": "13.0", "NSHighResolutionCapable": True,
     }
     info.update(macos_icon_info(icon))
@@ -132,6 +132,9 @@ def build(expected_arch, signing="adhoc", identity=None, notary_profile=None, dm
     if os.environ.get("GITHUB_ACTIONS") == "true":
         from macos.helper_smoke import run as helper_smoke
         helper_report = helper_smoke(cli, work)
+    selective_dir=work/'selective-native'
+    execute('sudo','-n',sys.executable,ROOT/'selective_smoke.py','--engine',engine,'--directory',selective_dir)
+    selective_report=json.loads((selective_dir/'selective.verification.json').read_text())
     smoke = work / "schema-smoke"
     execute(cli, "init", "--directory", smoke, "--platform", "macos")
     execute(engine, "check", "-c", smoke / "sing-box.json")
@@ -200,7 +203,7 @@ def build(expected_arch, signing="adhoc", identity=None, notary_profile=None, dm
         "dmg_to_disk_signature_verified": True, "sha256": digest,
         "finder_background_layout_verified": dmg_background is not None,
         "app_name": app.name, "native_ui_smoke": ui_report,
-        "developer": developer, "helper_smoke": helper_report, "source_commit": os.environ.get("GITHUB_SHA"), "release_channel": icon["channel"], "app_icon_sha256": hashlib.sha256((ui_assets / "AppIcon.png").read_bytes()).hexdigest(),
+        "developer": developer, "helper_smoke": helper_report, "selective_network":selective_report, "source_commit": os.environ.get("GITHUB_SHA"), "release_channel": icon["channel"], "app_icon_sha256": hashlib.sha256((ui_assets / "AppIcon.png").read_bytes()).hexdigest(),
     }, indent=2), encoding="utf-8")
     print(f"Verified DMG: {dmg}")
 

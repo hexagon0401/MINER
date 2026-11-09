@@ -1,4 +1,4 @@
-"""Preflight and foreground lifecycle; never toggle WARP or rewrite OS DNS."""
+"""Preflight and foreground lifecycle with journaled selective DNS recovery."""
 from contextlib import contextmanager
 import ctypes
 import json
@@ -51,11 +51,12 @@ def engine_path(value):
 
 
 def check_engine(engine, config_path):
+    config_path=Path(config_path).resolve()
     version = subprocess.run([engine, "version"], capture_output=True, text=True, timeout=10, check=True)
     if not re.search(r"\bsing-box version " + re.escape(ENGINE_VERSION) + r"(?:\s|$)", version.stdout):
         raise ValueError(f"this alpha requires sing-box {ENGINE_VERSION}; engine upgrades need schema testing")
     subprocess.run([engine, "check", "-c", str(config_path)], capture_output=True,
-                   text=True, timeout=10, check=True)
+                   text=True, timeout=10, check=True, cwd=Path(config_path).resolve().parent)
 
 
 def warp_mode(warp_cli, expected_port=None):
@@ -129,64 +130,69 @@ def instance_lock(directory):
 
 
 def run(directory, engine="sing-box", warp_cli=None, managed_helper=False):
-    directory = Path(directory).resolve()
+    from dataclasses import replace
+    from .network_dns import Lease, probe_dns
+    from .dns_forwarder import Forwarder
+    directory=Path(directory).resolve()
     with instance_lock(directory):
         if managed_helper:
             from .macos_service import BASE
-            if native_platform() != "macos" or not is_admin() or directory != BASE / "profile" or Path(engine).resolve() != BASE / "bin/sing-box":
-                raise ValueError("Managed helper can use only its root-owned installed engine/profile")
-            profile = load_profile(directory)
-            if profile.platform != "macos": raise ValueError("Managed helper requires a macOS profile")
-            check_engine(str(engine), directory / "sing-box.json")
-            proxy_ready(profile.proxy_port); verify_trace(profile.proxy_port)
-            result = {"preflight_ok":True,"engine":str(engine)}
+            if native_platform()!='macos' or not is_admin() or directory!=BASE/'profile' or Path(engine).resolve()!=BASE/'bin/sing-box':
+                raise ValueError('Managed helper can use only its root-owned installed engine/profile')
+            profile=load_profile(directory)
+            if profile.platform!='macos':raise ValueError('Managed helper requires a macOS profile')
+            proxy_ready(profile.proxy_port);verify_trace(profile.proxy_port)
+            result={'preflight_ok':True,'engine':str(engine)}
         else:
-            result = doctor(directory, engine, warp_cli)
-        if not result["preflight_ok"]:
-            raise ValueError("this profile cannot run on this operating system")
-        if not is_admin():
-            raise ValueError("TUN startup requires root on macOS / Administrator on Windows")
-        # Separate child group: controller forwards termination exactly once.
-        options = {"start_new_session": True} if os.name != "nt" else {
-            "creationflags": subprocess.CREATE_NEW_PROCESS_GROUP}
-        child = subprocess.Popen([result["engine"], "run", "-c", str(directory / "sing-box.json")], **options)
-        previous = {}
-        stop_deadline = None
-
-        def stop(signum, frame):
-            nonlocal stop_deadline
-            if child.poll() is None and stop_deadline is None:
-                stop_deadline = time.monotonic() + 10
-                if os.name == "nt":
-                    child.send_signal(signal.CTRL_BREAK_EVENT)
-                else:
-                    child.terminate()
-
-        try:
-            for signum in (signal.SIGINT, signal.SIGTERM):
-                previous[signum] = signal.signal(signum, stop)
-            print("Engine starting; verify client->warp and game->direct in its logs. Ctrl+C to stop.", flush=True)
-            while True:
-                try:
-                    returncode = child.wait(timeout=0.5)
-                    break
-                except subprocess.TimeoutExpired:
-                    if stop_deadline is not None and time.monotonic() >= stop_deadline:
-                        child.kill()
-                        child.wait()
-                        print("Forced engine exit: check OS routes manually before continuing.", flush=True)
-                        returncode = 1
-                        break
-        finally:
-            if child.poll() is None:
-                stop(None, None)
-                try:
-                    child.wait(timeout=10)
-                except subprocess.TimeoutExpired:
-                    child.kill()
-                    child.wait()
-                    print("Forced engine exit: check OS routes manually before continuing.", flush=True)
-            for signum, handler in previous.items():
-                signal.signal(signum, handler)
-        print("Engine exited; WARP proxy remains enabled. Verify restored routes/DNS on this OS.", flush=True)
-        return returncode if returncode >= 0 else 128 - returncode
+            result=doctor(directory,engine,warp_cli);profile=load_profile(directory)
+        if not result['preflight_ok']:raise ValueError('This profile cannot run on this operating system')
+        if not is_admin():raise ValueError('TUN startup requires administrator permission')
+        lease=Lease(directory);servers=lease.prepare()
+        with Forwarder(servers) as relay:
+            profile=replace(profile,dns_forward_port=relay.port)
+            write_json(directory/'profile.json',profile.to_dict())
+            write_json(directory/'sing-box.json',build_config(profile))
+            check_engine(result['engine'],directory/'sing-box.json')
+            # launchd owns the entire process group. A killed launcher must not
+            # leave a detached TUN engine behind on macOS.
+            options={} if native_platform()=='macos' else {'start_new_session':True}
+            print('Engine starting; selective routes only.',flush=True)
+            child=subprocess.Popen([result['engine'],'run','-c',str(directory/'sing-box.json')],cwd=directory,**options)
+            previous={};stop_deadline=None
+            def stop(signum,frame):
+                nonlocal stop_deadline
+                if stop_deadline is None:
+                    stop_deadline=time.monotonic()+10
+                    try:lease.close()
+                    finally:
+                        if child.poll() is None:child.terminate()
+            try:
+                for signum in (signal.SIGINT,signal.SIGTERM):previous[signum]=signal.signal(signum,stop)
+                deadline=time.monotonic()+20
+                while child.poll() is None and stop_deadline is None and not probe_dns():
+                    if time.monotonic()>deadline:raise ValueError('Selective DNS readiness timed out')
+                    time.sleep(.1)
+                if child.poll() is not None:raise ValueError('Network engine exited during startup')
+                if stop_deadline is None:
+                    lease.activate()
+                    print('MINER selective DNS ready; real game/browser IPs bypass TUN.',flush=True)
+                last_health=time.monotonic()
+                while child.poll() is None:
+                    try:child.wait(timeout=.5)
+                    except subprocess.TimeoutExpired:
+                        if stop_deadline is not None and time.monotonic()>=stop_deadline:
+                            child.kill();child.wait();raise ValueError('Engine forced to stop; verify recovery')
+                        if not managed_helper and stop_deadline is None and time.monotonic()-last_health>=15:
+                            from .warp import maintain_proxy
+                            maintain_proxy(profile.proxy_port,warp_cli)
+                            last_health=time.monotonic()
+            finally:
+                try:lease.close()
+                finally:
+                    if child.poll() is None:
+                        child.terminate()
+                        try:child.wait(timeout=10)
+                        except subprocess.TimeoutExpired:child.kill();child.wait(timeout=5)
+                    for signum,handler in previous.items():signal.signal(signum,handler)
+            print('Engine exited; original DNS recovered.',flush=True)
+            return child.returncode if child.returncode>=0 else 128-child.returncode

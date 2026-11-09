@@ -49,6 +49,8 @@ def main():
     # Real Windows adapter lifecycle, with auto_route disabled: do not reroute runner traffic.
     from windows.native_smoke import run as native_smoke
     native=native_smoke(engine,work)
+    from selective_smoke import run as selective_smoke
+    selective=selective_smoke(engine,work/"selective-native")
     execute(sys.executable,'-m','PyInstaller','--noconfirm','--clean','--onedir','--windowed','--uac-admin',
         '--name','MINER','--icon',work/'MINER.ico','--distpath',BASE/'dist-windows',
         '--workpath',work/'pyinstaller','--specpath',work,
@@ -79,7 +81,18 @@ def main():
     iscc=shutil.which('ISCC.exe') or r'C:\Program Files (x86)\Inno Setup 6\ISCC.exe'
     execute(iscc,f'/DAppBuildVersion={VERSION}',f'/DAppFileVersion={FILE_VERSION}',f'/DOutputStem={STEM}',BASE/'windows/installer.iss')
     setup=BASE/'dist-windows'/f'{STEM}-Setup.exe'
+    # Upgrade the actual published v1.1.1 installer, with its identity preserved.
+    old_setup=work/'MINER-ALPHA-v1.1.1-Windows-x64-Setup.exe'
+    with urllib.request.urlopen('https://github.com/hexagon0401/MINER/releases/download/miner-alpha-v1.1.1/'+old_setup.name,timeout=60) as response:
+        old_setup.write_bytes(response.read(100_000_001))
+    assert hashlib.sha256(old_setup.read_bytes()).hexdigest()=='a10a319b74072b0012c7a7e5786e063de33537b9518f805a052349448c11d2d6','Published baseline installer checksum mismatch'
+    execute(old_setup,'/VERYSILENT','/SUPPRESSMSGBOXES','/NORESTART',f'/DIR={work / "installed 한글 path"}')
+    user_data=Path(os.environ['LOCALAPPDATA'])/'MINER/Beta1';user_data.mkdir(parents=True,exist_ok=True)
+    sentinel=user_data/'upgrade-preservation-fixture.json'
+    sentinel.write_text('{"fixture":"v1.1.1 user data must survive"}')
+    sentinel_digest=hashlib.sha256(sentinel.read_bytes()).hexdigest()
     execute(setup,'/VERYSILENT','/SUPPRESSMSGBOXES','/NORESTART',f'/DIR={work / "installed 한글 path"}')
+    assert hashlib.sha256(sentinel.read_bytes()).hexdigest()==sentinel_digest,'Upgrade changed user data'
     execute(work/'installed 한글 path/MINER.exe','--self-test',output/'installed',timeout=90)
     # Reinstall over the same installation to exercise upgrade safety.
     execute(setup,'/VERYSILENT','/SUPPRESSMSGBOXES','/NORESTART',f'/DIR={work / "installed 한글 path"}')
@@ -89,9 +102,11 @@ def main():
         if not (work/'installed 한글 path/MINER.exe').exists(): break
         time.sleep(.2)
     assert not (work/'installed 한글 path/MINER.exe').exists(),'Uninstall did not remove app'
+    assert hashlib.sha256(sentinel.read_bytes()).hexdigest()==sentinel_digest,'Uninstall removed user data'
+    sentinel.unlink()
     import platform
     report={'test_os':platform.platform(),'version':VERSION,'base':'MINER Beta 1.1','architecture':'x64',
-      'authenticode_signed':False,'app_icon_sha256':app_icon['sha256'],'release_channel':app_icon['channel'],'ui':ui,'native_tun':native,'installer_verified':True,'upgrade_verified':True,'unicode_path_verified':True,
+      'authenticode_signed':False,'app_icon_sha256':app_icon['sha256'],'release_channel':app_icon['channel'],'ui':ui,'native_tun':native,'selective_network':selective,'upgrade_from':'1.1.1','upgrade_preserves_user_data':True,'installer_verified':True,'upgrade_verified':True,'unicode_path_verified':True,
       'ui_theme':'Pearl White','default_controls':'A rounded floating','alternative_controls':'B flush integrated',
       'supplied_asset_sha256':{name:hashlib.sha256((art/'pearl/mascot'/name).read_bytes()).hexdigest() for name in ('miner-transparent.png','MINER-wordmark-transparent.png')},'ui_engine':'Qt Quick RHI + Fluent controls and functional Pearl buttons','network_engine':'sing-box 1.12.0 Windows TUN',
       'ui_scale_factors':[1,1.25,1.5,2],'windows_11_live_tested':False,'vanguard_tested':False,

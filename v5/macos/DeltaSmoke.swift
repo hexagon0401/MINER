@@ -111,6 +111,11 @@ extension AppDelegate {
                 try require(MinerDeveloper.current.login == "hexagon0401" && MinerDeveloper.current.profileURL.absoluteString == "https://github.com/hexagon0401","About profile and GitHub destination match developer")
                 if let settingsView = self.settingsWindow?.contentView { try capture("settings-about",view:settingsView) }
                 self.settingsWindow?.close()
+                self.model.updateAvailable = true
+                self.model.updateMessage = "새 버전이 있습니다. 설정에서 업데이트하세요."
+                try await settle(); try capture("update-available")
+                try require(self.model.autoUpdates,"Automatic update checks default on")
+                self.model.updateAvailable = false
                 let result:[String:Any] = ["ok":true,"architecture":arch,"checks":checks,"network_actions":0]
                 try JSONSerialization.data(withJSONObject:result,options:[.prettyPrinted,.sortedKeys]).write(to:output.appendingPathComponent("miner-ui-\(arch).json"))
                 print("MINER native UI smoke passed: \(checks.count) checks")
