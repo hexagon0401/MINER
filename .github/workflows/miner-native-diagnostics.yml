@@ -37,5 +37,5 @@ jobs:
               if data.get('selective_network'): notice('Selective network proof '+data.get('architecture',''),json.dumps(data['selective_network']))
           for path in Path('diagnostics').rglob('*.log'):
               if 'release-' in path.name:
-                  notice(path.name,path.read_text(errors='replace')[-4500:])
+                  notice(path.name,path.read_text(errors='replace')[-2600:])
           PY
