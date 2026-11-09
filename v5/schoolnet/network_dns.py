@@ -22,7 +22,7 @@ def command(args):
 def powershell(body):
     executable=Path(os.environ.get('SystemRoot',r'C:\Windows'))/'System32/WindowsPowerShell/v1.0/powershell.exe'
     return command([str(executable),'-NoProfile','-NonInteractive','-Command',
-        "$ErrorActionPreference='Stop'; [Console]::OutputEncoding=[Text.UTF8Encoding]::new($false); "+body])
+        "$ErrorActionPreference='Stop'; $env:PSModulePath=$PSHOME+'\\Modules'; [Console]::OutputEncoding=[Text.UTF8Encoding]::new($false); "+body])
 
 
 def addresses(values):

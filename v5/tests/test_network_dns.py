@@ -72,6 +72,12 @@ class DNSTransactionTests(unittest.TestCase):
         self.assertIn(snapshot['guid'],script)
         self.assertNotIn('-InterfaceAlias *',script)
 
+    def test_powershell_uses_system_modules_instead_of_inherited_pwsh7_paths(self):
+        from schoolnet.network_dns import powershell
+        with patch('schoolnet.network_dns.command',return_value='') as run:
+            powershell('Get-NetRoute')
+        self.assertIn("$env:PSModulePath=$PSHOME+'\\Modules'",run.call_args.args[0][-1])
+
     def test_corrupt_recovery_input_never_reaches_powershell(self):
         backend=Backend('Windows')
         with patch('schoolnet.network_dns.powershell') as run,self.assertRaises(ValueError):

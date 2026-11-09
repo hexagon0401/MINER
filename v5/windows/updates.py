@@ -7,7 +7,7 @@ import sys
 
 def installer_command(path, parent):
     literal = str(Path(path).resolve()).replace("'", "''")
-    return f"$minerParent=Get-Process -Id {int(parent)} -ErrorAction SilentlyContinue; if($minerParent){{$minerParent.WaitForExit()}}; Start-Process -FilePath '{literal}'"
+    return f"$env:PSModulePath=$PSHOME+'\\Modules'; $minerParent=Get-Process -Id {int(parent)} -ErrorAction SilentlyContinue; if($minerParent){{$minerParent.WaitForExit()}}; Start-Process -FilePath '{literal}'"
 
 
 def launch(path):
