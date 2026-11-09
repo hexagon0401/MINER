@@ -11,7 +11,7 @@ def run():
         if '--dns-guard' in sys.argv:
             from schoolnet.dns_guard import run as guard
             index=sys.argv.index('--dns-guard')
-            return guard(int(sys.argv[index+1]),int(sys.argv[index+2]))
+            return guard(int(sys.argv[index+1]),int(sys.argv[index+2]),sys.argv[index+3])
         from windows.app import main
         return main()
     except BaseException:
@@ -21,7 +21,7 @@ def run():
               Path(os.environ.get('LOCALAPPDATA',str(Path.home())))/'MINER'/'Beta1')
         root.mkdir(parents=True,exist_ok=True)
         (root/'startup-error.log').write_text(text,encoding='utf-8')
-        if not test and sys.platform=='win32':
+        if not test and '--dns-guard' not in sys.argv and sys.platform=='win32':
             ctypes.windll.user32.MessageBoxW(None,'MINER could not start. / MINER를 시작할 수 없습니다.\n'+str(root/'startup-error.log'),'MINER',0x10)
         return 1
 

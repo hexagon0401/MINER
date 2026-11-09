@@ -223,6 +223,7 @@ class Lease:
         if not path.exists():return
         if os.name=='nt' and not explicit:path=journal_path(directory,True)
         if path.is_symlink():raise ValueError('DNS journal must not be a symlink')
-        snapshot=json.loads(path.read_text())
+        try:snapshot=json.loads(path.read_text())
+        except FileNotFoundError:return  # Another recovery actor completed first.
         (backend or Backend()).restore(snapshot)
         path.unlink(missing_ok=True)

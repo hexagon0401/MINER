@@ -9,7 +9,7 @@
 클라이언트는 WARP로, 게임은 직접 연결로.
 학교 네트워크의 접속 제한과 게임 지연 문제에서 출발한 분리 라우팅 앱입니다.
 
-![Beta 1.1](https://img.shields.io/badge/RELEASE-ALPHA_v1-0EFB2E?style=flat-square&labelColor=0C1421)
+![ALPHA v1.2.0](https://img.shields.io/badge/RELEASE-ALPHA_v1.2.0-0EFB2E?style=flat-square&labelColor=0C1421)
 ![macOS](https://img.shields.io/badge/macOS-Apple_Silicon-E6E8E6?style=flat-square&logo=apple&logoColor=white&labelColor=0C1421)
 ![Windows](https://img.shields.io/badge/Windows-x64-0078D4?style=flat-square&logo=windows&logoColor=white&labelColor=0C1421)
 ![Cloudflare WARP](https://img.shields.io/badge/Cloudflare-WARP-F38020?style=flat-square&logo=cloudflare&logoColor=white&labelColor=0C1421)
@@ -32,9 +32,9 @@ MINER는 **클라이언트 통신은 WARP로, 게임 플레이 통신은 직접 
 
 | 통신 | 연결 경로 |
 | :-- | :-- |
-| Riot·LoL 클라이언트 및 웹 Helper의 TCP | WARP Local Proxy |
-| 게임 실행 파일의 통신 | 직접 연결 |
-| 일반 DNS · 포트 53 | WARP를 통한 암호화 DNS |
+| 지정된 Riot 도메인의 TCP · 클라이언트/웹 Helper | 가상 주소 → 선택 TUN → WARP Local Proxy |
+| 실제 게임 서버·일반 앱의 IP | 원래 OS 경로 · TUN 우회 |
+| 일반 DNS · 포트 53 | 원래 연결의 DNS 서버 · 직접 경로 |
 
 현재는 개인용 Cloudflare WARP를 기반으로 macOS와 Windows x64 버전을 개발합니다. 게임 통신 자체가 차단된 환경에서는 직접 연결이 작동하지 않을 수 있습니다. 전국 모든 학교에서의 작동이나 모든 지연·연결 끊김의 해결을 보장하지 않습니다.
 
@@ -51,21 +51,21 @@ MINER는 **클라이언트 통신은 WARP로, 게임 플레이 통신은 직접 
 
 ## 다운로드
 
-[![MINER ALPHA v1 출시 기념 배너](docs/assets/miner-alpha-v1-release-banner.png)](https://github.com/hexagon0401/MINER/releases/tag/miner-alpha-v1.1.1)
+[![MINER ALPHA v1 출시 기념 배너](docs/assets/miner-alpha-v1-release-banner.png)](https://github.com/hexagon0401/MINER/releases/tag/miner-alpha-v1.2.0)
 
-**MINER ALPHA v1.1.1** · [최신 정식 릴리스 보기](https://github.com/hexagon0401/MINER/releases/tag/miner-alpha-v1.1.1)
+**MINER ALPHA v1.2.0** · [최신 정식 릴리스 보기](https://github.com/hexagon0401/MINER/releases/tag/miner-alpha-v1.2.0)
 
-[![Apple Silicon DMG](https://img.shields.io/badge/macOS-Apple_Silicon_DMG-0EFB2E?style=for-the-badge&logo=apple&logoColor=white&labelColor=0C1421)](https://github.com/hexagon0401/MINER/releases/download/miner-alpha-v1.1.1/MINER-ALPHA-v1.1.1-macOS-AppleSilicon.dmg)
-[![Intel DMG](https://img.shields.io/badge/macOS-Intel_DMG-E6E8E6?style=for-the-badge&logo=apple&logoColor=white&labelColor=0C1421)](https://github.com/hexagon0401/MINER/releases/download/miner-alpha-v1.1.1/MINER-ALPHA-v1.1.1-macOS-Intel.dmg)
-[![Windows EXE](https://img.shields.io/badge/Windows-x64_EXE-0078D4?style=for-the-badge&logo=windows&logoColor=white&labelColor=0C1421)](https://github.com/hexagon0401/MINER/releases/download/miner-alpha-v1.1.1/MINER-ALPHA-v1.1.1-Windows-x64-Setup.exe)
+[![Apple Silicon DMG](https://img.shields.io/badge/macOS-Apple_Silicon_DMG-0EFB2E?style=for-the-badge&logo=apple&logoColor=white&labelColor=0C1421)](https://github.com/hexagon0401/MINER/releases/download/miner-alpha-v1.2.0/MINER-ALPHA-v1.2.0-macOS-AppleSilicon.dmg)
+[![Intel DMG](https://img.shields.io/badge/macOS-Intel_DMG-E6E8E6?style=for-the-badge&logo=apple&logoColor=white&labelColor=0C1421)](https://github.com/hexagon0401/MINER/releases/download/miner-alpha-v1.2.0/MINER-ALPHA-v1.2.0-macOS-Intel.dmg)
+[![Windows EXE](https://img.shields.io/badge/Windows-x64_EXE-0078D4?style=for-the-badge&logo=windows&logoColor=white&labelColor=0C1421)](https://github.com/hexagon0401/MINER/releases/download/miner-alpha-v1.2.0/MINER-ALPHA-v1.2.0-Windows-x64-Setup.exe)
 
 | 컴퓨터 | 설치 파일 | 구성 |
 | :-- | :-- | :-- |
-| Mac · Apple Silicon (M 시리즈) | [DMG 다운로드](https://github.com/hexagon0401/MINER/releases/download/miner-alpha-v1.1.1/MINER-ALPHA-v1.1.1-macOS-AppleSilicon.dmg) | macOS 기본 UI · SwiftUI |
-| Mac · Intel | [DMG 다운로드](https://github.com/hexagon0401/MINER/releases/download/miner-alpha-v1.1.1/MINER-ALPHA-v1.1.1-macOS-Intel.dmg) | macOS 기본 UI · SwiftUI |
-| Windows · x64 | [EXE 다운로드](https://github.com/hexagon0401/MINER/releases/download/miner-alpha-v1.1.1/MINER-ALPHA-v1.1.1-Windows-x64-Setup.exe) | Windows Pearl White · A/B 버튼 · **56.3MB** |
+| Mac · Apple Silicon (M 시리즈) | [DMG 다운로드](https://github.com/hexagon0401/MINER/releases/download/miner-alpha-v1.2.0/MINER-ALPHA-v1.2.0-macOS-AppleSilicon.dmg) | macOS 기본 UI · SwiftUI |
+| Mac · Intel | [DMG 다운로드](https://github.com/hexagon0401/MINER/releases/download/miner-alpha-v1.2.0/MINER-ALPHA-v1.2.0-macOS-Intel.dmg) | macOS 기본 UI · SwiftUI |
+| Windows · x64 | [EXE 다운로드](https://github.com/hexagon0401/MINER/releases/download/miner-alpha-v1.2.0/MINER-ALPHA-v1.2.0-Windows-x64-Setup.exe) | Windows Pearl White · A/B 버튼 |
 
-일반 웹의 DNS를 분리하고 관리자 승인 재사용·앱 업데이트·Windows 용량 최적화를 적용한 **ALPHA v1.1.1 정식 릴리스**입니다. 베타 빌드는 BETA 아이콘을 사용합니다. 플랫폼별로 **별도 설치 파일**을 제공합니다. Mac과 Windows는 각각의 UI를 유지합니다. [체크섬](https://github.com/hexagon0401/MINER/releases/download/miner-alpha-v1.1.1/SHA256SUMS.txt) · [플랫폼별 버전·출처](https://github.com/hexagon0401/MINER/releases/download/miner-alpha-v1.1.1/release-manifest.json) · [Windows 소스](https://github.com/hexagon0401/MINER/tree/windows-beta1)
+전체 기본 경로를 TUN에서 제외하고 Riot 선택 경로·DNS 복구·연결 유지·자동 업데이트 안내를 적용한 **ALPHA v1.2.0 정식 릴리스**입니다. 베타 빌드는 BETA 아이콘을 사용합니다. 플랫폼별로 **별도 설치 파일**을 제공합니다. Mac과 Windows는 각각의 UI를 유지합니다. [체크섬](https://github.com/hexagon0401/MINER/releases/download/miner-alpha-v1.2.0/SHA256SUMS.txt) · [플랫폼별 버전·출처](https://github.com/hexagon0401/MINER/releases/download/miner-alpha-v1.2.0/release-manifest.json) · [Windows 소스](https://github.com/hexagon0401/MINER/tree/windows-beta1)
 
 | 구분 | 현재 상태 |
 | :-- | :-- |
@@ -97,7 +97,7 @@ brew update
 brew upgrade --cask miner
 ```
 
-DMG로 직접 설치한 MINER가 이미 있으면 Homebrew 설치가 중단될 수 있습니다. 앱을 중지·종료한 뒤 기존 설치와 사용자 데이터를 확인하고 전환해 주세요. Homebrew로 설치해도 아래의 최초 실행 허용 절차는 동일하게 적용됩니다. Mac에서의 Homebrew 설치·업데이트·제거 실기 검증은 아직 진행 전입니다.
+DMG로 직접 설치한 MINER가 이미 있으면 Homebrew 설치가 중단될 수 있습니다. 앱을 중지·종료한 뒤 기존 설치와 사용자 데이터를 확인하고 전환해 주세요. Homebrew로 설치해도 아래의 최초 실행 허용 절차는 동일하게 적용됩니다. Homebrew cask 자동 갱신과 파일 체크섬은 검증하며, 실제 사용자 Mac에서의 Homebrew 설치·업데이트·제거 실기 검증은 별도입니다.
 
 #### DMG로 설치
 
@@ -146,7 +146,7 @@ macOS 버전과 표시 언어에 따라 버튼 이름이나 화면 구성은 조
 4. 제거하려면 MINER에서 중지·종료한 뒤 Windows의 **설치된 앱**에서 MINER를 제거합니다. 사용자 설정과 로그, WARP는 보존합니다.
 
 > [!NOTE]
-> Windows 화면은 **Pearl White A안·Qt Quick RHI·D3D11**을 사용하고 한국어는 맑은 고딕, 영어는 Segoe UI 계열을 우선합니다. Mac은 SwiftUI를 유지하며 플랫폼별 창·설정 조작을 따릅니다. Windows 11 x64를 대상으로 개발하지만 자동 검증은 **Windows Server 2025**에서 수행했습니다. 설치·재설치·제거, 실제 TUN 생성·종료, 프로세스 정리, 화면 배율 100~200%를 확인했습니다. **실제 Windows 11·WARP 연결·학교망·LoL·Vanguard는 미검증**이며, 실행 파일은 Authenticode 미서명입니다.
+> Windows 화면은 **Pearl White A안·Qt Quick RHI·D3D11**을 사용하고 한국어는 맑은 고딕, 영어는 Segoe UI 계열을 우선합니다. Mac은 SwiftUI를 유지하며 플랫폼별 창·설정 조작을 따릅니다. Windows 11 x64를 대상으로 개발하지만 자동 검증은 **Windows Server 2025**에서 수행했습니다. 공개 v1.1.1 위 덮어쓰기 업그레이드·사용자 데이터 보존·제거, 실제 선택 TUN 경로·OS DNS/HTTPS·연속 클라이언트 TCP·엔진 강제 종료 후 DNS 복구, 화면 배율 100~200%를 검사합니다. **실제 Windows 11·WARP 연결·학교망·LoL·Vanguard는 미검증**이며, 실행 파일은 Authenticode 미서명입니다.
 
 <details>
 <summary><strong>Windows 실행 화면과 애니메이션 보기</strong></summary>
@@ -166,17 +166,23 @@ macOS 버전과 표시 언어에 따라 버튼 이름이나 화면 구성은 조
 
 1. 기존 SchoolNet 또는 MINER가 실행 중이면 먼저 중지하고 종료합니다.
 2. MINER에서 **시작**을 누릅니다. 앱이 WARP CLI로 Local Proxy 모드를 준비하고 `127.0.0.1:40000` 연결을 확인한 뒤 분리 라우팅을 시작합니다.
-3. Riot 클라이언트의 TCP 통신과 Riot 관련 DNS는 WARP 경로로, 게임·일반 브라우저·그 외 통신은 직접 경로로 보냅니다. 일반 웹의 DNS는 시스템 DNS를 사용합니다. 진행 막대는 실제 백엔드 상태에 따라 표시됩니다.
-4. **중지** 또는 앱 종료 시 엔진을 정리하고 WARP를 **UDP — Traffic and DNS** 모드로 복귀시킵니다. 실패하면 앱에 표시되는 오류를 확인합니다.
+3. 지정된 Riot 도메인은 로컬 가상 주소를 받아 TCP를 WARP로 보내며, 일반 앱·실제 게임 서버 IP는 원래 OS 경로를 유지합니다. 일반 DNS는 원래 연결의 DNS 서버로 전달합니다. 진행 막대는 실제 백엔드 상태를 따릅니다. **클라이언트 로그인 → 인게임 → 종료 후 통계창까지 MINER와 WARP를 계속 켜 두세요.** 게임 시작·종료 때 WARP를 끄거나 모드를 바꾸지 않습니다.
+4. **중지** 또는 앱 종료 시 원래 DNS(DHCP/수동 구분)를 복구한 뒤 엔진을 정리하고 WARP를 **UDP — Traffic and DNS** 모드로 복귀시킵니다. 실패하면 앱에 표시되는 오류를 확인합니다.
 5. **⌘,**로 설정을 열어 한국어·영어 변경, 개발자 소개, 제거 기능을 사용할 수 있습니다.
 
+업데이트 후 첫 연결은 Riot/LoL 클라이언트를 완전히 종료한 상태에서 MINER를 시작한 뒤 클라이언트를 실행하세요. 원래 연결이 바뀌거나 다른 VPN이 활성화되면 중지 후 재연결하세요. 지정되지 않은 서비스·브라우저 자체 보안 DNS(DoH)는 별도 확인이 필요합니다.
+
 ### 앱에서 업데이트
+
+v1.2.0부터 앱 실행 후와 6시간 간격으로 새 정식 버전을 확인해 앱에 안내합니다. 설정에서 자동 확인을 끌 수 있습니다. **기존 v1.1.1에는 자동 확인 기능이 없으므로 처음 한 번은 수동으로 업데이트해야 합니다.** 모든 구버전에 소급 알림을 보내지는 못합니다.
 
 Mac·Windows 모두 **설정 → 앱 업데이트 → 업데이트 확인**에서 새 정식 버전을 확인합니다. 연결을 중지한 뒤 **업데이트 설치**를 누르세요. 직접 설치한 앱은 SHA-256 검증을 마친 설치 파일만 엽니다.
 
 - **Mac · Homebrew:** 앱 종료 후 Terminal에서 Homebrew 업데이트를 진행합니다.
 - **Mac · DMG:** 검증된 DMG를 열고 앱을 종료합니다. DMG의 MINER를 응용 프로그램 폴더로 옮겨 교체합니다.
-- **Windows:** 앱이 종료된 뒤 검증된 Setup.exe를 실행해 설치를 진행합니다.
+- **Windows:** 앱이 종료된 뒤 검증된 Setup.exe를 실행해 **기존 설치 위치에 덮어씁니다.** 사용자 설정·로그·별도 WARP는 보존합니다.
+
+**업데이트 전에 기존 MINER를 삭제할 필요가 없습니다.** Mac 도우미 버전이 바뀌면 첫 연결에서 관리자 승인을 한 번 요청할 수 있습니다. 게임 중 업데이트하지 마세요.
 
 ## 성능 (Performance)
 

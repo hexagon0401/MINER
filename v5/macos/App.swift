@@ -231,10 +231,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
     @objc func start() {
         guard !busy && !model.updateBusy && !running else { return }
-        managedWarp = true; model.phase = "cli_check"; model.completed = 0; model.error = ""
         guard Bundle.main.bundleURL.path == "/Applications/MINER.app" else {
-            append("DMG에서 앱을 Applications로 복사한 뒤 그 앱을 실행하세요."); return
+            model.phase="error";model.error=model.tr("DMG에서 앱을 Applications로 복사한 뒤 실행하세요.","Copy MINER from the DMG to Applications before starting."); return
         }
+        managedWarp = true; model.phase = "cli_check"; model.completed = 0; model.error = ""
         operation({
             try self.ensureProfile()
             _ = try self.execute(self.warpArguments("connect"))
