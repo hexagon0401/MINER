@@ -1,6 +1,6 @@
-# MINER ALPHA v1.2.0 — 소스·연결 구조
+# MINER ALPHA v1.2.1 — 소스·연결 구조
 
-[설치 파일·한국어 설치 안내](../README.md#다운로드) · [릴리스](https://github.com/hexagon0401/MINER/releases/tag/miner-alpha-v1.2.0) · [서명 설정](docs/SIGNING.md)
+[설치 파일·한국어 설치 안내](../README.md#다운로드) · [릴리스](https://github.com/hexagon0401/MINER/releases/tag/miner-alpha-v1.2.1) · [서명 설정](docs/SIGNING.md)
 
 macOS는 SwiftUI·AppKit, Windows는 Qt Quick·Fluent/Pearl White UI를 유지합니다. 개인용 Cloudflare WARP는 별도 설치·등록해야 합니다. ALPHA는 제품 세대의 코드명입니다. 기존 버전·베타 소스와 릴리스는 보존합니다.
 
@@ -36,7 +36,7 @@ macOS에서는 설정의 **관리자 승인 항상 허용 · 도우미 재사용
 
 ## 빌드·검증
 
-배포 워크플로는 [miner-alpha-v120.yml](../.github/workflows/miner-alpha-v120.yml)입니다. Mac Apple Silicon·Intel과 Windows의 필수 검사가 모두 통과해야 새 정식 태그로 게시합니다. 서명·공증 설정이 있으면 그 검증도 필수입니다. 미설정 Mac은 ad-hoc, Windows는 Authenticode 미서명입니다.
+배포 워크플로는 [miner-alpha-v121.yml](../.github/workflows/miner-alpha-v121.yml)입니다. Mac Apple Silicon·Intel과 Windows의 필수 검사가 모두 통과해야 새 정식 태그로 게시합니다. 서명·공증 설정이 있으면 그 검증도 필수입니다. 미설정 Mac은 ad-hoc, Windows는 Authenticode 미서명입니다.
 
 ```bash
 cd v5
@@ -71,3 +71,7 @@ python3 main.py doctor --directory local/mac --engine "$PWD/local/bin/sing-box"
 개발자 소개는 번들에 포함한 GitHub 공개 프로필·이미지를 사용합니다. 정식/베타 아이콘 원본과 선택 규칙은 [아이콘 패키징 안내](../packaging/icons/README.md)에 보존합니다.
 
 베타 2 학교 현황·진단·제보 기능은 [보관 태그](https://github.com/hexagon0401/MINER/tree/archive/betas/beta2-ui-before-1.1.1)의 소스입니다. 현재 정식 UI·DMG에는 포함되지 않습니다. [커뮤니티 보관 안내](community/README.md) · [남은 사용자 작업](docs/BETA2_HANDOFF.md). 기존 릴리스와 태그는 덮어쓰지 않습니다.
+
+## v1.2.1 업데이트 설치·정리
+
+설정의 Check for Updates로 확인하고 연결 중지 후 설치합니다. Mac 직접 설치는 앱 바깥에 준비한 검증 작업자가 부모 종료를 기다린 뒤 DMG의 식별자·버전·서명 무결성을 확인하고 교체합니다. 새 창 시작 확인 후 이전 앱/설치 캐시를 제거합니다. Windows는 기존 등록 설치 경로에서 런타임을 임시 보관하고 깨끗한 새 런타임을 설치하며 실패 시 복구합니다. 성공 후 설치 파일을 정리하고 재실행합니다. 사용자 설정·로그는 보존합니다. 전용 캐시는 현재 버전 이하의 알려진 설치 파일만 정리합니다. 네트워크 엔진은 v1.2.0과 같습니다.

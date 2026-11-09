@@ -88,7 +88,7 @@ def build(expected_arch, signing="adhoc", identity=None, notary_profile=None, dm
         "CFBundleName": "MINER", "CFBundleDisplayName": "MINER", "CFBundleIconFile": "AppIcon",
         "CFBundleIdentifier": "org.schoolnet.v5.alpha", "CFBundleExecutable": "MINER",
         "CFBundlePackageType": "APPL", "CFBundleShortVersionString": __release_version__,
-        "CFBundleVersion": "502120", "SchoolNetReleaseVersion": __version__, "MINERPublicReleaseVersion": __release_version__,
+        "CFBundleVersion": "502121", "SchoolNetReleaseVersion": __version__, "MINERPublicReleaseVersion": __release_version__,
         "LSMinimumSystemVersion": "13.0", "NSHighResolutionCapable": True,
     }
     info.update(macos_icon_info(icon))
@@ -195,6 +195,8 @@ def build(expected_arch, signing="adhoc", identity=None, notary_profile=None, dm
                 raise ValueError("DMG Applications shortcut is missing")
         finally:
             execute("hdiutil", "detach", mount)
+    from macos.update_smoke import run as update_smoke
+    updater_report=update_smoke(app,dmg,work)
     digest = hashlib.sha256(dmg.read_bytes()).hexdigest()
     dmg.with_suffix(".dmg.sha256").write_text(f"{digest}  {name}\n", encoding="utf-8")
     dmg.with_suffix(".dmg.verification.json").write_text(json.dumps({
@@ -203,7 +205,7 @@ def build(expected_arch, signing="adhoc", identity=None, notary_profile=None, dm
         "dmg_to_disk_signature_verified": True, "sha256": digest,
         "finder_background_layout_verified": dmg_background is not None,
         "app_name": app.name, "native_ui_smoke": ui_report,
-        "developer": developer, "helper_smoke": helper_report, "selective_network":selective_report, "source_commit": os.environ.get("GITHUB_SHA"), "release_channel": icon["channel"], "app_icon_sha256": hashlib.sha256((ui_assets / "AppIcon.png").read_bytes()).hexdigest(),
+        "updater":updater_report,"developer": developer, "helper_smoke": helper_report, "selective_network":selective_report, "source_commit": os.environ.get("GITHUB_SHA"), "release_channel": icon["channel"], "app_icon_sha256": hashlib.sha256((ui_assets / "AppIcon.png").read_bytes()).hexdigest(),
     }, indent=2), encoding="utf-8")
     print(f"Verified DMG: {dmg}")
 

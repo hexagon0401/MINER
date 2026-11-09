@@ -47,10 +47,15 @@ def main(argv=None):
     desktop.add_argument("--resources", type=Path)
     desktop.add_argument("--profile", type=Path)
     update = commands.add_parser("update", help="check or verify an official installer download")
-    update.add_argument("operation", choices=["check", "download"])
+    update.add_argument("operation", choices=["check", "download", "prepare", "apply", "finish"])
     update.add_argument("--platform", choices=["macos", "windows"], required=True)
     update.add_argument("--arch", choices=["arm64", "x86_64", "x64"], required=True)
     update.add_argument("--directory", type=Path)
+    update.add_argument("--installer")
+    update.add_argument("--sha256")
+    update.add_argument("--target-version")
+    update.add_argument("--parent-pid",type=int)
+    update.add_argument("--ticket")
     community = commands.add_parser("community-diagnose", help="read-only school report diagnostics; no routing changes")
     community.add_argument("--directory", type=Path, required=True)
     community.add_argument("--engine", required=True)
@@ -58,6 +63,16 @@ def main(argv=None):
     try:
         if args.command == "update":
             from schoolnet import updates
+            if args.operation in {'prepare','apply','finish'}:
+                if args.platform=='macos':
+                    if sys.platform!='darwin':raise ValueError('macOS updater requires macOS')
+                    from schoolnet import macos_update
+                    if args.operation=='prepare':result=macos_update.prepare(args.installer,args.sha256,args.target_version,args.parent_pid)
+                    elif args.operation=='apply':result=macos_update.apply(args.ticket)
+                    else:result=macos_update.finish()
+                elif args.operation=='finish':result=updates.clean_cache(args.directory)
+                else:raise ValueError('Unsupported update operation')
+                print(json.dumps(result));return 0
             info = updates.check(args.platform, args.arch)
             if args.operation == "download":
                 if args.directory is None: raise ValueError("Download directory required")

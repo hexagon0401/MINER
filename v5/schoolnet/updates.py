@@ -123,3 +123,18 @@ def download(info, directory):
         return {**info, "path": str(target.resolve()), "verified": True}
     finally:
         temporary.unlink(missing_ok=True)
+
+
+def clean_cache(directory,current=__release_version__):
+    """Only our completed/partial installers at or below the running version."""
+    directory=Path(directory)
+    if directory.is_symlink() or (directory.exists() and getattr(directory.lstat(),'st_file_attributes',0)&0x400):raise ValueError('Update cache must not be a link')
+    removed=[];deferred=[]
+    if not directory.exists():return {'removed':removed,'deferred':deferred}
+    pattern=r'MINER-ALPHA-v([1-9]\d*(?:\.\d+)*)-(?:macOS-(?:AppleSilicon|Intel)\.dmg|Windows-x64-Setup\.exe)(?:\.download)?'
+    for path in directory.iterdir():
+        match=re.fullmatch(pattern,path.name)
+        if not match or path.is_symlink() or not path.is_file() or getattr(path.lstat(),'st_file_attributes',0)&0x400 or version(match[1])>version(current):continue
+        try:path.unlink();removed.append(path.name)
+        except OSError:deferred.append(path.name)
+    return {'removed':removed,'deferred':deferred}

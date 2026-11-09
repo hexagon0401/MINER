@@ -36,7 +36,7 @@ WORDS['en'].update({'disconnecting':'Emergency stop…', 'disconnected':'Emergen
 WORDS['ko'].update({'updates':'앱 업데이트','update_check':'업데이트 확인','update_install':'업데이트 설치',
     'update_checking':'최신 정식 버전을 확인하고 있습니다.','update_downloading':'설치 파일 다운로드·SHA-256 검증 중…',
     'update_current':'최신 버전입니다.','update_available':'새 버전:','update_stop':'먼저 연결을 중지한 뒤 업데이트하세요.'})
-WORDS['en'].update({'updates':'App updates','update_check':'Check for updates','update_install':'Install update',
+WORDS['en'].update({'updates':'App updates','update_check':'Check for Updates','update_install':'Install update',
     'update_checking':'Checking the latest official release.','update_downloading':'Downloading and verifying installer…',
     'update_current':'You are up to date.','update_available':'New release:','update_stop':'Stop MINER before updating.'})
 WORDS['ko']['auto_updates']='새 버전 자동 확인·알림'

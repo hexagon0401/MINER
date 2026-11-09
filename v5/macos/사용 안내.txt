@@ -1,4 +1,4 @@
-MINER ALPHA v1.2.0 — macOS
+MINER ALPHA v1.2.1 — macOS
 
 설치와 첫 연결
 1. DMG에서 MINER.app을 Applications로 드래그해 설치하거나 기존 앱을 교체하세요.
@@ -33,7 +33,7 @@ MINER ALPHA v1.2.0 — macOS
 확인, 개발자 소개를 설정합니다. 새 버전은 실행 후 및 6시간 간격으로 확인해
 앱에서 알립니다. 연결을 중지한 뒤 업데이트 설치를 진행하세요.
 Homebrew 설치는 Terminal에서 brew update / brew upgrade --cask miner를 실행합니다.
-DMG 설치는 HTTPS·SHA-256 검증을 마친 파일에서 응용 프로그램 폴더의 앱을 교체합니다.
+v1.2.1부터 이후 DMG 업데이트는 검증 후 앱 종료·교체·재실행하고 새 창 시작 확인 후 이전 앱과 설치 캐시를 정리합니다.
 기존 앱을 먼저 제거하지 않아도 됩니다. v1.1.1 사용자는 한 번 수동 확인이 필요합니다.
 
 제거

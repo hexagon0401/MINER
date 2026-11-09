@@ -62,6 +62,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         let submenu = NSMenu()
         let settingsItem = submenu.addItem(withTitle: "설정 / Settings…", action: #selector(showSettings), keyEquivalent: ",")
         settingsItem.target = self
+        let updateItem=submenu.addItem(withTitle:"업데이트 확인 / Check for Updates…",action:#selector(manualCheckUpdate),keyEquivalent:"")
+        updateItem.target=self
         submenu.addItem(.separator())
         submenu.addItem(withTitle: "종료 / Quit", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q")
         item.submenu = submenu
@@ -72,7 +74,19 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             runDeltaSmoke(output:URL(fileURLWithPath:CommandLine.arguments[index+1]),arch:CommandLine.arguments[index+2])
             return
         }
-        append("MINER ALPHA v1.2.0: 게임 중에도 MINER와 WARP Local Proxy 연결을 유지하세요.")
+        DispatchQueue.global(qos:.utility).async {
+            do {
+                try self.ensureProfile()
+                _ = try self.execute(["update","finish","--platform","macos","--arch",self.updateArchitecture])
+                let failure=self.dataDirectory.appendingPathComponent("Updates/install-error.txt")
+                if let message=try? String(contentsOf:failure,encoding:.utf8) {
+                    DispatchQueue.main.async { self.model.updateMessage=self.model.tr("이전 업데이트 실패: ","Previous update failed: ")+self.model.redact(message) }
+                    try? FileManager.default.removeItem(at:failure)
+                }
+            }
+            catch { DispatchQueue.main.async { self.append(error.localizedDescription) } }
+        }
+        append("MINER ALPHA v1.2.1: 게임 중에도 MINER와 WARP Local Proxy 연결을 유지하세요.")
         refresh()
         DispatchQueue.main.asyncAfter(deadline:.now()+4) { if self.model.autoUpdates { self.checkUpdate() } }
         updateTimer=Timer.scheduledTimer(withTimeInterval:21600,repeats:true) { _ in if self.model.autoUpdates { self.checkUpdate() } }
@@ -302,6 +316,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         return "x86_64"
         #endif
     }
+    @objc func manualCheckUpdate() { showSettings();checkUpdate() }
     @objc func checkUpdate() {
         guard !model.updateBusy && !busy else { return }
         model.updateBusy = true; model.updateMessage = model.tr("최신 정식 버전을 확인하고 있습니다.","Checking the latest official release.")
@@ -322,7 +337,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         guard model.updateAvailable && !model.updateBusy && !busy && !running else { return }
         if updateInfo["manager"] as? String == "homebrew" {
             guard let brew = updateInfo["brew"] as? String, ["/opt/homebrew/bin/brew","/usr/local/bin/brew"].contains(brew) else { return }
-            let command = "while /usr/bin/pgrep -x MINER >/dev/null; do /bin/sleep 1; done; " + shellQuote(brew) + " update && " + shellQuote(brew) + " upgrade --cask hexagon0401/miner/miner"
+            let command = "while /usr/bin/pgrep -x MINER >/dev/null; do /bin/sleep 1; done; " + shellQuote(brew) + " update && " + shellQuote(brew) + " upgrade --cask hexagon0401/miner/miner && " + shellQuote(brew) + " cleanup miner"
             let process = Process(); process.executableURL = URL(fileURLWithPath:"/usr/bin/osascript")
             process.arguments = ["-e","tell application \"Terminal\" to do script " + appleString(command)]
             do { try process.run(); NSApp.terminate(nil) } catch { model.updateMessage = error.localizedDescription }
@@ -335,11 +350,20 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                 let info = try JSONSerialization.jsonObject(with:Data(text.utf8)) as? [String:Any] ?? [:]
                 guard info["verified"] as? Bool == true, let path = info["path"] as? String else { throw NSError(domain:identifier,code:1) }
                 DispatchQueue.main.async {
-                    self.model.updateInstalling = false; self.model.updateBusy = false
-                    self.model.updateMessage = self.model.tr("검증 완료. DMG에서 MINER를 응용 프로그램 폴더로 옮겨 교체하세요.","Verified. Drag MINER from the DMG to Applications to replace it.")
-                    NSWorkspace.shared.open(URL(fileURLWithPath:path)); NSApp.terminate(nil)
+                    self.startAppReplacement(path:path,info:info)
                 }
             } catch { DispatchQueue.main.async { self.model.updateInstalling = false; self.model.updateBusy = false; self.model.updateMessage = self.model.redact(error.localizedDescription) } }
+        }
+    }
+    func startAppReplacement(path:String,info:[String:Any]) {
+        DispatchQueue.global(qos:.utility).async {
+            do {
+                guard let sha=info["sha256"] as? String,let target=info["version"] as? String else { throw NSError(domain:identifier,code:1) }
+                let text=try self.execute(["update","prepare","--platform","macos","--arch",self.updateArchitecture,"--installer",path,"--sha256",sha,"--target-version",target,"--parent-pid",String(getpid())])
+                let request=try JSONSerialization.jsonObject(with:Data(text.utf8)) as? [String:Any] ?? [:]
+                guard request["started"] as? Bool == true else { throw NSError(domain:identifier,code:1) }
+                DispatchQueue.main.async { self.model.updateInstalling=false;self.model.updateBusy=false;NSApp.terminate(nil) }
+            } catch { DispatchQueue.main.async { self.model.updateInstalling=false;self.model.updateBusy=false;self.model.updateMessage=self.model.redact(error.localizedDescription) } }
         }
     }
     @objc func uninstall() {

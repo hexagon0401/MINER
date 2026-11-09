@@ -55,6 +55,21 @@ class UpdateTests(unittest.TestCase):
             with self.subTest(url=url),self.assertRaises(ValueError):
                 updates.HTTPSRedirect().redirect_request(None,None,302,"",{},url)
 
+    def test_cache_cleanup_preserves_future_installers_user_files_and_symlinks(self):
+        with tempfile.TemporaryDirectory() as d:
+            root=Path(d)
+            old=root/'MINER-ALPHA-v1.2.0-Windows-x64-Setup.exe';old.write_bytes(b'old')
+            future=root/'MINER-ALPHA-v1.3.0-macOS-Intel.dmg';future.write_bytes(b'future')
+            personal=root/'notes.txt';personal.write_text('preserve')
+            updates.clean_cache(root,'1.2.1')
+            self.assertFalse(old.exists());self.assertTrue(future.exists());self.assertTrue(personal.exists())
+
+    def test_windows_verified_update_waits_and_relaunches_only_after_success(self):
+        command=installer_command('Setup.exe',123,'C:/Program Files/MINER','a'*64)
+        self.assertIn('Get-FileHash',command);self.assertIn('-PassThru -Wait',command)
+        self.assertLess(command.index('ExitCode'),command.index('Remove-Item'))
+        self.assertIn('/DIR="C:/Program Files/MINER"',command)
+
     def test_windows_installer_waits_for_parent_and_quotes_paths(self):
         command=installer_command("folder with ' quote/Setup.exe",123)
         self.assertIn("WaitForExit()",command)

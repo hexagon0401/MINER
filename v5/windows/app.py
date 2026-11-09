@@ -53,6 +53,10 @@ class Bridge(QObject):
         super().__init__();self.testing=testing;self.worker=None;self.closing=False;self.detail='';self.count=0
         self.settings_open=False;self.fixture_busy=False;self.pending_kill=False;self.effects_supported=False
         self.update_worker=None;self.update_busy=False;self.installing_update=False;self.update_message='';self.update_info=None;self.pending_installer=None
+        failure=DATA/'Updates/install-error.txt'
+        if failure.is_file():
+            try:self.update_message=failure.read_text(encoding='utf-8-sig');failure.unlink()
+            except OSError:pass
         DATA.mkdir(parents=True,exist_ok=True)
         try:
             cfg=json.loads((DATA/'settings.json').read_text(encoding='utf-8'))
@@ -65,6 +69,7 @@ class Bridge(QObject):
         self.control_layout=layout if layout in ('rounded','flush') else 'rounded'
         self.reduced=cfg.get('reduce_motion') is True
         self.auto_updates=cfg.get('auto_updates',True) is not False
+        self.last_notified=cfg.get('notified_version','')
         self.appearance=windows_appearance();self.dirty=(DATA/'session.json').exists()
         self.phase='interrupted' if self.dirty else 'idle'
         available=QFontDatabase.families()
@@ -93,7 +98,7 @@ class Bridge(QObject):
 
     def save(self):
         from schoolnet.runtime import write_json
-        try:write_json(DATA/'settings.json',{'language':self.language,'theme':self.theme,'reduce_motion':self.reduced,'control_layout':self.control_layout,'auto_updates':self.auto_updates})
+        try:write_json(DATA/'settings.json',{'language':self.language,'theme':self.theme,'reduce_motion':self.reduced,'control_layout':self.control_layout,'auto_updates':self.auto_updates,'notified_version':self.last_notified})
         except (OSError,ValueError) as exc:self.detail=str(exc)
         self.changed.emit()
 
@@ -217,8 +222,15 @@ class Bridge(QObject):
 
     def update_result(self,result):
         if result.get('verified'):
-            self.pending_installer=result['path'];return
+            self.pending_installer=result;return
         self.update_info=result
+        if result.get('available') and result['version']!=self.last_notified:
+            self.last_notified=result['version'];self.save()
+            if sys.platform=='win32' and hasattr(self,'window'):
+                class Flash(ctypes.Structure):
+                    _fields_=[('size',ctypes.c_uint),('window',ctypes.c_void_p),('flags',ctypes.c_uint),('count',ctypes.c_uint),('timeout',ctypes.c_uint)]
+                request=Flash(ctypes.sizeof(Flash),int(self.window.winId()),2,3,0)
+                ctypes.windll.user32.FlashWindowEx(ctypes.byref(request))
         self.update_message=(WORDS[self.language]['update_available']+' '+result['version']) if result.get('available') else WORDS[self.language]['update_current']
 
     def update_error(self,message):self.update_message=message;self.pending_installer=None
@@ -228,7 +240,7 @@ class Bridge(QObject):
         if self.pending_installer:
             try:
                 from windows.updates import launch
-                launch(self.pending_installer);self.pending_installer=None;self.closeRequested.emit()
+                launch(self.pending_installer["path"],self.pending_installer["sha256"]);self.pending_installer=None;self.closeRequested.emit()
             except Exception as exc:self.update_message=str(exc);self.pending_installer=None
         self.changed.emit()
 
@@ -256,6 +268,11 @@ def create_app(testing=False):
     bridge.effects_supported=window.rendererInterface().graphicsApi() not in (QSGRendererInterface.GraphicsApi.Software,QSGRendererInterface.GraphicsApi.Unknown)
     bridge.changed.emit();bridge.apply_appearance()
     if not testing:
+        def clear_old_installers():
+            from schoolnet.updates import clean_cache
+            try:clean_cache(DATA/'Updates')
+            except (OSError,ValueError):pass
+        threading.Thread(target=clear_old_installers,daemon=True).start()
         QTimer.singleShot(4000,bridge.automaticUpdate)
         bridge.update_timer=QTimer(bridge);bridge.update_timer.setInterval(21600000)
         bridge.update_timer.timeout.connect(bridge.automaticUpdate);bridge.update_timer.start()
