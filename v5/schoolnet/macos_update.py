@@ -46,7 +46,7 @@ def validate_app(app,target=None):
 
 def prepare(installer,sha,target,parent):
     import re
-    version(target)
+    if version(target)<version(__release_version__):raise ValueError("Refusing an older app update")
     if not re.fullmatch('[a-f0-9]{64}',sha) or parent<=1:raise ValueError('Invalid update request')
     cache=safe_cache();installer=Path(installer)
     if installer.parent!=cache or installer.is_symlink() or not re.fullmatch(r'MINER-ALPHA-v[0-9.]+-macOS-(AppleSilicon|Intel)\.dmg',installer.name):raise ValueError('Invalid update installer path')
@@ -58,15 +58,15 @@ def prepare(installer,sha,target,parent):
         try:
             pid=int((stale/'worker.pid').read_text())
             os.kill(pid,0)
-            if time.time()-stale.stat().st_mtime<3600:raise ValueError('An update worker is still active')
+            if time.time()-(stale/'worker.pid').stat().st_mtime<3600:raise ValueError('An update worker is still active')
             shutil.rmtree(stale)
         except (FileNotFoundError,ProcessLookupError):shutil.rmtree(stale)
     worker=cache/('.worker-'+uuid.uuid4().hex)
     child=None
     try:
         worker.mkdir(mode=0o700)
-        (worker/'.miner-worker-owned').write_text(worker.name[8:])
         (worker/'worker.pid').write_text(str(os.getpid()))
+        (worker/'.miner-worker-owned').write_text(worker.name[8:])
         shutil.copytree(Path(sys.executable).parent,worker,symlinks=True,dirs_exist_ok=True)
         ticket=worker/'ticket.json'
         write_json(ticket,{'installer':str(installer),'sha256':sha,'target':target,'parent':parent,'token':worker.name[8:]})
