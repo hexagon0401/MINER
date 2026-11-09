@@ -1,0 +1,135 @@
+name: MINER ALPHA v1.2.0 universal
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: miner-alpha-v120
+  cancel-in-progress: false
+jobs:
+  macos:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runner: macos-26
+            arch: arm64
+          - runner: macos-15-intel
+            arch: x86_64
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 60
+    env:
+      MINER_RELEASE_CHANNEL: stable
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: automation
+      - uses: actions/checkout@v4
+        with:
+          path: source
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install native dependencies and engine
+        working-directory: source/v5
+        run: |
+          python3 -m pip install pyinstaller==6.22.3 certifi==2026.10.23 dmgbuild==1.6.7
+          python3 install_engine.py
+      - name: Import Developer ID if configured
+        id: signing
+        working-directory: source/v5
+        env:
+          APPLE_CERTIFICATE_P12_BASE64: ${{ secrets.APPLE_CERTIFICATE_P12_BASE64 }}
+          APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          NOTARY_CONFIGURED: ${{ secrets.APPLE_NOTARY_KEY_P8_BASE64 != '' || secrets.APPLE_NOTARY_KEY_ID != '' || secrets.APPLE_NOTARY_ISSUER_ID != '' }}
+        run: python3 macos/signing_credentials.py
+      - name: Test and package native DMG
+        working-directory: source/v5
+        env:
+          CODE_SIGN_IDENTITY: ${{ steps.signing.outputs.identity }}
+          SIGNING_ENABLED: ${{ steps.signing.outputs.enabled }}
+          APPLE_NOTARY_KEY_P8_BASE64: ${{ secrets.APPLE_NOTARY_KEY_P8_BASE64 }}
+          APPLE_NOTARY_KEY_ID: ${{ secrets.APPLE_NOTARY_KEY_ID }}
+          APPLE_NOTARY_ISSUER_ID: ${{ secrets.APPLE_NOTARY_ISSUER_ID }}
+        run: |
+          set -o pipefail
+          export SCHOOLNET_TEST_ENGINE="$PWD/local/bin/sing-box"
+          python3 -c 'import subprocess,sys; subprocess.run([sys.executable,"-m","unittest","discover","-s","tests","-v"],check=True,timeout=180)' 2>&1 | tee "$RUNNER_TEMP/v120-release-tests-${{ matrix.arch }}.log"
+          if [ "$SIGNING_ENABLED" = true ]; then mode=developer-id; else mode=adhoc; fi
+          python3 macos/build.py --arch '${{ matrix.arch }}' --signing "$mode" 2>&1 | tee "$RUNNER_TEMP/v120-release-build-${{ matrix.arch }}.log"
+      - name: Remove temporary signing keychain
+        if: always() && steps.signing.outputs.keychain != ''
+        working-directory: source/v5
+        env:
+          SIGNING_KEYCHAIN: ${{ steps.signing.outputs.keychain }}
+        run: python3 macos/signing_credentials.py --cleanup "$SIGNING_KEYCHAIN"
+      - name: Annotate failure diagnostics
+        if: failure()
+        run: python3 automation/packaging/icons/annotate_failure.py
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: v120-release-macos-${{ matrix.arch }}
+          path: |
+            source/v5/dist/*
+            ${{ runner.temp }}/v120-release-*.log
+            ${{ runner.temp }}/miner-ui-${{ matrix.arch }}*
+  windows:
+    runs-on: windows-2025
+    timeout-minutes: 45
+    env:
+      PYTHONUTF8: '1'
+      MINER_RELEASE_CHANNEL: stable
+      QSG_RHI_PREFER_SOFTWARE_RENDERER: '1'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: automation
+      - uses: actions/checkout@v4
+        with:
+          path: source
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install PySide6==6.8.3 pyinstaller==6.22.3 certifi==2026.10.23 Pillow==11.3.0
+      - name: Package and exercise installed EXE
+        working-directory: source/v5
+        run: |
+          python windows/build.py 2>&1 | Tee-Object -FilePath "$env:RUNNER_TEMP/v120-release-build-windows.log"
+          exit $LASTEXITCODE
+      - name: Annotate failure diagnostics
+        if: failure()
+        run: python automation/packaging/icons/annotate_failure.py
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: v120-release-windows
+          path: |
+            source/v5/dist-windows/*Setup.exe
+            source/v5/dist-windows/*.sha256
+            source/v5/dist-windows/*.verification.json
+            ${{ runner.temp }}/v120-release-build-windows.log
+            ${{ runner.temp }}/miner-windows-diagnostics/**
+  publish:
+    needs: [macos, windows]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      actions: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: v120-release-*
+          path: platform-assets
+      - run: python3 packaging/alpha-v1.2.0/assemble.py platform-assets release-assets
+      - name: Publish verified universal release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          gh release create miner-alpha-v1.2.0 --target "$GITHUB_SHA" --draft --title 'MINER ALPHA v1.2.0' --notes-file packaging/alpha-v1.2.0/RELEASE_NOTES.md
+          gh release upload miner-alpha-v1.2.0 release-assets/*
+          gh release edit miner-alpha-v1.2.0 --draft=false --prerelease=false --latest
+          gh workflow run miner-homebrew.yml --ref main
