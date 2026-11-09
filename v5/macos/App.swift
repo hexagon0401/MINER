@@ -368,7 +368,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
     func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool { true }
     func applicationShouldTerminate(_ sender: NSApplication) -> NSApplication.TerminateReply {
-        if busy || model.updateBusy { return .terminateCancel }
+        if busy || model.updateInstalling { return .terminateCancel }
         guard running || managedWarp else { return .terminateNow }
         model.phase = "stopping"; setBusy(true)
         DispatchQueue.global().async {

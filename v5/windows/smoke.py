@@ -75,6 +75,23 @@ def run(output):
         assert b.state['canStart'],'Background version checks must not block connection controls'
         b.update_busy=False;b.changed.emit()
         checks.append('automatic update preference and available-version banner render without network actions')
+        import threading
+        from unittest.mock import patch
+        release=threading.Event()
+        def metadata(*args):
+            release.wait(timeout=2)
+            return {'available':False,'version':'1.2.0'}
+        with patch('schoolnet.updates.check',side_effect=metadata):
+            b.testing=False;b.checkUpdate()
+            try:
+                assert b.update_busy and b.state['canStart']
+                assert b.requestClose(),'Metadata checks must not block closing the window'
+            finally:release.set()
+            deadline=time.monotonic()+3
+            while b.update_busy and time.monotonic()<deadline:wait(app,.05)
+            assert not b.update_busy,'Metadata worker failed to finish'
+            b.testing=True;b.update_info=None
+        checks.append('background metadata lookup preserves Start and Close responsiveness')
         w.setWidth(480);w.setHeight(440);wait(app,.1)
         for name in ('startButton','stopButton','killButton','settingsButton'):
             item=w.findChild(QObject,name)

@@ -31,16 +31,20 @@ class Worker(QThread):
         except Exception as exc:self.failed.emit(str(exc))
 
 
-class UpdateWorker(QThread):
-    completed=Signal(object); failed=Signal(str)
+class UpdateWorker(QObject):
+    completed=Signal(object); failed=Signal(str); finished=Signal()
     def __init__(self,info=None):
-        super().__init__();self.info=info
+        super().__init__();self.info=info;self.cancelled=threading.Event()
+    def start(self):threading.Thread(target=self.run,daemon=True,name="MINER update").start()
     def run(self):
         try:
             from schoolnet import updates
             result=updates.download(self.info,DATA/'Updates') if self.info else updates.check('windows','x64')
-            self.completed.emit(result)
-        except Exception as exc:self.failed.emit(str(exc))
+            if not self.cancelled.is_set():self.completed.emit(result)
+        except Exception as exc:
+            if not self.cancelled.is_set():self.failed.emit(str(exc))
+        finally:
+            if not self.cancelled.is_set():self.finished.emit()
 
 
 class Bridge(QObject):
@@ -129,7 +133,7 @@ class Bridge(QObject):
     @Slot(result=bool)
     def requestClose(self):
         if self.testing:return True
-        if self.update_busy:return False
+        if self.installing_update:return False
         if self.dirty or (self.worker and self.worker.isRunning()):
             self.closing=True
             if self.phase not in ('restoring','disconnecting'):self.end()
@@ -283,6 +287,7 @@ def main():
     kernel.AllocConsole();ctypes.windll.user32.ShowWindow(kernel.GetConsoleWindow(),0)
     app,engine,bridge,window=create_app()
     code=app.exec()
+    if bridge.update_worker:bridge.update_worker.cancelled.set()
     import shiboken6
     shiboken6.delete(window);shiboken6.delete(engine)
     kernel.CloseHandle(mutex);return code
