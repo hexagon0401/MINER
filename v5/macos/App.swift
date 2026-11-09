@@ -75,8 +75,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             return
         }
         DispatchQueue.global(qos:.utility).async {
+            guard FileManager.default.fileExists(atPath:self.dataDirectory.appendingPathComponent(".managed.json").path) else { return }
             do {
-                try self.ensureProfile()
                 _ = try self.execute(["update","finish","--platform","macos","--arch",self.updateArchitecture])
                 let failure=self.dataDirectory.appendingPathComponent("Updates/install-error.txt")
                 if let message=try? String(contentsOf:failure,encoding:.utf8) {
