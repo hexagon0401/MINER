@@ -287,7 +287,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                 let status=try self.execute(["desktop","status"])
                 let info=try JSONSerialization.jsonObject(with:Data(status.utf8)) as? [String:Any] ?? [:]
                 guard info["running"] as? Bool == true else { throw NSError(domain:identifier,code:1,userInfo:[NSLocalizedDescriptionKey:"네트워크 엔진이 종료되었습니다. 일반 DNS를 복구한 뒤 다시 연결하세요."]) }
-                _ = try self.execute(["warp","maintain","--proxy-port",String(self.currentProxyPort)])
+                let health=try self.execute(["warp","maintain","--proxy-port",String(self.currentProxyPort)])
+                if let state=try JSONSerialization.jsonObject(with:Data(health.utf8)) as? [String:Any],let warning=state["warning"] as? String {
+                    DispatchQueue.main.async { self.append(warning) }
+                }
                 DispatchQueue.main.async { self.healthBusy=false }
             } catch { DispatchQueue.main.async { self.healthBusy=false; self.model.error=self.model.redact(error.localizedDescription);self.model.phase="error" } }
         }

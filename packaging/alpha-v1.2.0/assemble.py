@@ -54,7 +54,7 @@ def assemble(source, output):
         for check in ['ok','real_ip_routes_bypass_tun','ordinary_os_dns_and_tls','remote_dns_and_continuous_client_tcp',
                       'original_dns_recovered_before_engine_stop','engine_crash_dns_recovered','ordinary_https_after_recovery','dhcp_or_manual_mode_preserved']:
             if selective.get(check) is not True:raise ValueError('Native selective network proof missing: '+check)
-        if suffix.endswith('.exe') and (receipt.get('upgrade_from')!='1.1.1' or receipt.get('upgrade_preserves_user_data') is not True or selective.get('windows_guardian_tested') is not True):
+        if suffix.endswith('.exe') and (receipt.get('upgrade_from')!='1.1.1' or receipt.get('upgrade_preserves_user_data') is not True or selective.get('windows_guardian_tested') is not True or selective.get('packaged_guardian_verified') is not True):
             raise ValueError('Published Windows v1.1.1 upgrade or recovery guardian not verified')
         name = f"MINER-ALPHA-v{VERSION}-{suffix}"
         shutil.copyfile(binary, output / name)

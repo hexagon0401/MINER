@@ -65,7 +65,7 @@ MINER는 **클라이언트 통신은 WARP로, 게임 플레이 통신은 직접 
 | Mac · Intel | [DMG 다운로드](https://github.com/hexagon0401/MINER/releases/download/miner-alpha-v1.2.0/MINER-ALPHA-v1.2.0-macOS-Intel.dmg) | macOS 기본 UI · SwiftUI |
 | Windows · x64 | [EXE 다운로드](https://github.com/hexagon0401/MINER/releases/download/miner-alpha-v1.2.0/MINER-ALPHA-v1.2.0-Windows-x64-Setup.exe) | Windows Pearl White · A/B 버튼 |
 
-전체 기본 경로를 TUN에서 제외하고 Riot 선택 경로·DNS 복구·연결 유지·자동 업데이트 안내를 적용한 **ALPHA v1.2.0 정식 릴리스**입니다. 베타 빌드는 BETA 아이콘을 사용합니다. 플랫폼별로 **별도 설치 파일**을 제공합니다. Mac과 Windows는 각각의 UI를 유지합니다. [체크섬](https://github.com/hexagon0401/MINER/releases/download/miner-alpha-v1.2.0/SHA256SUMS.txt) · [플랫폼별 버전·출처](https://github.com/hexagon0401/MINER/releases/download/miner-alpha-v1.2.0/release-manifest.json) · [Windows 소스](https://github.com/hexagon0401/MINER/tree/windows-beta1)
+전체 기본 경로를 TUN에서 제외하고 Riot 선택 경로·DNS 복구·연결 유지·자동 업데이트 안내를 적용한 **ALPHA v1.2.0 정식 릴리스**입니다. 베타 빌드는 BETA 아이콘을 사용합니다. 플랫폼별로 **별도 설치 파일**을 제공합니다. Mac과 Windows는 각각의 UI를 유지합니다. [체크섬](https://github.com/hexagon0401/MINER/releases/download/miner-alpha-v1.2.0/SHA256SUMS.txt) · [플랫폼별 버전·출처](https://github.com/hexagon0401/MINER/releases/download/miner-alpha-v1.2.0/release-manifest.json) · [Windows 소스](https://github.com/hexagon0401/MINER/tree/main/v5/windows)
 
 | 구분 | 현재 상태 |
 | :-- | :-- |
@@ -158,7 +158,7 @@ macOS 버전과 표시 언어에 따라 버튼 이름이나 화면 구성은 조
 <img src="docs/assets/windows-beta1/idle.png" alt="Windows MINER 베타 1 대기 화면 — 실제 EXE UI 검증" width="420" />
 <img src="docs/assets/windows-beta1/settings.png" alt="Windows MINER 한영·테마·동작 줄이기·개발자 설정" width="280" />
 
-[상태 전환 GIF](https://github.com/hexagon0401/MINER/releases/download/v5.0.0-beta.1.1-windows.8/MINER-v5.0.0-beta.1.1-windows.8-Windows-x64-Preview.gif) · [B안 미리보기](https://github.com/hexagon0401/MINER/releases/download/v5.0.0-beta.1.1-windows.8/MINER-v5.0.0-beta.1.1-windows.8-Windows-x64-flush.png) · [전체 스크린샷 ZIP](https://github.com/hexagon0401/MINER/releases/download/v5.0.0-beta.1.1-windows.8/MINER-v5.0.0-beta.1.1-windows.8-Windows-x64-Screenshots.zip) · [Mac 대비 변경점](https://github.com/hexagon0401/MINER/blob/windows-beta1/v5/windows/README.md)
+[상태 전환 GIF](https://github.com/hexagon0401/MINER/releases/download/v5.0.0-beta.1.1-windows.8/MINER-v5.0.0-beta.1.1-windows.8-Windows-x64-Preview.gif) · [B안 미리보기](https://github.com/hexagon0401/MINER/releases/download/v5.0.0-beta.1.1-windows.8/MINER-v5.0.0-beta.1.1-windows.8-Windows-x64-flush.png) · [전체 스크린샷 ZIP](https://github.com/hexagon0401/MINER/releases/download/v5.0.0-beta.1.1-windows.8/MINER-v5.0.0-beta.1.1-windows.8-Windows-x64-Screenshots.zip) · [Mac 대비 변경점](https://github.com/hexagon0401/MINER/blob/main/v5/windows/README.md)
 
 </details>
 
@@ -225,7 +225,7 @@ Mac·Windows 모두 **설정 → 앱 업데이트 → 업데이트 확인**에�
 
 | 문서 | 내용 |
 | :-- | :-- |
-| [Windows 기술 안내](https://github.com/hexagon0401/MINER/blob/windows-beta1/v5/windows/README.md) | Windows 베타 1 설치·복구·현지화 변경점 |
+| [Windows 기술 안내](https://github.com/hexagon0401/MINER/blob/main/v5/windows/README.md) | Windows 베타 1 설치·복구·현지화 변경점 |
 | [v5 기술 안내](v5/README.md) | 설치·연결 구조·CLI 사용법 |
 | [학교 데이터·제보 시스템](v5/community/README.md) | 베타 2의 로컬 진단과 제보 구조 |
 | [베타 2 인계](v5/docs/BETA2_HANDOFF.md) | 개발 상태와 남은 작업 |

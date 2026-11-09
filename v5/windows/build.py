@@ -94,6 +94,7 @@ def main():
     execute(setup,'/VERYSILENT','/SUPPRESSMSGBOXES','/NORESTART',f'/DIR={work / "installed 한글 path"}')
     assert hashlib.sha256(sentinel.read_bytes()).hexdigest()==sentinel_digest,'Upgrade changed user data'
     execute(work/'installed 한글 path/MINER.exe','--self-test',output/'installed',timeout=90)
+    packaged_selective=selective_smoke(work/'installed 한글 path/_internal/engine/sing-box.exe',work/'installed-native',guardian_executable=work/'installed 한글 path/MINER.exe')
     # Reinstall over the same installation to exercise upgrade safety.
     execute(setup,'/VERYSILENT','/SUPPRESSMSGBOXES','/NORESTART',f'/DIR={work / "installed 한글 path"}')
     execute(work/'installed 한글 path/unins000.exe','/VERYSILENT','/SUPPRESSMSGBOXES','/NORESTART')
@@ -106,7 +107,7 @@ def main():
     sentinel.unlink()
     import platform
     report={'test_os':platform.platform(),'version':VERSION,'base':'MINER Beta 1.1','architecture':'x64',
-      'authenticode_signed':False,'app_icon_sha256':app_icon['sha256'],'release_channel':app_icon['channel'],'ui':ui,'native_tun':native,'selective_network':selective,'upgrade_from':'1.1.1','upgrade_preserves_user_data':True,'installer_verified':True,'upgrade_verified':True,'unicode_path_verified':True,
+      'authenticode_signed':False,'app_icon_sha256':app_icon['sha256'],'release_channel':app_icon['channel'],'ui':ui,'native_tun':native,'selective_network':packaged_selective,'source_selective_network':selective,'upgrade_from':'1.1.1','upgrade_preserves_user_data':True,'installer_verified':True,'upgrade_verified':True,'unicode_path_verified':True,
       'ui_theme':'Pearl White','default_controls':'A rounded floating','alternative_controls':'B flush integrated',
       'supplied_asset_sha256':{name:hashlib.sha256((art/'pearl/mascot'/name).read_bytes()).hexdigest() for name in ('miner-transparent.png','MINER-wordmark-transparent.png')},'ui_engine':'Qt Quick RHI + Fluent controls and functional Pearl buttons','network_engine':'sing-box 1.12.0 Windows TUN',
       'ui_scale_factors':[1,1.25,1.5,2],'windows_11_live_tested':False,'vanguard_tested':False,

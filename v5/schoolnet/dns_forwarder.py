@@ -27,12 +27,23 @@ class Forwarder:
         self.threads = []
 
     def __enter__(self):
-        udp = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        udp.bind(('127.0.0.1', 0))
-        self.port = udp.getsockname()[1]
-        tcp = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        try: tcp.bind(('127.0.0.1', self.port)); tcp.listen(8)
-        except Exception: udp.close(); tcp.close(); self.pool.shutdown(); raise
+        # Windows can reserve different port ranges for TCP and UDP (Hyper-V,
+        # system services). A UDP-allocated ephemeral port is not necessarily
+        # legal for TCP. Reserve TCP first and retry the pair before DNS changes.
+        for _ in range(32):
+            tcp=socket.socket(socket.AF_INET,socket.SOCK_STREAM)
+            udp=socket.socket(socket.AF_INET,socket.SOCK_DGRAM)
+            try:
+                if hasattr(socket,'SO_EXCLUSIVEADDRUSE'):
+                    for sock in (tcp,udp):sock.setsockopt(socket.SOL_SOCKET,socket.SO_EXCLUSIVEADDRUSE,1)
+                tcp.bind(('127.0.0.1',0));self.port=tcp.getsockname()[1]
+                udp.bind(('127.0.0.1',self.port));tcp.listen(8)
+                break
+            except OSError:
+                tcp.close();udp.close()
+        else:
+            self.pool.shutdown()
+            raise OSError('Cannot reserve a loopback port for both DNS protocols; no DNS settings changed')
         self.sockets = [udp, tcp]
         for sock, target in [(udp,self.udp_loop),(tcp,self.tcp_loop)]:
             sock.settimeout(.25)

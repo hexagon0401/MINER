@@ -10,10 +10,10 @@ import uuid
 from .network_dns import Lease, journal_path
 
 
-def spawn(directory, engine_pid):
+def spawn(directory, engine_pid, executable=None):
     if os.name!='nt': return None
-    args=[sys.executable]
-    if getattr(sys,'frozen',False): args+=['--dns-guard']
+    args=[str(executable or sys.executable)]
+    if executable or getattr(sys,'frozen',False): args+=['--dns-guard']
     else: args+=['-m','schoolnet.dns_guard']
     kernel=ctypes.WinDLL('kernel32',use_last_error=True)
     kernel.CreateEventW.argtypes=[ctypes.c_void_p,ctypes.c_int,ctypes.c_int,ctypes.c_wchar_p];kernel.CreateEventW.restype=ctypes.c_void_p

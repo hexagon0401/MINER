@@ -83,7 +83,8 @@ def session(directory, engine, stop, emit, restore_only=False, emergency=None):
                         last_health=time.monotonic()
                         while child.poll() is None and not stop.wait(.25):
                             if time.monotonic()-last_health>=15:
-                                warp.maintain_proxy(profile.proxy_port)
+                                health=warp.maintain_proxy(profile.proxy_port)
+                                if health.get('warning'):print(health['warning'],file=log,flush=True)
                                 last_health=time.monotonic()
                         if not stop.is_set():raise ValueError('Network engine exited. Ordinary DNS is being recovered.')
         except Exception as exc:

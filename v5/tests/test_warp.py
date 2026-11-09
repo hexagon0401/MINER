@@ -122,6 +122,17 @@ class WarpTests(unittest.TestCase):
             self.assertNotIn(('mode','proxy'),calls)
             self.assertEqual(expected,('connect',) in calls)
 
+    def test_transient_cli_timeouts_preserve_session_and_retry_without_disconnect(self):
+        import subprocess
+        for failing in ('settings','status','connect'):
+            calls,fixture=self.cli_fixture(mode='proxy',status='Disconnected')
+            def command(cli,*args,**kwargs):
+                if args==(failing,):raise subprocess.TimeoutExpired('warp-cli',2)
+                return fixture(cli,*args,**kwargs)
+            with patch.object(warp,'resolve_cli',return_value='warp-cli'),patch.object(warp,'command',side_effect=command):
+                self.assertIn('warning',warp.maintain_proxy())
+            self.assertNotIn(('disconnect',),calls)
+
     def test_external_full_tunnel_change_is_an_error_not_a_silent_toggle(self):
         calls,call=self.cli_fixture(mode='full',status='Connected')
         with patch.object(warp,'resolve_cli',return_value='warp-cli'),patch.object(warp,'command',side_effect=call),self.assertRaisesRegex(ValueError,'mode changed'):

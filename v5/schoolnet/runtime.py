@@ -184,7 +184,8 @@ def run(directory, engine="sing-box", warp_cli=None, managed_helper=False):
                             child.kill();child.wait();raise ValueError('Engine forced to stop; verify recovery')
                         if not managed_helper and stop_deadline is None and time.monotonic()-last_health>=15:
                             from .warp import maintain_proxy
-                            maintain_proxy(profile.proxy_port,warp_cli)
+                            health=maintain_proxy(profile.proxy_port,warp_cli)
+                            if health.get('warning'):print(health['warning'],flush=True)
                             last_health=time.monotonic()
             finally:
                 try:lease.close()

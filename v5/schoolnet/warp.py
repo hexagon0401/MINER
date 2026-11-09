@@ -144,11 +144,18 @@ def inspect(port=40000, warp_cli=None):
 def maintain_proxy(port=40000,warp_cli=None):
     """Repair a disconnected local proxy without toggling a healthy tunnel."""
     cli=resolve_cli(warp_cli)
-    if not proxy_mode(command(cli,'settings',timeout=2),port):
+    try:
+        settings=command(cli,'settings',timeout=2)
+    except (OSError,ValueError,subprocess.TimeoutExpired):
+        return {'reconnecting':False,'warning':'WARP status unavailable; preserving the engine and retrying.'}
+    if not proxy_mode(settings,port):
         raise ValueError('WARP mode changed outside MINER; stop and reconnect MINER. Do not toggle WARP during a match.')
-    if not connected(command(cli,'status',timeout=2)):
-        command(cli,'connect',timeout=2)
-        return {'reconnecting':True}
+    try:
+        if not connected(command(cli,'status',timeout=2)):
+            command(cli,'connect',timeout=2)
+            return {'reconnecting':True}
+    except (OSError,ValueError,subprocess.TimeoutExpired):
+        return {'reconnecting':True,'warning':'WARP reconnect pending; preserving the engine and retrying.'}
     return {'reconnecting':False}
 
 

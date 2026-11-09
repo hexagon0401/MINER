@@ -3,7 +3,7 @@ import socketserver
 import struct
 import threading
 import unittest
-from unittest.mock import patch
+from unittest.mock import patch,MagicMock
 
 from schoolnet.dns_forwarder import Forwarder,recv_exact
 from schoolnet.network_dns import addresses
@@ -57,6 +57,19 @@ class ForwarderTests(unittest.TestCase):
                 self.assertEqual(QUERY[:2],answer[:2]);self.assertEqual(2,answer[3]&15)
                 self.assertEqual('192.0.2.53',call.call_args.args[0])
         finally:relay.__exit__()
+
+    def test_a_reserved_udp_port_retries_the_tcp_udp_pair_before_any_dns_change(self):
+        factory=socket.socket;failed=[]
+        def sock(*args,**kwargs):
+            connection=factory(*args,**kwargs)
+            if args[1]==socket.SOCK_DGRAM and not failed:
+                failed.append(connection)
+                wrapper=MagicMock(wraps=connection);wrapper.bind.side_effect=PermissionError(13,'reserved protocol port')
+                return wrapper
+            return connection
+        with patch('schoolnet.dns_forwarder.socket.socket',side_effect=sock),Forwarder(['192.0.2.53']) as relay:
+            self.assertGreater(relay.port,1023)
+            self.assertEqual(-1,failed[0].fileno())
 
     def test_dns_scope_cannot_become_powershell_code(self):
         self.assertEqual([],addresses(["fe80::1%';Write-Output bad;#",'1.2.3.4%en0','198.18.0.1','172.30.255.2']))

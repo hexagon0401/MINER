@@ -70,7 +70,7 @@ def ordinary_https():
         response.read(2048)
 
 
-def run(engine,directory):
+def run(engine,directory,guardian_executable=None):
     engine=Path(engine).resolve();directory=Path(directory).resolve();directory.mkdir(parents=True,exist_ok=True)
     system=platform.system()
     if system not in ('Windows','Darwin'):raise ValueError('Native macOS/Windows only')
@@ -102,7 +102,7 @@ def run(engine,directory):
                     report['real_ip_routes_bypass_tun']=True
                     if system=='Windows':
                         from schoolnet.dns_guard import spawn
-                        guardian=spawn(directory,child.pid)
+                        guardian=spawn(directory,child.pid,executable=guardian_executable)
                     lease.activate()
                     ordinary_https();report['ordinary_os_dns_and_tls']=True
                     fake=socket.gethostbyname('login.riotgames.com')
@@ -123,7 +123,7 @@ def run(engine,directory):
                         guardian.wait(timeout=10);assert guardian.returncode==0;guardian=None
                     # Reapply, then simulate an unexpected engine crash.
                     lease.prepare()
-                    if system=='Windows':guardian=spawn(directory,child.pid)
+                    if system=='Windows':guardian=spawn(directory,child.pid,executable=guardian_executable)
                     lease.activate();child.kill();child.wait(timeout=10)
                     if guardian:
                         guardian.wait(timeout=20)
@@ -143,7 +143,7 @@ def run(engine,directory):
         proxy.shutdown();proxy.server_close()
     assert route_interface('8.8.8.8')==physical
     report.update(ok=True,system=system,windows_guardian_tested=system=='Windows',dhcp_or_manual_mode_preserved=True,
-        source_commit=os.environ.get('GITHUB_SHA'))
+        source_commit=os.environ.get('GITHUB_SHA'),packaged_guardian_verified=bool(guardian_executable))
     receipt=directory/'selective.verification.json'
     write_json(receipt,report)
     if system=='Darwin':receipt.chmod(0o644)  # Sanitized booleans, read by the unprivileged packager.
