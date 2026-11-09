@@ -21,6 +21,7 @@ final class MinerModel: ObservableObject {
         didSet { UserDefaults.standard.set(alwaysAllow,forKey:"miner.alwaysAllow") }
     }
     @Published var updateBusy = false
+    @Published var updateInstalling = false
     @Published var updateMessage = ""
     @Published var updateAvailable = false
     @Published var autoUpdates = UserDefaults.standard.object(forKey:"miner.autoUpdates") as? Bool ?? true {

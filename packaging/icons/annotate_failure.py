@@ -4,6 +4,6 @@ from pathlib import Path
 
 
 for path in sorted(Path(os.environ["RUNNER_TEMP"]).glob("*release-*.log")):
-    tail = path.read_text(errors="replace")[-6000:]
+    tail = path.read_text(errors="replace")[-2600:]
     escaped = tail.replace("%", "%25").replace("\r", "%0D").replace("\n", "%0A")
     print(f"::error title={path.name}::{escaped}")

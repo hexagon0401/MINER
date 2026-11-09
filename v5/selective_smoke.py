@@ -144,7 +144,9 @@ def run(engine,directory):
     assert route_interface('8.8.8.8')==physical
     report.update(ok=True,system=system,windows_guardian_tested=system=='Windows',dhcp_or_manual_mode_preserved=True,
         source_commit=os.environ.get('GITHUB_SHA'))
-    write_json(directory/'selective.verification.json',report)
+    receipt=directory/'selective.verification.json'
+    write_json(receipt,report)
+    if system=='Darwin':receipt.chmod(0o644)  # Sanitized booleans, read by the unprivileged packager.
     print(json.dumps(report,indent=2));return report
 
 

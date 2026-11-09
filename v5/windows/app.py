@@ -48,7 +48,7 @@ class Bridge(QObject):
     def __init__(self,testing=False):
         super().__init__();self.testing=testing;self.worker=None;self.closing=False;self.detail='';self.count=0
         self.settings_open=False;self.fixture_busy=False;self.pending_kill=False;self.effects_supported=False
-        self.update_worker=None;self.update_busy=False;self.update_message='';self.update_info=None;self.pending_installer=None
+        self.update_worker=None;self.update_busy=False;self.installing_update=False;self.update_message='';self.update_info=None;self.pending_installer=None
         DATA.mkdir(parents=True,exist_ok=True)
         try:
             cfg=json.loads((DATA/'settings.json').read_text(encoding='utf-8'))
@@ -76,7 +76,7 @@ class Bridge(QObject):
             'dark':False,'controlLayout':self.control_layout,'effectsSupported':self.effects_supported,
             'reduced':self.reduced or self.appearance['reduced'],'systemReduced':self.appearance['reduced'],
             'contrast':self.appearance['contrast'],'phase':self.phase,'completed':self.count,
-            'detail':self.detail,'canStart':not self.dirty and not active and not self.update_busy,
+            'detail':self.detail,'canStart':not self.dirty and not active and not self.installing_update,
             'canStop':self.dirty and self.phase not in ('restoring','disconnecting'),
             'canKill':self.phase not in ('disconnecting','disconnected'),
             'busy':(active or self.fixture_busy) and self.phase not in ('running','restoring','disconnecting','error','restored','disconnected'),
@@ -201,6 +201,7 @@ class Bridge(QObject):
         if self.testing or self.update_busy or not self.update_info or not self.update_info.get('available'):return
         if self.dirty or (self.worker and self.worker.isRunning()):
             self.update_message=WORDS[self.language]['update_stop'];self.changed.emit();return
+        self.installing_update=True
         self.update_message=WORDS[self.language]['update_downloading'];self.run_update(self.update_info)
 
     def run_update(self,info=None):
@@ -219,7 +220,7 @@ class Bridge(QObject):
     def update_error(self,message):self.update_message=message;self.pending_installer=None
 
     def update_finished(self):
-        self.update_busy=False
+        self.update_busy=False;self.installing_update=False
         if self.pending_installer:
             try:
                 from windows.updates import launch

@@ -71,7 +71,9 @@ def run(output):
         checks.append('Fluent settings, Korean-English copy, theme and persisted preferences')
         b.update_info={'available':True,'version':'99.0.0'};b.changed.emit();capture('update-available')
         assert b.state['updateAvailable'] and b.state['autoUpdates']
-        b.update_info=None;b.changed.emit()
+        b.update_info=None;b.update_busy=True
+        assert b.state['canStart'],'Background version checks must not block connection controls'
+        b.update_busy=False;b.changed.emit()
         checks.append('automatic update preference and available-version banner render without network actions')
         w.setWidth(480);w.setHeight(440);wait(app,.1)
         for name in ('startButton','stopButton','killButton','settingsButton'):

@@ -5,6 +5,9 @@ on:
       run_id:
         description: Native build run ID
         required: true
+      probe_ref:
+        description: Optional source ref for a lightweight Windows network probe
+        required: false
 permissions:
   contents: read
   actions: read
@@ -37,5 +40,42 @@ jobs:
               if data.get('selective_network'): notice('Selective network proof '+data.get('architecture',''),json.dumps(data['selective_network']))
           for path in Path('diagnostics').rglob('*.log'):
               if 'release-' in path.name:
-                  notice(path.name,path.read_text(errors='replace')[-4500:])
+                  notice(path.name,path.read_text(errors='replace')[-2600:])
           PY
+
+  windows-network:
+    if: inputs.probe_ref != ''
+    runs-on: windows-2025
+    timeout-minutes: 10
+    env:
+      PYTHONUTF8: '1'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.probe_ref }}
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Exercise only native routing and DNS recovery
+        working-directory: v5
+        shell: pwsh
+        run: |
+          python install_engine.py
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          @'
+          import os,subprocess
+          from pathlib import Path
+          from selective_smoke import run
+          try:
+              run('local/bin/sing-box.exe',Path(os.environ['RUNNER_TEMP'])/'miner-network-probe')
+          except subprocess.CalledProcessError as exc:
+              message=(exc.stderr or str(exc))[-2600:]
+              print('::error title=System DNS command::'+message.replace('%','%25').replace('\r','%0D').replace('\n','%0A'),flush=True)
+              raise
+          '@ | python -u -
+          exit $LASTEXITCODE
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: native-network-probe
+          path: ${{ runner.temp }}/miner-network-probe/**

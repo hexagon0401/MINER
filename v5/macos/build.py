@@ -133,7 +133,7 @@ def build(expected_arch, signing="adhoc", identity=None, notary_profile=None, dm
         from macos.helper_smoke import run as helper_smoke
         helper_report = helper_smoke(cli, work)
     selective_dir=work/'selective-native'
-    execute('sudo','-n',sys.executable,ROOT/'selective_smoke.py','--engine',engine,'--directory',selective_dir)
+    execute('sudo','-n','env','GITHUB_SHA='+os.environ.get('GITHUB_SHA',''),sys.executable,ROOT/'selective_smoke.py','--engine',engine,'--directory',selective_dir)
     selective_report=json.loads((selective_dir/'selective.verification.json').read_text())
     smoke = work / "schema-smoke"
     execute(cli, "init", "--directory", smoke, "--platform", "macos")

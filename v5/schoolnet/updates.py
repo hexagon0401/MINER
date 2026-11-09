@@ -35,15 +35,15 @@ class HTTPSRedirect(urllib.request.HTTPRedirectHandler):
         return super().redirect_request(request, fp, code, message, headers, url)
 
 
-def open_url(url):
+def open_url(url, timeout=30):
     import certifi
     context = ssl.create_default_context(cafile=certifi.where())
     opener = urllib.request.build_opener(HTTPSRedirect(), urllib.request.HTTPSHandler(context=context))
-    return opener.open(urllib.request.Request(url, headers={"User-Agent": "MINER-updater"}), timeout=30)
+    return opener.open(urllib.request.Request(url, headers={"User-Agent": "MINER-updater"}), timeout=timeout)
 
 
 def get_json(url):
-    with open_url(url) as response:
+    with open_url(url,timeout=8) as response:
         raw = response.read(1024 * 1024 + 1)
     if len(raw) > 1024 * 1024: raise ValueError("Release metadata too large")
     return json.loads(raw)

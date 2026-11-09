@@ -152,7 +152,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     func operation(_ work: @escaping () throws -> String, completion: (() -> Void)? = nil) {
-        guard !busy && !model.updateBusy else { return }
+        guard !busy && !model.updateInstalling else { return }
         setBusy(true)
         DispatchQueue.global(qos: .userInitiated).async {
             let result: Result<String, Error> = Result { try work() }
@@ -178,7 +178,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         return ["warp", operation, "--proxy-port", String(port), "--progress"]
     }
     @objc func connectWarp() {
-        guard !busy && !model.updateBusy && !running else { return }
+        guard !busy && !model.updateInstalling && !running else { return }
         managedWarp = true; model.phase = "cli_check"; model.completed = 0; model.error = ""
         operation({ try self.execute(self.warpArguments("connect")) }, completion: { self.model.phase = "warp_ready"; self.model.warp = true; self.model.completed = 3 })
     }
@@ -230,7 +230,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         }
     }
     @objc func start() {
-        guard !busy && !model.updateBusy && !running else { return }
+        guard !busy && !model.updateInstalling && !running else { return }
         guard Bundle.main.bundleURL.path == "/Applications/MINER.app" else {
             model.phase="error";model.error=model.tr("DMG에서 앱을 Applications로 복사한 뒤 실행하세요.","Copy MINER from the DMG to Applications before starting."); return
         }
@@ -280,7 +280,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         return try execute(["desktop","stop"],administrator:true)
     }
     func checkSessionHealth() {
-        guard running && !busy && !healthBusy && !model.updateBusy else { return }
+        guard running && !busy && !healthBusy && !model.updateInstalling else { return }
         healthBusy=true
         DispatchQueue.global(qos:.utility).async {
             do {
@@ -325,18 +325,18 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             do { try process.run(); NSApp.terminate(nil) } catch { model.updateMessage = error.localizedDescription }
             return
         }
-        model.updateBusy = true; model.updateMessage = model.tr("설치 파일 다운로드·SHA-256 검증 중…","Downloading and verifying the installer…")
+        model.updateInstalling = true; model.updateBusy = true; model.updateMessage = model.tr("설치 파일 다운로드·SHA-256 검증 중…","Downloading and verifying the installer…")
         DispatchQueue.global(qos:.utility).async {
             do {
                 let text = try self.execute(["update","download","--platform","macos","--arch",self.updateArchitecture,"--directory",self.dataDirectory.appendingPathComponent("Updates").path])
                 let info = try JSONSerialization.jsonObject(with:Data(text.utf8)) as? [String:Any] ?? [:]
                 guard info["verified"] as? Bool == true, let path = info["path"] as? String else { throw NSError(domain:identifier,code:1) }
                 DispatchQueue.main.async {
-                    self.model.updateBusy = false
+                    self.model.updateInstalling = false; self.model.updateBusy = false
                     self.model.updateMessage = self.model.tr("검증 완료. DMG에서 MINER를 응용 프로그램 폴더로 옮겨 교체하세요.","Verified. Drag MINER from the DMG to Applications to replace it.")
                     NSWorkspace.shared.open(URL(fileURLWithPath:path)); NSApp.terminate(nil)
                 }
-            } catch { DispatchQueue.main.async { self.model.updateBusy = false; self.model.updateMessage = self.model.redact(error.localizedDescription) } }
+            } catch { DispatchQueue.main.async { self.model.updateInstalling = false; self.model.updateBusy = false; self.model.updateMessage = self.model.redact(error.localizedDescription) } }
         }
     }
     @objc func uninstall() {

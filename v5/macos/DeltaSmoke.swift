@@ -116,6 +116,9 @@ extension AppDelegate {
                 try await settle(); try capture("update-available")
                 try require(self.model.autoUpdates,"Automatic update checks default on")
                 self.model.updateAvailable = false
+                self.model.updateBusy = true
+                try require(!self.model.updateInstalling,"Background update checks do not lock network operations")
+                self.model.updateBusy = false
                 let result:[String:Any] = ["ok":true,"architecture":arch,"checks":checks,"network_actions":0]
                 try JSONSerialization.data(withJSONObject:result,options:[.prettyPrinted,.sortedKeys]).write(to:output.appendingPathComponent("miner-ui-\(arch).json"))
                 print("MINER native UI smoke passed: \(checks.count) checks")

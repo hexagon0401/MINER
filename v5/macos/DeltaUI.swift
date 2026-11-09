@@ -299,7 +299,7 @@ struct DeltaRoot: View {
             Text(base.actionText).font(.system(size:14,weight:.semibold)).foregroundStyle(deltaNavy)
                 .frame(width:min(340,size.width-80),height:48)
                 .background(deltaGreen.opacity(model.busy || model.engine ? 0.45 : 1),in:RoundedRectangle(cornerRadius:15))
-        }.buttonStyle(.plain).keyboardShortcut(.defaultAction).disabled(model.busy || model.engine)
+        }.buttonStyle(.plain).keyboardShortcut(.defaultAction).disabled(model.busy || model.engine || model.updateInstalling)
         .background(GeometryReader { proxy in Color.clear.preference(key:DeltaControlFrames.self,value:["start":proxy.frame(in:.named("deltaWindow"))]) })
     }
     private func stopButton(_ size:CGSize) -> some View {
