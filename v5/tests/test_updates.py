@@ -3,7 +3,7 @@ import io
 from pathlib import Path
 import tempfile
 import unittest
-from unittest.mock import patch
+from unittest.mock import patch,MagicMock
 
 from schoolnet import updates
 from windows.updates import installer_command
@@ -55,6 +55,14 @@ class UpdateTests(unittest.TestCase):
             with self.subTest(url=url),self.assertRaises(ValueError):
                 updates.HTTPSRedirect().redirect_request(None,None,302,"",{},url)
 
+    def test_check_uses_official_static_manifest_without_rest_api_quota(self):
+        r,m=self.fixture('3.0.0');m['payloads_rebuilt']=True
+        for suffix,arch in [('macOS-Intel.dmg','x86_64'),('Windows-x64-Setup.exe','x64')]:
+            m['platforms'].append({'filename':'MINER-ALPHA-v3.0.0-'+suffix,'architecture':arch,'sha256':'a'*64})
+        with patch.object(updates,'get_json',return_value=m) as get,patch.object(updates,'homebrew',return_value=None):
+            self.assertTrue(updates.check('windows','x64')['available'])
+        get.assert_called_once_with('https://github.com/hexagon0401/MINER/releases/latest/download/release-manifest.json')
+
     def test_cache_cleanup_preserves_future_installers_user_files_and_symlinks(self):
         with tempfile.TemporaryDirectory() as d:
             root=Path(d)
@@ -69,6 +77,13 @@ class UpdateTests(unittest.TestCase):
         self.assertIn('Get-FileHash',command);self.assertIn('-PassThru -Wait',command)
         self.assertLess(command.index('ExitCode'),command.index('Remove-Item'))
         self.assertIn('/DIR="C:/Program Files/MINER"',command)
+
+    def test_windows_installer_does_not_inherit_the_runtime_dll_directory(self):
+        import windows.updates as windows
+        dll=MagicMock()
+        with patch.object(windows.sys,'platform','win32'),patch.object(windows.sys,'frozen',True,create=True),patch.object(windows.sys,'_MEIPASS','fixture-runtime',create=True),patch.object(windows.ctypes,'windll',dll,create=True),patch.object(windows.subprocess,'CREATE_NO_WINDOW',0,create=True),patch.object(windows.subprocess,'Popen'):
+            windows.launch('fixture.exe','a'*64)
+        self.assertEqual([None,'fixture-runtime'],[call.args[0] for call in dll.kernel32.SetDllDirectoryW.call_args_list])
 
     def test_windows_installer_waits_for_parent_and_quotes_paths(self):
         command=installer_command("folder with ' quote/Setup.exe",123)

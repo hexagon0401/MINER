@@ -65,7 +65,7 @@ def same_dns(backend,snapshot):
 
 def ordinary_https():
     # Uses the OS resolver and normal TLS certificate verification.
-    with urllib.request.urlopen('https://api.github.com/zen',timeout=15) as response:
+    with urllib.request.urlopen('https://github.com/robots.txt',timeout=15) as response:
         if response.status!=200:raise ValueError('Ordinary HTTPS failed')
         response.read(2048)
 

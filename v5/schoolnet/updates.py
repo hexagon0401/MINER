@@ -75,12 +75,19 @@ def select(release, manifest, platform, architecture, current=__release_version_
 
 
 def check(platform, architecture):
-    release = get_json(f"https://api.github.com/repos/{REPO}/releases/latest")
-    tag = release.get("tag_name", "")
-    if not re.fullmatch(r"miner-alpha-v[1-9]\d*(?:\.\d+)*", tag):
-        raise ValueError("Latest release uses an unsupported release scheme")
-    manifest = get_json(BASE + tag + "/release-manifest.json")
-    info = select(release, manifest, platform, architecture)
+    # Shared school/CI IPs hit the unauthenticated REST quota. Fetch the
+    # official latest-release asset over HTTPS instead; select/download still
+    # validate codename, version, architecture, fixed repository URL and SHA-256.
+    manifest=get_json(f"https://github.com/{REPO}/releases/latest/download/release-manifest.json")
+    target=str(manifest.get('release_version',''));version(target)
+    entries=manifest.get('platforms',[])
+    expected={f'MINER-ALPHA-v{target}-'+suffix for suffix in ('macOS-AppleSilicon.dmg','macOS-Intel.dmg','Windows-x64-Setup.exe')}
+    names={item.get('filename') for item in entries}
+    if not expected.issubset(names) or len(names)!=len(entries) or manifest.get('payloads_rebuilt') is not True:
+        raise ValueError('Official release is incomplete')
+    release={'draft':False,'prerelease':manifest.get('prerelease'),'tag_name':manifest.get('tag'),
+             'assets':[{'name':item['filename'],'state':'uploaded'} for item in entries]}
+    info=select(release,manifest,platform,architecture)
     brew = homebrew() if platform == "macos" else None
     return {**info, "manager": "homebrew" if brew else "installer", "brew": brew}
 

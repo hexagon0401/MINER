@@ -1,5 +1,6 @@
 """Install after MINER exits, relaunch only on success, clean the managed cache."""
 import os
+import ctypes
 from pathlib import Path
 import re
 import subprocess
@@ -27,4 +28,11 @@ def installer_command(path,parent,install_dir=None,sha=None):
 def launch(path,sha):
     if sys.platform!='win32' or not getattr(sys,'frozen',False):raise ValueError('Use the installed Windows app to apply updates')
     powershell=Path(os.environ.get('SystemRoot',r'C:\Windows'))/'System32/WindowsPowerShell/v1.0/powershell.exe'
-    return subprocess.Popen([str(powershell),'-NoProfile','-NonInteractive','-Command',installer_command(path,os.getpid(),Path(sys.executable).parent,sha)],creationflags=subprocess.CREATE_NO_WINDOW)
+    # PyInstaller's DLL search directory is inherited by children. An updater
+    # must not load/lock DLLs from the runtime it is about to replace.
+    kernel=ctypes.windll.kernel32
+    kernel.SetDllDirectoryW.argtypes=[ctypes.c_wchar_p]
+    kernel.SetDllDirectoryW(None)
+    try:
+        return subprocess.Popen([str(powershell),'-NoProfile','-NonInteractive','-Command',installer_command(path,os.getpid(),Path(sys.executable).parent,sha)],creationflags=subprocess.CREATE_NO_WINDOW)
+    finally:kernel.SetDllDirectoryW(str(sys._MEIPASS))

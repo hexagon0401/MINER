@@ -92,6 +92,19 @@ def run(output):
             assert not b.update_busy,'Metadata worker failed to finish'
             b.testing=True;b.update_info=None
         checks.append('background metadata lookup preserves Start and Close responsiveness')
+        if ui.sys.platform=='win32':
+            import ctypes
+            from windows.updates import launch
+            kernel=ctypes.windll.kernel32
+            kernel.GetDllDirectoryW.argtypes=[ctypes.c_uint,ctypes.c_wchar_p]
+            def capture_launch(*args,**kwargs):
+                directory=ctypes.create_unicode_buffer(32768)
+                assert kernel.GetDllDirectoryW(len(directory),directory)==0,'Installer inherited app DLL search directory'
+            with patch('windows.updates.subprocess.Popen',side_effect=capture_launch):
+                launch('fixture-update.exe','a'*64)
+            directory=ctypes.create_unicode_buffer(32768);kernel.GetDllDirectoryW(len(directory),directory)
+            assert Path(directory.value)==Path(ui.sys._MEIPASS)
+            checks.append('packaged installer handoff clears then restores the runtime DLL search directory')
         w.setWidth(480);w.setHeight(440);wait(app,.1)
         for name in ('startButton','stopButton','killButton','settingsButton'):
             item=w.findChild(QObject,name)
