@@ -1,9 +1,9 @@
 cask "miner" do
   arch arm: "AppleSilicon", intel: "Intel"
 
-  version "1.2.1"
-  sha256 arm:   "4921b7527931df4d41b85c35c9e566943839bdbd6d4a777183179f3f6c9653f9",
-         intel: "60cdce5ee57fa4c403aa8f28fc20713e93110af0f4491a3b40dc9969c2251f95"
+  version "1.2.2"
+  sha256 arm:   "cd718df042a10abdc313644d2ec07bb84a92661fc802fe690787259a3c88a244",
+         intel: "79f0eb95d1f3c3a8eb7eaee7a4920a8ab03ce22c8a9e1a5c84bde97c82cd0f15"
 
   url "https://github.com/hexagon0401/MINER/releases/download/miner-alpha-v#{version}/MINER-ALPHA-v#{version}-macOS-#{arch}.dmg",
       verified: "github.com/hexagon0401/MINER/"
