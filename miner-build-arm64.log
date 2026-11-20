@@ -1,0 +1,4 @@
+usage: build.py [-h] --arch {arm64,x86_64} [--signing {adhoc,developer-id}]
+                [--identity IDENTITY] [--notary-profile NOTARY_PROFILE]
+                [--dmg-background DMG_BACKGROUND]
+build.py: error: unrecognized arguments: --validation-only
