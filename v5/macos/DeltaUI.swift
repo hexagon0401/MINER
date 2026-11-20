@@ -292,25 +292,25 @@ struct DeltaRoot: View {
     }
     private func startButton(_ size:CGSize) -> some View {
         Button {
-            guard !model.busy && !model.engine else { return }
+            guard !model.busy && !model.engine && !model.recoveryNeeded else { return }
             pulse(size,stop:false)
             controller.start()
         } label: {
             Text(base.actionText).font(.system(size:14,weight:.semibold)).foregroundStyle(deltaNavy)
                 .frame(width:min(340,size.width-80),height:48)
                 .background(deltaGreen.opacity(model.busy || model.engine ? 0.45 : 1),in:RoundedRectangle(cornerRadius:15))
-        }.buttonStyle(.plain).keyboardShortcut(.defaultAction).disabled(model.busy || model.engine || model.updateInstalling)
+        }.buttonStyle(.plain).keyboardShortcut(.defaultAction).disabled(model.busy || model.engine || model.recoveryNeeded || model.updateInstalling)
         .background(GeometryReader { proxy in Color.clear.preference(key:DeltaControlFrames.self,value:["start":proxy.frame(in:.named("deltaWindow"))]) })
     }
     private func stopButton(_ size:CGSize) -> some View {
         Button {
-            guard !model.busy && (model.engine || model.warp) else { return }
+            guard !model.updateInstalling && (model.busy || model.engine || model.warp || model.recoveryNeeded) && model.phase != "stopping" else { return }
             cancelVisuals(); pulse(size,stop:true)
             controller.stop()
         } label: {
-            Text(model.tr("중지","Stop")).font(.system(size:14,weight:.medium)).frame(width:166,height:36)
+            Text(model.busy ? model.tr("연결 취소","Cancel connection") : model.tr("중지","Stop")).font(.system(size:14,weight:.medium)).frame(width:166,height:36)
                 .modifier(DeltaGlass(radius:12))
-        }.buttonStyle(.plain).disabled(model.busy || (!model.engine && !model.warp))
+        }.buttonStyle(.plain).disabled(model.updateInstalling || model.phase == "stopping" || (!model.busy && !model.engine && !model.warp && !model.recoveryNeeded))
         .background(GeometryReader { proxy in Color.clear.preference(key:DeltaControlFrames.self,value:["stop":proxy.frame(in:.named("deltaWindow"))]) })
     }
     private var footer: some View {

@@ -8,6 +8,8 @@ import shutil
 import subprocess
 import tempfile
 import time
+import stat
+import signal
 
 from . import __version__
 from .config import build_config
@@ -38,17 +40,29 @@ def status():
     result = subprocess.run(["/bin/launchctl", "print", f"system/{LABEL}"],
                             capture_output=True, text=True, timeout=5)
     match = re.search(r"^\s*pid = (\d+)\s*$", result.stdout, re.MULTILINE)
-    return {"running": bool(result.returncode == 0 and match),
+    from .network_dns import probe_dns
+    return {"ready":bool(result.returncode == 0 and match and probe_dns()),"running": bool(result.returncode == 0 and match),
             "pid": int(match.group(1)) if match else None,
             "log": str(BASE / "engine.log")}
 
 
+def start_cancelled(owner,session):
+    if session is None:return False
+    match=re.fullmatch(r'(\d{10})-([a-f0-9]{32})',session)
+    if not match or owner is None or owner<=0:raise ValueError('Invalid connection session')
+    age=time.time()-int(match[1])
+    if age< -30 or age>300:return True
+    path=Path('/tmp')/f'.miner-cancel-{owner}-{session}'
+    try:entry=path.lstat()
+    except FileNotFoundError:return False
+    return stat.S_ISREG(entry.st_mode) and entry.st_uid==owner
+
+
 def stop():
     from .network_dns import Lease
-    Lease.recover(BASE/'profile')
     before = status()
     if before["running"]:
-        subprocess.run(["/bin/launchctl", "remove", LABEL], check=True,
+        subprocess.run(["/bin/launchctl", "kill", "SIGTERM", f"system/{LABEL}"], check=True,
                        capture_output=True, text=True, timeout=10)
     else:
         # Remove an exited launchd job too, before the next submit.
@@ -64,6 +78,8 @@ def stop():
                 if time.monotonic() >= deadline:
                     raise ValueError("engine cleanup still active; keeping installed files and logs")
                 time.sleep(.1)
+    Lease.recover(BASE/'profile')
+    subprocess.run(['/bin/launchctl','remove',LABEL],capture_output=True,timeout=10)
     return {"running": False, "message": "Stopped. WARP remains installed and enabled as a local proxy."}
 
 
@@ -134,10 +150,11 @@ def prepare(resources, profile_dir):
     return base
 
 
-def start_installed(profile):
+def start_installed(profile,cancelled=lambda:False):
     """Persistent approval may execute only the installed root-owned runtime."""
     if platform.system() != "Darwin" or os.geteuid() != 0:
         raise ValueError("Installed engine requires the macOS root helper")
+    if cancelled():raise ValueError('Connection cancelled before engine startup')
     base = owned_base()
     if status()["running"]: raise ValueError("MINER is already running")
     stop()
@@ -158,14 +175,17 @@ def start_installed(profile):
                "-o", str(base / "engine.log"), "-e", str(base / "engine.log"), "--",
                str(base / "runtime/schoolnet-cli"), "run", "--directory", str(directory),
                "--engine", str(engine), "--managed-helper"]
+    if cancelled():raise ValueError('Connection cancelled before engine startup')
     subprocess.run(command, check=True, capture_output=True, text=True, timeout=10)
-    return wait_ready(base,offset)
+    return wait_ready(base,offset,cancelled)
 
 
-def wait_ready(base,offset):
+def wait_ready(base,offset,cancelled=lambda:False):
     log=base/"engine.log"
     deadline = time.monotonic() + 20
     while time.monotonic() < deadline:
+        if cancelled():
+            stop();raise ValueError('Connection cancelled; engine stopped')
         result = status()
         text = ""
         if log.exists():
@@ -178,7 +198,7 @@ def wait_ready(base,offset):
     raise ValueError("TUN readiness timed out; routing was stopped")
 
 
-def manage(operation, resources=None, profile=None, owner=None):
+def manage(operation, resources=None, profile=None, owner=None, session=None):
     if platform.system() != "Darwin":
         raise ValueError("desktop service commands are macOS-only")
     if operation == "status":
@@ -188,6 +208,8 @@ def manage(operation, resources=None, profile=None, owner=None):
         raise ValueError("macOS administrator authorization is required")
     owned_base()
     if operation == "start":
+        cancelled=lambda:start_cancelled(owner,session)
+        if cancelled():raise ValueError('Connection request expired or was cancelled')
         from .warp import progress
         progress("routing", 4)
         if status()["running"]:
@@ -203,8 +225,9 @@ def manage(operation, resources=None, profile=None, owner=None):
                    "-o", str(base / "engine.log"), "-e", str(base / "engine.log"), "--",
                    str(base / "runtime" / "schoolnet-cli"), "run",
                    "--directory", str(base / "profile"), "--engine", str(base / "bin" / "sing-box")]
+        if cancelled():raise ValueError('Connection cancelled before engine startup')
         subprocess.run(command, check=True, capture_output=True, text=True, timeout=10)
-        result=wait_ready(base,offset)
+        result=wait_ready(base,offset,cancelled)
         progress("running", 5)
         print(json.dumps(result))
     elif operation == "stop":

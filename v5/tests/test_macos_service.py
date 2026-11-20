@@ -96,7 +96,7 @@ class ServiceTests(unittest.TestCase):
             result = service.status()
         self.assertTrue(result["running"])
         self.assertEqual(result["pid"], 123)
-        self.assertNotIn("ready", result)
+        self.assertFalse(result["ready"])
         with patch("subprocess.run", return_value=subprocess.CompletedProcess([], 1, "")):
             self.assertFalse(service.status()["running"])
 

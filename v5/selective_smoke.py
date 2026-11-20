@@ -117,6 +117,33 @@ def run(engine,directory,guardian_executable=None):
                             ordinary_https()
                     assert proxy.destinations==[('login.riotgames.com',443)],'Session replaced or hostname lost'
                     report['remote_dns_and_continuous_client_tcp']=True
+                    # A game process also uses Riot HTTPS services. Its TCP must
+                    # not fall into the old all-game-traffic direct exception.
+                    if system=='Darwin':
+                        source=directory/'game-service.c';probe=directory/'LeagueofLegends'
+                        source.write_text(r'''#include <sys/socket.h>
+#include <sys/time.h>
+#include <arpa/inet.h>
+#include <unistd.h>
+#include <string.h>
+#include <stdio.h>
+int main(int n,char **v){
+ if(n!=2)return 2;
+ int s=socket(AF_INET,SOCK_STREAM,0);struct timeval t={5,0};
+ setsockopt(s,SOL_SOCKET,SO_RCVTIMEO,&t,sizeof(t));setsockopt(s,SOL_SOCKET,SO_SNDTIMEO,&t,sizeof(t));
+ struct sockaddr_in a={0};a.sin_family=AF_INET;a.sin_port=htons(443);inet_pton(AF_INET,v[1],&a.sin_addr);
+ if(connect(s,(void*)&a,sizeof(a)))return 3;
+ char b[9];if(send(s,"post-game",9,0)!=9)return 4;
+ if(recv(s,b,9,MSG_WAITALL)!=9 || memcmp(b,"post-game",9))return 5;
+ close(s);puts("post-game");return 0;
+}''')
+                        subprocess.run(['/usr/bin/clang',str(source),'-o',str(probe)],check=True,timeout=30)
+                        stats=socket.gethostbyname('stats.riotgames.com')
+                        result=subprocess.run([str(probe),stats],capture_output=True,text=True,timeout=10,check=True)
+                        assert result.stdout.strip()=='post-game'
+                        assert proxy.destinations[-1]==('stats.riotgames.com',443)
+                        report['game_service_tcp_proxied']=True
+
                     lease.close();assert same_dns(backend,snapshot),'DNS settings not restored exactly'
                     report['original_dns_recovered_before_engine_stop']=True
                     if guardian:

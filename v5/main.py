@@ -5,6 +5,8 @@ import http.client
 import json
 from pathlib import Path
 import subprocess
+import signal
+import os
 import sys
 
 from schoolnet.config import Profile, build_config
@@ -44,6 +46,7 @@ def main(argv=None):
     desktop = commands.add_parser("desktop", help="macOS app service management")
     desktop.add_argument("operation", choices=["start", "stop", "status", "uninstall", "helper-install", "helper-serve", "helper-start", "helper-stop", "helper-status"])
     desktop.add_argument("--owner", type=int)
+    desktop.add_argument("--session-id")
     desktop.add_argument("--resources", type=Path)
     desktop.add_argument("--profile", type=Path)
     update = commands.add_parser("update", help="check or verify an official installer download")
@@ -123,12 +126,16 @@ def main(argv=None):
                     if operation == "start":
                         from schoolnet.warp import progress
                         progress("routing", 4)
-                    result = helper.request(operation, load_profile(args.profile) if operation == "start" else None)
+                    result = helper.request(operation, load_profile(args.profile) if operation == "start" else None,args.session_id)
                     if operation == "start" and result.get("running"): progress("running", 5)
                 print(json.dumps(result)); return 0
             from schoolnet.macos_service import manage
-            return manage(args.operation, args.resources, args.profile, args.owner)
+            return manage(args.operation, args.resources, args.profile, args.owner,args.session_id)
         elif args.command == "warp":
+            if os.name=='posix':
+                from schoolnet.warp import WarpCancelled
+                def cancel_command(signum,frame):raise WarpCancelled('WARP operation cancelled')
+                signal.signal(signal.SIGTERM,cancel_command)
             from schoolnet.warp import activate, deactivate, inspect, restore, progress, maintain_proxy
             if args.operation == "connect":
                 result = activate(args.proxy_port, args.warp_cli, notify=progress if args.progress else None)

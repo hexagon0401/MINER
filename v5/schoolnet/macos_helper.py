@@ -49,16 +49,17 @@ def receive(connection):
     return value
 
 
-def request(operation, profile=None):
+def request(operation, profile=None, session=None):
     entry = SOCKET.lstat()
     if not stat.S_ISSOCK(entry.st_mode) or entry.st_uid != os.getuid():
         raise ValueError("Helper endpoint does not belong to this user")
     with socket.socket(socket.AF_UNIX, socket.SOCK_STREAM) as connection:
-        connection.settimeout(35)
+        connection.settimeout(3 if operation == "status" else 75)
         connection.connect(str(SOCKET))
         if peer_uid(connection) != 0:
             raise ValueError("Helper is not a root-owned process")
         message = {"operation": operation, "version": __version__}
+        if session is not None:message["session"]=session
         if profile is not None:
             message["profile"] = profile.to_dict()
         connection.sendall(json.dumps(message).encode() + b"\n")
@@ -84,7 +85,7 @@ def dispatch(message, uid, owner):
             raise ValueError("Helper only accepts macOS profiles")
         if service.status()["running"]:
             raise ValueError("MINER is already running")
-        result = service.start_installed(profile)
+        result = service.start_installed(profile,cancelled=lambda:service.start_cancelled(owner,message.get("session")))
     else:
         raise ValueError("Unsupported helper command")
     return {"ok": True, "version": __version__, "helper_pid": os.getpid(), **result}
@@ -94,7 +95,10 @@ def serve(owner):
     if os.geteuid() != 0 or type(owner) is not int or owner <= 0:
         raise ValueError("Helper requires root and a non-root installing user")
     from .network_dns import Lease
-    if not service.status()['running']:Lease.recover(service.BASE/'profile')
+    recovery_error=None
+    try:
+        if not service.status()['running']:Lease.recover(service.BASE/'profile')
+    except (OSError,ValueError,subprocess.SubprocessError) as exc:recovery_error=type(exc).__name__
     SOCKET.unlink(missing_ok=True)
     last_recovery=time.monotonic()
     with socket.socket(socket.AF_UNIX, socket.SOCK_STREAM) as server:
@@ -108,7 +112,10 @@ def serve(owner):
             except socket.timeout:
                 from .network_dns import JOURNAL
                 if time.monotonic()-last_recovery>=5 and (service.BASE/'profile'/JOURNAL).exists():
-                    if not service.status()['running']:Lease.recover(service.BASE/'profile')
+                    try:
+                        if not service.status()['running']:Lease.recover(service.BASE/'profile')
+                        recovery_error=None
+                    except (OSError,ValueError,subprocess.SubprocessError) as exc:recovery_error=type(exc).__name__
                     last_recovery=time.monotonic()
                 continue
             with connection:
@@ -116,7 +123,12 @@ def serve(owner):
                 try:
                     message = receive(connection)
                     if message.get("version") != __version__: raise ValueError("Helper update needs administrator approval")
-                    response = dispatch(message, peer_uid(connection), owner)
+                    uid=peer_uid(connection)
+                    if recovery_error and message.get('operation')=='start':
+                        raise ValueError('Previous DNS recovery is pending. Use Stop to retry before connecting.')
+                    response = dispatch(message, uid, owner)
+                    if message.get('operation')=='stop':recovery_error=None
+                    response['recovery_pending']=recovery_error is not None
                 except (ValueError, TypeError, OSError, subprocess.SubprocessError) as exc:
                     response = {"ok": False, "error": str(exc), "version": __version__}
                 try:

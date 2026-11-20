@@ -44,6 +44,13 @@ def build(expected_arch, signing="adhoc", identity=None, notary_profile=None, dm
     if signed:
         identity = developer_identity(identity or os.environ.get("CODE_SIGN_IDENTITY"))
         validate_notary_credentials(notary_profile)
+    command_smoke=Path(tempfile.mkdtemp(prefix="miner-command-"))
+    try:
+        execute('xcrun','swiftc','-swift-version','5','-parse-as-library',ROOT/'macos/CommandRunner.swift',ROOT/'macos/CommandSmoke.swift','-o',command_smoke/'command-smoke')
+        command_result=subprocess.run([str(command_smoke/'command-smoke')],capture_output=True,text=True,check=True,timeout=15)
+        command_report=json.loads(command_result.stdout)
+        assert command_report['ok']
+    finally:shutil.rmtree(command_smoke)
     work = ROOT / "build" / f"macos-{arch}"
     if work.exists():
         raise ValueError(f"build directory already exists; preserve or remove it explicitly: {work}")
@@ -64,7 +71,7 @@ def build(expected_arch, signing="adhoc", identity=None, notary_profile=None, dm
     execute(*packager, ROOT / "main.py")
     execute("xcrun", "swiftc", "-swift-version", "5", "-parse-as-library", "-O", "-framework", "AppKit", "-framework", "SwiftUI",
             "-target", f"{arch}-apple-macosx13.0", ROOT / "macos" / "App.swift",
-            ROOT / "macos" / "MinerUI.swift", ROOT / "macos" / "DeltaUI.swift",
+            ROOT / "macos" / "CommandRunner.swift", ROOT / "macos" / "MinerUI.swift", ROOT / "macos" / "DeltaUI.swift",
             ROOT / "macos" / "DeltaSmoke.swift", ROOT / "macos" / "DeveloperAbout.swift", "-o", contents / "MacOS" / "MINER")
     ui_assets = resources / "UIAssets"
     ui_assets.mkdir()
@@ -88,7 +95,7 @@ def build(expected_arch, signing="adhoc", identity=None, notary_profile=None, dm
         "CFBundleName": "MINER", "CFBundleDisplayName": "MINER", "CFBundleIconFile": "AppIcon",
         "CFBundleIdentifier": "org.schoolnet.v5.alpha", "CFBundleExecutable": "MINER",
         "CFBundlePackageType": "APPL", "CFBundleShortVersionString": __release_version__,
-        "CFBundleVersion": "502121", "SchoolNetReleaseVersion": __version__, "MINERPublicReleaseVersion": __release_version__,
+        "CFBundleVersion": "502122", "SchoolNetReleaseVersion": __version__, "MINERPublicReleaseVersion": __release_version__,
         "LSMinimumSystemVersion": "13.0", "NSHighResolutionCapable": True,
     }
     info.update(macos_icon_info(icon))
@@ -205,7 +212,7 @@ def build(expected_arch, signing="adhoc", identity=None, notary_profile=None, dm
         "dmg_to_disk_signature_verified": True, "sha256": digest,
         "finder_background_layout_verified": dmg_background is not None,
         "app_name": app.name, "native_ui_smoke": ui_report,
-        "updater":updater_report,"developer": developer, "helper_smoke": helper_report, "selective_network":selective_report, "source_commit": os.environ.get("GITHUB_SHA"), "release_channel": icon["channel"], "app_icon_sha256": hashlib.sha256((ui_assets / "AppIcon.png").read_bytes()).hexdigest(),
+        "commands":command_report,"updater":updater_report,"developer": developer, "helper_smoke": helper_report, "selective_network":selective_report, "source_commit": os.environ.get("GITHUB_SHA"), "release_channel": icon["channel"], "app_icon_sha256": hashlib.sha256((ui_assets / "AppIcon.png").read_bytes()).hexdigest(),
     }, indent=2), encoding="utf-8")
     print(f"Verified DMG: {dmg}")
 

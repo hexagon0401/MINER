@@ -1,4 +1,5 @@
 """Replace a real installed copy using the packaged updater; never starts WARP."""
+from schoolnet import __release_version__
 import hashlib
 import json
 import os
@@ -14,20 +15,20 @@ def run(app,dmg,output):
     cache=Path.home()/'Library/Application Support/SchoolNet v5 Alpha/Updates'
     cache.mkdir(parents=True,exist_ok=True)
     (cache.parent/'.managed.json').write_text(json.dumps({'id':'org.schoolnet.v5.alpha'}))
-    target=cache/('MINER-ALPHA-v1.2.1-macOS-'+('AppleSilicon' if 'arm64' in str(app) else 'Intel')+'.dmg')
+    target=cache/('MINER-ALPHA-v'+__release_version__+'-macOS-'+('AppleSilicon' if 'arm64' in str(app) else 'Intel')+'.dmg')
     subprocess.run(['/usr/bin/ditto',str(app),str(installed)],check=True)
     (installed/'Contents/Resources/obsolete-upgrade-fixture.txt').write_text('old app resource must disappear')
     shutil.copyfile(dmg,target)
     cli=installed/'Contents/Resources/runtime/schoolnet-cli/schoolnet-cli'
     # A disposable parent exits after the worker is ready, just like the GUI.
     code='''import subprocess,time,os,json,sys
-result=subprocess.run([sys.argv[1],'update','prepare','--platform','macos','--arch','arm64','--installer',sys.argv[2],'--sha256',sys.argv[3],'--target-version','1.2.1','--parent-pid',str(os.getpid())],capture_output=True,text=True)
+result=subprocess.run([sys.argv[1],'update','prepare','--platform','macos','--arch','arm64','--installer',sys.argv[2],'--sha256',sys.argv[3],'--target-version',sys.argv[4],'--parent-pid',str(os.getpid())],capture_output=True,text=True)
 print(result.stdout,result.stderr,flush=True)
 raise SystemExit(result.returncode)
 '''
     try:
         import sys
-        subprocess.run([sys.executable,'-c',code,str(cli),str(target),hashlib.sha256(target.read_bytes()).hexdigest()],check=True,timeout=45)
+        subprocess.run([sys.executable,'-c',code,str(cli),str(target),hashlib.sha256(target.read_bytes()).hexdigest(),__release_version__],check=True,timeout=45)
         deadline=time.monotonic()+90
         while True:
             if not target.exists() and not (cache/'mac-install.json').exists() and not list(cache.glob('.worker-*')):break

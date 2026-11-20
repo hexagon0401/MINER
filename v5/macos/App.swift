@@ -18,14 +18,23 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     let model = MinerModel()
     var settingsWindow: NSWindow?
     var managedWarp = false
+    var engineStoppedConfirmed=false
     var updateInfo:[String:Any] = [:]
     var updateTimer:Timer?
     var healthTimer:Timer?
     var healthBusy=false
+    let backendLock=NSLock()
+    var healthCancellation:CommandCancellation?
+    var healthFailure=""
     var currentProxyPort=40000
     var buttons: [NSButton] = []
     var running = false { didSet { model.engine = running } }
     var busy = false
+    var operationCancellation:CommandCancellation?
+    var operationReadOnly=false
+    var stopPending=false
+    var quitPending=false
+    let operationTokenKey="MINER.operationCancellation"
     let resources = Bundle.main.resourceURL!
     let dataDirectory = FileManager.default.homeDirectoryForCurrentUser
         .appendingPathComponent("Library/Application Support/SchoolNet v5 Alpha")
@@ -86,7 +95,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             }
             catch { DispatchQueue.main.async { self.append(error.localizedDescription) } }
         }
-        append("MINER ALPHA v1.2.1: 게임 중에도 MINER와 WARP Local Proxy 연결을 유지하세요.")
+        append("MINER ALPHA v1.2.2: 게임 중에도 MINER와 WARP Local Proxy 연결을 유지하세요.")
         refresh()
         DispatchQueue.main.asyncAfter(deadline:.now()+4) { if self.model.autoUpdates { self.checkUpdate() } }
         updateTimer=Timer.scheduledTimer(withTimeInterval:21600,repeats:true) { _ in if self.model.autoUpdates { self.checkUpdate() } }
@@ -107,41 +116,31 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         guard !CommandLine.arguments.contains("--ui-smoke") else {
             throw NSError(domain:identifier,code:1,userInfo:[NSLocalizedDescriptionKey:"Network/backend actions are disabled in UI smoke fixtures"])
         }
-        if administrator && (arguments.prefix(2).elementsEqual(["desktop", "start"]) || arguments.prefix(2).elementsEqual(["desktop", "helper-install"])) {
-            DispatchQueue.main.async { self.model.phase = "admin_auth"; self.model.completed = 3 }
-        }
-        let process = Process()
-        if administrator {
-            let command = ([cli] + arguments).map(shellQuote).joined(separator: " ")
-            process.executableURL = URL(fileURLWithPath: "/usr/bin/osascript")
-            process.arguments = ["-e", "do shell script " + appleString(command) + " with administrator privileges"]
-        } else {
-            process.executableURL = URL(fileURLWithPath: cli)
-            process.arguments = arguments
-        }
-        let pipe = Pipe()
-        process.standardOutput = pipe
-        process.standardError = pipe
-        try process.run()
-        var collected = Data()
-        var pending = Data()
-        while true {
-            let chunk = pipe.fileHandleForReading.availableData
-            if chunk.isEmpty { break }
-            collected.append(chunk); pending.append(chunk)
-            while let index = pending.firstIndex(of: 10) {
-                let line = String(data: pending.prefix(upTo:index), encoding:.utf8) ?? ""
-                self.model.accept(line)
-                pending.removeSubrange(...index)
+        let serialized=["warp","desktop"].contains(arguments.first ?? "")
+        if serialized { backendLock.lock() }
+        defer { if serialized { backendLock.unlock() } }
+        let cancellation=Thread.current.threadDictionary[operationTokenKey] as? CommandCancellation
+        if cancellation?.cancelled == true { throw NSError(domain:"MINER.cancelled",code:1) }
+        let protected=administrator || arguments.prefix(2).elementsEqual(["desktop","helper-start"])
+        var scoped=arguments
+        if let token=cancellation,arguments.first=="desktop",["start","helper-start"].contains(arguments.dropFirst().first ?? "") { scoped += ["--session-id",token.session] }
+        if administrator && (arguments.prefix(2).elementsEqual(["desktop","start"]) || arguments.prefix(2).elementsEqual(["desktop","helper-install"])) {
+            DispatchQueue.main.async {
+                guard cancellation?.cancelled != true else { return }
+                self.model.phase="admin_auth";self.model.completed=3
             }
         }
-        process.waitUntilExit()
-        let text = String(data: collected, encoding: .utf8) ?? ""
-        guard process.terminationStatus == 0 else {
-            throw NSError(domain: identifier, code: Int(process.terminationStatus),
-                          userInfo: [NSLocalizedDescriptionKey: text])
+        let executable:String
+        let parameters:[String]
+        if administrator {
+            let command=([cli]+scoped).map(shellQuote).joined(separator:" ")
+            executable="/usr/bin/osascript";parameters=["-e","do shell script "+appleString(command)+" with administrator privileges"]
+        } else { executable=cli;parameters=scoped }
+        let quick=arguments.prefix(2).elementsEqual(["desktop","status"]) || arguments.prefix(2).elementsEqual(["desktop","helper-status"])
+        let timeout:TimeInterval=quick ? 8 : arguments.prefix(2).elementsEqual(["warp","maintain"]) ? 12 : arguments.first=="update" ? 300 : administrator ? 120 : 90
+        return try CommandRunner.run(executable,parameters,timeout:timeout,cancellation:cancellation,interruptible:!protected) { line in
+            if cancellation?.cancelled != true { self.model.accept(line,allowed:{ cancellation?.cancelled != true }) }
         }
-        return text
     }
 
     func ensureProfile() throws {
@@ -165,17 +164,37 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         }
     }
 
-    func operation(_ work: @escaping () throws -> String, completion: (() -> Void)? = nil) {
+    func operation(_ work: @escaping () throws -> String, readOnly:Bool=false, completion: (() -> Void)? = nil) {
         guard !busy && !model.updateInstalling else { return }
-        setBusy(true)
+        healthCancellation?.cancel()
+        setBusy(true);operationReadOnly=readOnly
+        let cancellation=CommandCancellation();operationCancellation=cancellation
         DispatchQueue.global(qos: .userInitiated).async {
+            Thread.current.threadDictionary[self.operationTokenKey]=cancellation
+            defer { Thread.current.threadDictionary.removeObject(forKey:self.operationTokenKey) }
             let result: Result<String, Error> = Result { try work() }
             DispatchQueue.main.async {
-                self.setBusy(false)
-                switch result {
-                case .success(let text): self.append(text); completion?()
-                case .failure(let error): self.model.phase = "error"; self.model.error = self.model.redact(error.localizedDescription); self.append(error.localizedDescription); self.window.makeKeyAndOrderFront(nil)
+                self.operationCancellation=nil;self.setBusy(false)
+                if self.stopPending {
+                    self.stopPending=false
+                    self.stop()
+                    return
                 }
+                switch result {
+                case .success(let text):
+                    self.append(text)
+                    if let info=try? JSONSerialization.jsonObject(with:Data(text.utf8)) as? [String:Any],let active=info["running"] as? Bool {
+                        self.running=active
+                        if active {
+                            self.engineStoppedConfirmed=false;self.managedWarp=true
+                            if info["ready"] as? Bool == false { self.model.phase="error";self.model.completed=0;self.model.error=self.model.tr("이전 연결이 준비되지 않았습니다. 중지 후 다시 연결하세요.","Previous engine is not ready. Stop and reconnect.") }
+                            else { self.model.phase="running";self.model.completed=5 }
+                        }
+                    }
+                    completion?()
+                case .failure(let error): self.model.recoveryNeeded=true; self.model.phase = "error"; self.model.error = self.model.redact(error.localizedDescription); self.append(error.localizedDescription); self.window.makeKeyAndOrderFront(nil)
+                }
+                if self.quitPending { self.quitPending=false;NSApp.terminate(nil) }
             }
         }
     }
@@ -193,7 +212,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
     @objc func connectWarp() {
         guard !busy && !model.updateInstalling && !running else { return }
-        managedWarp = true; model.phase = "cli_check"; model.completed = 0; model.error = ""
+        engineStoppedConfirmed=false;managedWarp = true; model.phase = "cli_check"; model.completed = 0; model.error = ""
         operation({ try self.execute(self.warpArguments("connect")) }, completion: { self.model.phase = "warp_ready"; self.model.warp = true; self.model.completed = 3 })
     }
     @objc func showSettings() {
@@ -224,7 +243,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         guard alert.runModal() == .alertFirstButtonReturn else { return }
         operation({
             _ = try self.execute(["desktop", "stop"], administrator: true)
-            DispatchQueue.main.async { self.running = false }
+            DispatchQueue.main.async { self.running = false;self.engineStoppedConfirmed=true }
             return try self.execute(self.warpArguments("disconnect"))
         }, completion: { self.running = false })
     }
@@ -248,7 +267,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         guard Bundle.main.bundleURL.path == "/Applications/MINER.app" else {
             model.phase="error";model.error=model.tr("DMG에서 앱을 Applications로 복사한 뒤 실행하세요.","Copy MINER from the DMG to Applications before starting."); return
         }
-        managedWarp = true; model.phase = "cli_check"; model.completed = 0; model.error = ""
+        engineStoppedConfirmed=false;managedWarp = true; model.phase = "cli_check"; model.completed = 0; model.error = ""
         operation({
             try self.ensureProfile()
             _ = try self.execute(self.warpArguments("connect"))
@@ -261,23 +280,19 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         }, completion: { self.running = true; self.model.phase = "running"; self.model.completed = 5; self.model.warp = true })
     }
     @objc func stop() {
-        guard !busy else { return }
+        if busy {
+            stopPending=true;model.phase="stopping";operationCancellation?.cancel()
+            return
+        }
         model.phase = "stopping"
         operation({
-            if self.running { _ = try self.stopEngine() }
-            DispatchQueue.main.async { self.running = false }
+            _ = try self.stopEngine()
+            DispatchQueue.main.async { self.running = false;self.engineStoppedConfirmed=true }
             return try self.execute(["warp", "restore"])
-        }, completion: { self.running = false; self.model.phase = "stopped"; self.model.completed = 0; self.model.warp = true; self.model.restored = true; self.managedWarp = false })
+        }, completion: { self.running = false; self.model.phase = "stopped"; self.model.completed = 0; self.model.warp = true; self.model.restored = true; self.managedWarp = false;self.model.recoveryNeeded=false; if self.quitPending { self.quitPending=false;NSApp.terminate(nil) } })
     }
     @objc func refresh() {
-        operation {
-            let text = try self.execute(["desktop", "status"])
-            if let data = text.data(using: .utf8),
-               let info = try JSONSerialization.jsonObject(with: data) as? [String: Any] {
-                DispatchQueue.main.async { self.running = info["running"] as? Bool ?? false; if self.running { self.model.phase = "running"; self.model.completed = 5; self.managedWarp = true } }
-            }
-            return text
-        }
+        operation({ try self.execute(["desktop","status"]) },readOnly:true,completion:nil)
     }
     func helperReady() -> Bool {
         guard let text = try? execute(["desktop","helper-status"]), let data = text.data(using:.utf8),
@@ -290,23 +305,45 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         guard helperReady() else { throw NSError(domain:identifier,code:1,userInfo:[NSLocalizedDescriptionKey:"MINER helper did not become ready"] ) }
     }
     func stopEngine() throws -> String {
-        if model.alwaysAllow && helperReady() { return try execute(["desktop","helper-stop"]) }
+        if model.alwaysAllow && FileManager.default.fileExists(atPath:"/var/run/org.schoolnet.v5.alpha.helper.sock") {
+            do { return try execute(["desktop","helper-stop"]) }
+            catch {
+                let message=error.localizedDescription
+                if (error as NSError).domain=="MINER.timeout" { throw error }
+                if !message.contains("administrator approval") && !message.contains("No such file") && !message.contains("Connection refused") { throw error }
+            }
+        }
         return try execute(["desktop","stop"],administrator:true)
     }
     func checkSessionHealth() {
         guard running && !busy && !healthBusy && !model.updateInstalling else { return }
         healthBusy=true
+        let token=CommandCancellation();healthCancellation=token
         DispatchQueue.global(qos:.utility).async {
+            Thread.current.threadDictionary[self.operationTokenKey]=token
+            defer { Thread.current.threadDictionary.removeObject(forKey:self.operationTokenKey) }
             do {
                 let status=try self.execute(["desktop","status"])
                 let info=try JSONSerialization.jsonObject(with:Data(status.utf8)) as? [String:Any] ?? [:]
-                guard info["running"] as? Bool == true else { throw NSError(domain:identifier,code:1,userInfo:[NSLocalizedDescriptionKey:"네트워크 엔진이 종료되었습니다. 일반 DNS를 복구한 뒤 다시 연결하세요."]) }
+                guard info["running"] as? Bool == true else { throw NSError(domain:"MINER.engineGone",code:1,userInfo:[NSLocalizedDescriptionKey:"네트워크 엔진이 종료되었습니다. 일반 DNS를 복구한 뒤 다시 연결하세요."]) }
                 let health=try self.execute(["warp","maintain","--proxy-port",String(self.currentProxyPort)])
                 if let state=try JSONSerialization.jsonObject(with:Data(health.utf8)) as? [String:Any],let warning=state["warning"] as? String {
                     DispatchQueue.main.async { self.append(warning) }
                 }
-                DispatchQueue.main.async { self.healthBusy=false }
-            } catch { DispatchQueue.main.async { self.healthBusy=false; self.model.error=self.model.redact(error.localizedDescription);self.model.phase="error" } }
+                DispatchQueue.main.async {
+                    self.healthBusy=false
+                    guard !self.busy && self.running else { return }
+                    if self.model.phase=="error" && self.model.error==self.healthFailure { self.model.error="";self.model.phase="running" }
+                    self.healthFailure=""
+                }
+            } catch { DispatchQueue.main.async {
+                self.healthBusy=false
+                guard !self.busy && self.running else { return }
+                let message=self.model.redact(error.localizedDescription)
+                if self.healthFailure != message { self.append(message) }
+                self.healthFailure=message;self.model.error=message;self.model.phase="error"
+                if (error as NSError).domain=="MINER.engineGone" { self.running=false }
+            } }
         }
     }
     var updateArchitecture:String {
@@ -395,17 +432,31 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
     func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool { true }
     func applicationShouldTerminate(_ sender: NSApplication) -> NSApplication.TerminateReply {
-        if busy || model.updateInstalling { return .terminateCancel }
-        guard running || managedWarp else { return .terminateNow }
-        model.phase = "stopping"; setBusy(true)
+        if model.updateInstalling { return .terminateCancel }
+        if busy {
+            quitPending=true
+            if operationReadOnly { return .terminateCancel }
+            if model.phase != "stopping" { stopPending=true;model.phase="stopping";operationCancellation?.cancel() }
+            window.makeKeyAndOrderFront(nil)
+            return .terminateCancel
+        }
+        guard running || managedWarp || model.recoveryNeeded else { return .terminateNow }
+        healthCancellation?.cancel()
+        model.phase = "stopping";engineStoppedConfirmed=false; setBusy(true)
         DispatchQueue.global().async {
             do {
-                if self.running { _ = try self.stopEngine() }
-                DispatchQueue.main.async { self.running = false }
+                _ = try self.stopEngine()
+                DispatchQueue.main.async { self.running = false;self.engineStoppedConfirmed=true }
                 _ = try self.execute(["warp", "restore"])
-                DispatchQueue.main.async { self.managedWarp = false; self.model.restored = true; NSApp.reply(toApplicationShouldTerminate:true) }
+                DispatchQueue.main.async { self.managedWarp = false; self.model.restored = true;self.model.recoveryNeeded=false; NSApp.reply(toApplicationShouldTerminate:true) }
             } catch {
-                DispatchQueue.main.async { self.setBusy(false); self.model.phase = "error"; self.model.error = self.model.redact(error.localizedDescription); self.append(error.localizedDescription); self.window.makeKeyAndOrderFront(nil); NSApp.reply(toApplicationShouldTerminate:false) }
+                DispatchQueue.main.async { self.setBusy(false); self.model.phase = "error"; self.model.error = self.model.redact(error.localizedDescription); self.append(error.localizedDescription); self.window.makeKeyAndOrderFront(nil)
+                    if self.engineStoppedConfirmed {
+                        let alert=NSAlert();alert.messageText=self.model.tr("MINER는 중지됐지만 WARP 복귀를 확인하지 못했습니다.","MINER stopped, but WARP restoration could not be confirmed.")
+                        alert.informativeText=self.model.tr("앱을 종료한 뒤 WARP 앱에서 연결 상태를 확인할 수 있습니다.","You can quit and check the connection in the WARP app.")
+                        alert.addButton(withTitle:self.model.tr("앱 종료","Quit app"));alert.addButton(withTitle:self.model.tr("계속 열기","Keep open"))
+                        NSApp.reply(toApplicationShouldTerminate:alert.runModal() == .alertFirstButtonReturn)
+                    } else { NSApp.reply(toApplicationShouldTerminate:false) } }
             }
         }
         return .terminateLater

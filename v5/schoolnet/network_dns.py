@@ -15,8 +15,8 @@ from .config import DNS_V4, DNS_V6
 JOURNAL = 'network-dns-v1.json'
 
 
-def command(args):
-    return subprocess.run(args,check=True,capture_output=True,text=True,encoding='utf-8',errors='replace',timeout=15).stdout
+def command(args,timeout=15):
+    return subprocess.run(args,check=True,capture_output=True,text=True,encoding='utf-8',errors='replace',timeout=timeout).stdout
 
 
 def powershell(body):
@@ -98,10 +98,28 @@ class Backend:
         if not snapshot['servers']:raise ValueError('No original system DNS servers; no settings changed')
         return snapshot
 
+    def retired_service(self,snapshot):
+        # A USB/network service can disappear while MINER is not running.
+        # Archive its journal only after proving no configured service still
+        # points at our temporary DNS. Never reset a different adapter blindly.
+        deadline=time.monotonic()+5
+        raw=command(['/usr/sbin/networksetup','-listallnetworkservices'],timeout=2)
+        names=[line.lstrip('*') for line in raw.splitlines()[1:] if line.strip()]
+        if snapshot['service'] in names:raise ValueError('Original DNS service is unavailable; recovery record preserved')
+        for name in names:
+            remaining=deadline-time.monotonic()
+            if remaining<=0:raise ValueError('DNS recovery inspection timed out; record preserved')
+            values=command(['/usr/sbin/networksetup','-getdnsservers',name],timeout=min(2,remaining)).splitlines()
+            if DNS_V4 in values or DNS_V6 in values:raise ValueError('Temporary DNS remains on another service; recovery record preserved')
+        self.retired=True
+        return []
+
     def current(self, snapshot):
         self.validate(snapshot)
         if self.system=='Darwin':
-            raw=command(['/usr/sbin/networksetup','-getdnsservers',snapshot['service']])
+            try:raw=command(['/usr/sbin/networksetup','-getdnsservers',snapshot['service']])
+            except subprocess.CalledProcessError:return self.retired_service(snapshot)
+            if '** Error' in raw:return self.retired_service(snapshot)
             values=[]
             for line in raw.splitlines():
                 try:ipaddress.ip_address(line);values.append(line)
@@ -141,6 +159,7 @@ class Backend:
         self.flush()
 
     def restore(self,snapshot):
+        self.retired=False
         current=self.current(snapshot)
         if self.system=='Darwin':
             if current and set(normalized(current)).issubset(set(normalized([DNS_V4,DNS_V6]))):
@@ -225,5 +244,7 @@ class Lease:
         if path.is_symlink():raise ValueError('DNS journal must not be a symlink')
         try:snapshot=json.loads(path.read_text())
         except FileNotFoundError:return  # Another recovery actor completed first.
-        (backend or Backend()).restore(snapshot)
-        path.unlink(missing_ok=True)
+        actual=backend or Backend();actual.restore(snapshot)
+        if getattr(actual,'retired',False):
+            path.rename(path.with_name('network-dns-retired-'+str(time.time_ns())+'.json'))
+        else:path.unlink(missing_ok=True)

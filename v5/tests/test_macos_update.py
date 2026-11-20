@@ -6,20 +6,20 @@ import subprocess
 import tempfile
 import unittest
 from unittest.mock import patch
-from schoolnet import macos_update as update
+from schoolnet import macos_update as update, __release_version__
 
 class AppUpdateTests(unittest.TestCase):
     def fixture(self,root):
         app=root/'Applications/MINER.app';app.mkdir(parents=True)
         incoming=root/'incoming';incoming.mkdir()
-        for bundle,version in [(app,'1.2.0'),(incoming,'1.2.1')]:
+        for bundle,version in [(app,'1.2.0'),(incoming,__release_version__)]:
             (bundle/'Contents').mkdir()
             (bundle/'Contents/Info.plist').write_bytes(plistlib.dumps({'CFBundleIdentifier':update.IDENTIFIER,'CFBundleShortVersionString':version}))
         (app/'old-resource').write_text('obsolete')
         cache=root/'cache';cache.mkdir()
         token='a'*32;worker=cache/('.worker-'+token);worker.mkdir()
-        installer=cache/'MINER-ALPHA-v1.2.1-macOS-Intel.dmg';installer.write_bytes(b'verified fixture')
-        ticket=worker/'ticket.json';ticket.write_text(json.dumps({'installer':str(installer),'sha256':hashlib.sha256(installer.read_bytes()).hexdigest(),'target':'1.2.1','parent':123,'token':token}))
+        installer=cache/('MINER-ALPHA-v'+__release_version__+'-macOS-Intel.dmg');installer.write_bytes(b'verified fixture')
+        ticket=worker/'ticket.json';ticket.write_text(json.dumps({'installer':str(installer),'sha256':hashlib.sha256(installer.read_bytes()).hexdigest(),'target':__release_version__,'parent':123,'token':token}))
         return app,incoming,cache,ticket
 
     def test_verified_replacement_removes_old_resources_only_after_new_launch(self):

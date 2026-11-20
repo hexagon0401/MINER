@@ -119,6 +119,18 @@ extension AppDelegate {
                 self.model.updateBusy = true
                 try require(!self.model.updateInstalling,"Background update checks do not lock network operations")
                 self.model.updateBusy = false
+                self.model.phase="proxy_connect";self.setBusy(true)
+                let cancellation=CommandCancellation();self.operationCancellation=cancellation
+                self.stop()
+                try require(cancellation.cancelled && self.stopPending && self.model.phase=="stopping","Proxy startup can be cancelled while busy")
+                self.model.accept("{\"event\":\"progress\",\"phase\":\"running\",\"completed\":5}",allowed:{ !cancellation.cancelled })
+                try await settle()
+                try require(self.model.phase=="stopping","Late progress cannot override cancellation")
+                let cleanup=CommandCancellation();self.operationCancellation=cleanup
+                _ = self.applicationShouldTerminate(NSApp)
+                try require(self.quitPending && !cleanup.cancelled,"Quit waits for cleanup without cancelling cleanup itself")
+                self.stopPending=false;self.quitPending=false;self.operationCancellation=nil;self.setBusy(false)
+                try? FileManager.default.removeItem(atPath:"/tmp/.miner-cancel-\(getuid())-\(cancellation.session)")
                 let result:[String:Any] = ["ok":true,"architecture":arch,"checks":checks,"network_actions":0]
                 try JSONSerialization.data(withJSONObject:result,options:[.prettyPrinted,.sortedKeys]).write(to:output.appendingPathComponent("miner-ui-\(arch).json"))
                 print("MINER native UI smoke passed: \(checks.count) checks")

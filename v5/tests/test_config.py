@@ -42,7 +42,8 @@ class ProfileTests(unittest.TestCase):
                 rules = build_config(Profile(platform=platform))["route"]["rules"]
                 game_index = next(i for i, r in enumerate(rules) if r.get("process_name") == GAMES[platform])
                 proxy_index = next(i for i, r in enumerate(rules) if r.get("outbound") == "warp")
-                self.assertLess(game_index, proxy_index)
+                self.assertGreater(game_index, proxy_index)
+                self.assertEqual("udp",rules[game_index]["network"])
                 self.assertEqual(rules[game_index]["outbound"], "direct")
 
     def test_no_udp_socks_assumption(self):

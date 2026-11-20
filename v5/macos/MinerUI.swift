@@ -6,6 +6,7 @@ final class MinerModel: ObservableObject {
     @Published var phase = "idle"
     @Published var completed = 0
     @Published var busy = false
+    @Published var recoveryNeeded = false
     @Published var engine = false
     @Published var warp = false
     @Published var restored = false
@@ -45,9 +46,10 @@ final class MinerModel: ObservableObject {
         if language == "ko", let table = copy["systemStatus"] as? [String: [String: String]], let text = table[phase]?["detail"] { return text }
         return ["idle":"Start to inspect the connection path.", "cli_check":"Checking WARP CLI capabilities", "proxy_connect":"Verifying Local Proxy on port 40000", "tls_verify":"Verifying TLS and warp=on", "admin_auth":"Use the native macOS authorization dialog", "routing":"Starting the split-routing engine", "warp_ready":"Proxy verified · routing engine not started", "running":"Split-routing engine is running", "stopping":"Waiting for shutdown and WARP restoration", "stopped":"Engine stopped · WARP state shown separately"][phase] ?? ""
     }
-    func accept(_ line: String) {
+    func accept(_ line: String,allowed:@escaping ()->Bool = { true }) {
         guard let data = line.data(using: .utf8), let event = try? JSONSerialization.jsonObject(with: data) as? [String: Any], event["event"] as? String == "progress", let p = event["phase"] as? String, let n = event["completed"] as? Int else { return }
         DispatchQueue.main.async {
+            guard allowed() else { return }
             self.phase = p; self.completed = min(5, max(0,n))
             if n >= 3 { self.warp = true; self.restored = false }
         }

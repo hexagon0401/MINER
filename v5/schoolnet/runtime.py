@@ -163,9 +163,8 @@ def run(directory, engine="sing-box", warp_cli=None, managed_helper=False):
                 nonlocal stop_deadline
                 if stop_deadline is None:
                     stop_deadline=time.monotonic()+10
-                    try:lease.close()
-                    finally:
-                        if child.poll() is None:child.terminate()
+                    # Only mark cancellation in the signal handler. DNS apply
+                    # must finish before restore; never reenter OS DNS commands.
             try:
                 for signum in (signal.SIGINT,signal.SIGTERM):previous[signum]=signal.signal(signum,stop)
                 deadline=time.monotonic()+20
@@ -175,9 +174,11 @@ def run(directory, engine="sing-box", warp_cli=None, managed_helper=False):
                 if child.poll() is not None:raise ValueError('Network engine exited during startup')
                 if stop_deadline is None:
                     lease.activate()
-                    print('MINER selective DNS ready; real game/browser IPs bypass TUN.',flush=True)
+                    if stop_deadline is None:print('MINER selective DNS ready; real game/browser IPs bypass TUN.',flush=True)
                 last_health=time.monotonic()
                 while child.poll() is None:
+                    if stop_deadline is not None:
+                        lease.close();child.terminate()
                     try:child.wait(timeout=.5)
                     except subprocess.TimeoutExpired:
                         if stop_deadline is not None and time.monotonic()>=stop_deadline:

@@ -1,6 +1,6 @@
-# MINER ALPHA v1.2.1 — 소스·연결 구조
+# MINER ALPHA v1.2.2 — 소스·연결 구조
 
-[설치 파일·한국어 설치 안내](../README.md#다운로드) · [릴리스](https://github.com/hexagon0401/MINER/releases/tag/miner-alpha-v1.2.1) · [서명 설정](docs/SIGNING.md)
+[설치 파일·한국어 설치 안내](../README.md#다운로드) · [릴리스](https://github.com/hexagon0401/MINER/releases/tag/miner-alpha-v1.2.2) · [서명 설정](docs/SIGNING.md)
 
 macOS는 SwiftUI·AppKit, Windows는 Qt Quick·Fluent/Pearl White UI를 유지합니다. 개인용 Cloudflare WARP는 별도 설치·등록해야 합니다. ALPHA는 제품 세대의 코드명입니다. 기존 버전·베타 소스와 릴리스는 보존합니다.
 
@@ -22,7 +22,7 @@ macOS는 SwiftUI·AppKit, Windows는 Qt Quick·Fluent/Pearl White UI를 유지�
 
 로그인부터 인게임·종료 후 통계창까지 **MINER와 WARP를 켜 두세요.** 게임 단계에 따라 WARP를 전환하지 않습니다. 건강한 프록시는 재설정하지 않고, 같은 프록시 모드에서 연결이 끊기면 `connect`만 재시도합니다. 다른 모드로 외부 변경되면 오류를 표시합니다. 모든 지연·Wi-Fi 손실의 해결을 보장하지 않습니다.
 
-Riot 가상 주소 TCP는 실행 파일명에 의존하지 않고 WARP로 보냅니다. 게임 프로세스의 직접 경로 예외가 먼저 적용되고, 가상 주소 UDP는 거부합니다. 이름이 지정 범위 밖인 클라이언트 서비스나 브라우저 자체 DoH는 이 도메인 경로에 해당하지 않을 수 있습니다. SOCKS 대상의 DNS는 WARP에 맡기며 실패 시 직접 연결로 자동 전환하지 않습니다. 일반 DNS는 기존 연결의 신뢰·암호화 수준을 유지하며 새 공개 DNS로 대체하지 않습니다.
+Riot 가상 주소 TCP는 실행 파일명에 의존하지 않고 WARP로 보냅니다. 게임 이름에 관계없이 지정 Riot 서비스 TCP를 먼저 프록시로 보냅니다. 게임 UDP의 직접 연결 예외는 그 뒤 적용하고 나머지 가상 주소 UDP는 거부합니다. 실제 공개 게임 IP는 OS 경로를 유지합니다. 이름이 지정 범위 밖인 클라이언트 서비스나 브라우저 자체 DoH는 이 도메인 경로에 해당하지 않을 수 있습니다. SOCKS 대상의 DNS는 WARP에 맡기며 실패 시 직접 연결로 자동 전환하지 않습니다. 일반 DNS는 기존 연결의 신뢰·암호화 수준을 유지하며 새 공개 DNS로 대체하지 않습니다.
 
 ## DNS 변경과 복구
 
@@ -36,7 +36,7 @@ macOS에서는 설정의 **관리자 승인 항상 허용 · 도우미 재사용
 
 ## 빌드·검증
 
-배포 워크플로는 [miner-alpha-v121.yml](../.github/workflows/miner-alpha-v121.yml)입니다. Mac Apple Silicon·Intel과 Windows의 필수 검사가 모두 통과해야 새 정식 태그로 게시합니다. 서명·공증 설정이 있으면 그 검증도 필수입니다. 미설정 Mac은 ad-hoc, Windows는 Authenticode 미서명입니다.
+배포 워크플로는 [miner-alpha-v122.yml](../.github/workflows/miner-alpha-v122.yml)입니다. Mac Apple Silicon·Intel과 Windows의 필수 검사가 모두 통과해야 새 정식 태그로 게시합니다. 서명·공증 설정이 있으면 그 검증도 필수입니다. 미설정 Mac은 ad-hoc, Windows는 Authenticode 미서명입니다.
 
 ```bash
 cd v5
@@ -46,7 +46,7 @@ PYTHONPATH=. SCHOOLNET_TEST_ENGINE="$PWD/local/bin/sing-box" python3 -m unittest
 
 Python 3.10+의 공통 로직은 표준 라이브러리, 앱 업데이트는 certifi를 사용합니다. 패키징은 Python 3.12이며 GUI/패키징 의존성은 각 워크플로에 고정합니다. 엔진은 SHA-256을 확인한 **sing-box 1.12.0**만 사용합니다. 임의 최신 엔진으로 바꾸지 마세요.
 
-`selective_smoke.py`는 **일회용 네이티브 CI 호스트 전용 관리자 검사**입니다. 실제 선택 경로·OS DNS/HTTPS·동일 Riot TCP의 원격 이름 전달·DNS 정상/엔진 강제 종료 복구를 확인합니다. SOCKS는 로컬 시험 서버이며 실제 WARP가 아닙니다. Windows는 이전 공개 v1.1.1 설치 파일의 체크섬을 확인하고 같은 위치에 덮어써 사용자 데이터 보존을 검사합니다. Mac은 DMG 마운트→복사 후 서명 무결성과 네이티브 UI·도우미 root 피어 인증을 확인합니다.
+`selective_smoke.py`는 **일회용 네이티브 CI 호스트 전용 관리자 검사**입니다. 실제 선택 경로·OS DNS/HTTPS·동일 Riot TCP의 원격 이름 전달·DNS 정상/엔진 강제 종료 복구를 확인합니다. SOCKS는 로컬 시험 서버이며 실제 WARP가 아닙니다. Windows는 이전 공개 v1.2.0 설치 파일의 체크섬을 확인하고 같은 위치에 덮어써 사용자 데이터 보존을 검사합니다. Mac은 DMG 마운트→복사 후 서명 무결성과 네이티브 UI·도우미 root 피어 인증을 확인합니다.
 
 Windows 자동 검증은 **Windows Server 2025**입니다. 실제 Windows 11·학교망·개인용 WARP·LoL·Vanguard·macOS 27.1.1 Arc/게임 호환성은 미검증입니다. UI PNG는 검사용 상태 주입이며 네트워크 성공 증거가 아닙니다. 검증 JSON과 SHA-256을 릴리스에 첨부합니다.
 
@@ -75,3 +75,9 @@ python3 main.py doctor --directory local/mac --engine "$PWD/local/bin/sing-box"
 ## v1.2.1 업데이트 설치·정리
 
 설정의 Check for Updates로 확인하고 연결 중지 후 설치합니다. Mac 직접 설치는 앱 바깥에 준비한 검증 작업자가 부모 종료를 기다린 뒤 DMG의 식별자·버전·서명 무결성을 확인하고 교체합니다. 새 창 시작 확인 후 이전 앱/설치 캐시를 제거합니다. Windows는 기존 등록 설치 경로에서 런타임을 임시 보관하고 깨끗한 새 런타임을 설치하며 실패 시 복구합니다. 성공 후 설치 파일을 정리하고 재실행합니다. 사용자 설정·로그는 보존합니다. 전용 캐시는 현재 버전 이하의 알려진 설치 파일만 정리합니다. 네트워크 엔진은 v1.2.0과 같습니다.
+
+## v1.2.2 macOS 복구와 연결 수명
+
+CLI 출력과 대기를 제한하고 취소된 작업의 진행 이벤트를 무시합니다. 관리자 시작 요청에는 소유 사용자·유효기간·취소 표식을 사용해 늦은 승인이 엔진을 다시 띄우지 않도록 합니다. 읽기 전용 초기 상태 확인 동안 닫기는 상태 확인 종료 후 처리합니다. 중지·복귀는 완료 전 다시 취소하지 않습니다. 실행 PID와 DNS 준비 상태를 구분합니다. 복구 오류는 도우미 소켓을 유지한 채 표시하며, 원래 네트워크 서비스가 사라진 기록은 현재 서비스에 임시 DNS가 남지 않았음을 확인한 경우에만 보관 처리합니다.
+
+런타임 SIGTERM은 복구를 신호 처리기 안에서 재진입하지 않고 DNS 적용 종료 후 정상 정리 경로에서 수행합니다. WARP HTTPS 확인은 인증서 검증과 SOCKS 원격 DNS를 유지하며 전체 응답 시간 제한을 둡니다. 네이티브 `CommandSmoke.swift`는 상속된 stdout·무응답 명령·취소를 확인합니다. `selective_smoke.py`는 게임 이름의 프로세스에서 새 Riot 서비스 TCP가 SOCKS로 전달되는지 확인합니다. 이는 실제 게임 통계창이나 학교망 검증을 대신하지 않습니다.

@@ -11,8 +11,13 @@ import ssl
 import subprocess
 import sys
 import time
+import threading
 
 from .probe import socks_connect, proxy_ready
+
+
+class WarpCancelled(Exception):
+    """Cancellation must not be swallowed as an EINTR retry by selectors."""
 
 
 def progress(phase, completed):
@@ -31,7 +36,14 @@ def resolve_cli(value=None):
 
 
 def command(cli, *arguments, timeout=10):
-    result = subprocess.run([cli, *arguments], capture_output=True, text=True, timeout=timeout)
+    child=subprocess.Popen([cli,*arguments],stdout=subprocess.PIPE,stderr=subprocess.PIPE,text=True)
+    try:
+        stdout,stderr=child.communicate(timeout=timeout)
+        result=subprocess.CompletedProcess(child.args,child.returncode,stdout,stderr)
+    except BaseException:
+        if child.poll() is None:child.kill()
+        child.communicate(timeout=2)
+        raise
     if result.returncode:
         # WARP output can include account metadata. Record the failing command,
         # not raw settings/account data or a silently selected direct path.
@@ -55,20 +67,31 @@ def verify_trace(port=40000, timeout=5.0):
     There is intentionally no direct-network retry.
     """
     host = "www.cloudflare.com"
-    with socket.create_connection(("127.0.0.1", port), timeout=timeout) as sock:
-        socks_connect(sock, host, 443)
-        context = ssl.create_default_context()
-        if getattr(sys, "frozen", False):
-            # The standalone Mac may have no Python/OpenSSL CA installation.
-            # Add the build's pinned public CA bundle, never disable TLS checks.
-            context.load_verify_locations(cafile=str(Path(sys._MEIPASS) / "cacert.pem"))
-        with context.wrap_socket(sock, server_hostname=host) as tls:
-            tls.sendall(f"GET /cdn-cgi/trace HTTP/1.1\r\nHost: {host}\r\nConnection: close\r\nAccept-Encoding: identity\r\n\r\n".encode("ascii"))
-            response = http.client.HTTPResponse(tls)
-            response.begin()
-            body = response.read(8193)
-            if response.status != 200 or len(body) > 8192:
-                raise ValueError("WARP trace HTTPS request failed")
+    deadline=time.monotonic()+timeout
+    active=[None]
+    def abort():
+        try:
+            if active[0] is not None:active[0].shutdown(socket.SHUT_RDWR)
+        except OSError:pass
+    timer=threading.Timer(timeout,abort);timer.daemon=True;timer.start()
+    try:
+        with socket.create_connection(("127.0.0.1",port),timeout=timeout) as sock:
+            active[0]=sock
+            socks_connect(sock,host,443)
+            remaining=deadline-time.monotonic()
+            if remaining<=0:raise TimeoutError('WARP TLS verification timed out')
+            sock.settimeout(remaining)
+            context=ssl.create_default_context()
+            if getattr(sys,'frozen',False):context.load_verify_locations(cafile=str(Path(sys._MEIPASS)/'cacert.pem'))
+            with context.wrap_socket(sock,server_hostname=host) as tls:
+                active[0]=tls
+                remaining=deadline-time.monotonic()
+                if remaining<=0:raise TimeoutError('WARP HTTPS verification timed out')
+                tls.settimeout(remaining)
+                tls.sendall(f"GET /cdn-cgi/trace HTTP/1.1\r\nHost: {host}\r\nConnection: close\r\nAccept-Encoding: identity\r\n\r\n".encode('ascii'))
+                response=http.client.HTTPResponse(tls);response.begin();body=response.read(8193)
+                if response.status!=200 or len(body)>8192:raise ValueError('WARP trace HTTPS request failed')
+    finally:timer.cancel()
     values = dict(line.split("=", 1) for line in body.decode("utf-8", "strict").splitlines() if "=" in line)
     if values.get("warp") not in {"on", "plus"}:
         raise ValueError("SOCKS endpoint did not confirm WARP (warp=on/plus required)")
@@ -118,10 +141,14 @@ def activate(port=40000, warp_cli=None, wait_seconds=30, notify=None):
                     result = verify_trace(port)
                     emit("warp_ready", 3)
                     return {**result, "mode": "WarpProxy", "reconfigured": changed}
+                except WarpCancelled:
+                    raise
                 except (OSError, ValueError, http.client.HTTPException) as exc:
                     last_error = type(exc).__name__ + ": WARP trace verification failed"
             time.sleep(.5)
         raise ValueError(f"WARP proxy readiness timed out: {last_error}; no direct fallback")
+    except WarpCancelled:
+        raise  # The UI performs serialized cleanup; do not spawn new CLI work on cancellation.
     except Exception:
         if changed:
             try:

@@ -9,7 +9,7 @@
 클라이언트는 WARP로, 게임은 직접 연결로.
 학교 네트워크의 접속 제한과 게임 지연 문제에서 출발한 분리 라우팅 앱입니다.
 
-![ALPHA v1.2.1](https://img.shields.io/badge/RELEASE-ALPHA_v1.2.1-0EFB2E?style=flat-square&labelColor=0C1421)
+![ALPHA v1.2.2](https://img.shields.io/badge/RELEASE-ALPHA_v1.2.2-0EFB2E?style=flat-square&labelColor=0C1421)
 ![macOS](https://img.shields.io/badge/macOS-Apple_Silicon-E6E8E6?style=flat-square&logo=apple&logoColor=white&labelColor=0C1421)
 ![Windows](https://img.shields.io/badge/Windows-x64-0078D4?style=flat-square&logo=windows&logoColor=white&labelColor=0C1421)
 ![Cloudflare WARP](https://img.shields.io/badge/Cloudflare-WARP-F38020?style=flat-square&logo=cloudflare&logoColor=white&labelColor=0C1421)
@@ -51,21 +51,21 @@ MINER는 **클라이언트 통신은 WARP로, 게임 플레이 통신은 직접 
 
 ## 다운로드
 
-[![MINER ALPHA v1 출시 기념 배너](docs/assets/miner-alpha-v1-release-banner.png)](https://github.com/hexagon0401/MINER/releases/tag/miner-alpha-v1.2.1)
+[![MINER ALPHA v1 출시 기념 배너](docs/assets/miner-alpha-v1-release-banner.png)](https://github.com/hexagon0401/MINER/releases/tag/miner-alpha-v1.2.2)
 
-**MINER ALPHA v1.2.1** · [최신 정식 릴리스 보기](https://github.com/hexagon0401/MINER/releases/tag/miner-alpha-v1.2.1)
+**MINER ALPHA v1.2.2** · [최신 정식 릴리스 보기](https://github.com/hexagon0401/MINER/releases/tag/miner-alpha-v1.2.2)
 
-[![Apple Silicon DMG](https://img.shields.io/badge/macOS-Apple_Silicon_DMG-0EFB2E?style=for-the-badge&logo=apple&logoColor=white&labelColor=0C1421)](https://github.com/hexagon0401/MINER/releases/download/miner-alpha-v1.2.1/MINER-ALPHA-v1.2.1-macOS-AppleSilicon.dmg)
-[![Intel DMG](https://img.shields.io/badge/macOS-Intel_DMG-E6E8E6?style=for-the-badge&logo=apple&logoColor=white&labelColor=0C1421)](https://github.com/hexagon0401/MINER/releases/download/miner-alpha-v1.2.1/MINER-ALPHA-v1.2.1-macOS-Intel.dmg)
-[![Windows EXE](https://img.shields.io/badge/Windows-x64_EXE-0078D4?style=for-the-badge&logo=windows&logoColor=white&labelColor=0C1421)](https://github.com/hexagon0401/MINER/releases/download/miner-alpha-v1.2.1/MINER-ALPHA-v1.2.1-Windows-x64-Setup.exe)
+[![Apple Silicon DMG](https://img.shields.io/badge/macOS-Apple_Silicon_DMG-0EFB2E?style=for-the-badge&logo=apple&logoColor=white&labelColor=0C1421)](https://github.com/hexagon0401/MINER/releases/download/miner-alpha-v1.2.2/MINER-ALPHA-v1.2.2-macOS-AppleSilicon.dmg)
+[![Intel DMG](https://img.shields.io/badge/macOS-Intel_DMG-E6E8E6?style=for-the-badge&logo=apple&logoColor=white&labelColor=0C1421)](https://github.com/hexagon0401/MINER/releases/download/miner-alpha-v1.2.2/MINER-ALPHA-v1.2.2-macOS-Intel.dmg)
+[![Windows EXE](https://img.shields.io/badge/Windows-x64_EXE-0078D4?style=for-the-badge&logo=windows&logoColor=white&labelColor=0C1421)](https://github.com/hexagon0401/MINER/releases/download/miner-alpha-v1.2.2/MINER-ALPHA-v1.2.2-Windows-x64-Setup.exe)
 
 | 컴퓨터 | 설치 파일 | 구성 |
 | :-- | :-- | :-- |
-| Mac · Apple Silicon (M 시리즈) | [DMG 다운로드](https://github.com/hexagon0401/MINER/releases/download/miner-alpha-v1.2.1/MINER-ALPHA-v1.2.1-macOS-AppleSilicon.dmg) | macOS 기본 UI · SwiftUI |
-| Mac · Intel | [DMG 다운로드](https://github.com/hexagon0401/MINER/releases/download/miner-alpha-v1.2.1/MINER-ALPHA-v1.2.1-macOS-Intel.dmg) | macOS 기본 UI · SwiftUI |
-| Windows · x64 | [EXE 다운로드](https://github.com/hexagon0401/MINER/releases/download/miner-alpha-v1.2.1/MINER-ALPHA-v1.2.1-Windows-x64-Setup.exe) | Windows Pearl White · A/B 버튼 |
+| Mac · Apple Silicon (M 시리즈) | [DMG 다운로드](https://github.com/hexagon0401/MINER/releases/download/miner-alpha-v1.2.2/MINER-ALPHA-v1.2.2-macOS-AppleSilicon.dmg) | macOS 기본 UI · SwiftUI |
+| Mac · Intel | [DMG 다운로드](https://github.com/hexagon0401/MINER/releases/download/miner-alpha-v1.2.2/MINER-ALPHA-v1.2.2-macOS-Intel.dmg) | macOS 기본 UI · SwiftUI |
+| Windows · x64 | [EXE 다운로드](https://github.com/hexagon0401/MINER/releases/download/miner-alpha-v1.2.2/MINER-ALPHA-v1.2.2-Windows-x64-Setup.exe) | Windows Pearl White · A/B 버튼 |
 
-전체 기본 경로를 TUN에서 제외하고 Riot 선택 경로·DNS 복구·연결 유지·자동 업데이트 안내를 적용한 **ALPHA v1.2.1 정식 릴리스**입니다. 베타 빌드는 BETA 아이콘을 사용합니다. 플랫폼별로 **별도 설치 파일**을 제공합니다. Mac과 Windows는 각각의 UI를 유지합니다. [체크섬](https://github.com/hexagon0401/MINER/releases/download/miner-alpha-v1.2.1/SHA256SUMS.txt) · [플랫폼별 버전·출처](https://github.com/hexagon0401/MINER/releases/download/miner-alpha-v1.2.1/release-manifest.json) · [Windows 소스](https://github.com/hexagon0401/MINER/tree/main/v5/windows)
+전체 기본 경로를 TUN에서 제외하고 Riot 선택 경로·DNS 복구·연결 유지·자동 업데이트 안내를 적용한 **ALPHA v1.2.2 정식 릴리스**입니다. 베타 빌드는 BETA 아이콘을 사용합니다. 플랫폼별로 **별도 설치 파일**을 제공합니다. Mac과 Windows는 각각의 UI를 유지합니다. [체크섬](https://github.com/hexagon0401/MINER/releases/download/miner-alpha-v1.2.2/SHA256SUMS.txt) · [플랫폼별 버전·출처](https://github.com/hexagon0401/MINER/releases/download/miner-alpha-v1.2.2/release-manifest.json) · [Windows 소스](https://github.com/hexagon0401/MINER/tree/main/v5/windows)
 
 | 구분 | 현재 상태 |
 | :-- | :-- |
@@ -146,7 +146,7 @@ macOS 버전과 표시 언어에 따라 버튼 이름이나 화면 구성은 조
 4. 제거하려면 MINER에서 중지·종료한 뒤 Windows의 **설치된 앱**에서 MINER를 제거합니다. 사용자 설정과 로그, WARP는 보존합니다.
 
 > [!NOTE]
-> Windows 화면은 **Pearl White A안·Qt Quick RHI·D3D11**을 사용하고 한국어는 맑은 고딕, 영어는 Segoe UI 계열을 우선합니다. Mac은 SwiftUI를 유지하며 플랫폼별 창·설정 조작을 따릅니다. Windows 11 x64를 대상으로 개발하지만 자동 검증은 **Windows Server 2025**에서 수행했습니다. 공개 v1.1.1 위 덮어쓰기 업그레이드·사용자 데이터 보존·제거, 실제 선택 TUN 경로·OS DNS/HTTPS·연속 클라이언트 TCP·엔진 강제 종료 후 DNS 복구, 화면 배율 100~200%를 검사합니다. **실제 Windows 11·WARP 연결·학교망·LoL·Vanguard는 미검증**이며, 실행 파일은 Authenticode 미서명입니다.
+> Windows 화면은 **Pearl White A안·Qt Quick RHI·D3D11**을 사용하고 한국어는 맑은 고딕, 영어는 Segoe UI 계열을 우선합니다. Mac은 SwiftUI를 유지하며 플랫폼별 창·설정 조작을 따릅니다. Windows 11 x64를 대상으로 개발하지만 자동 검증은 **Windows Server 2025**에서 수행했습니다. 공개 v1.2.0 위 덮어쓰기 업그레이드·사용자 데이터 보존·제거, 실제 선택 TUN 경로·OS DNS/HTTPS·연속 클라이언트 TCP·엔진 강제 종료 후 DNS 복구, 화면 배율 100~200%를 검사합니다. **실제 Windows 11·WARP 연결·학교망·LoL·Vanguard는 미검증**이며, 실행 파일은 Authenticode 미서명입니다.
 
 <details>
 <summary><strong>Windows 실행 화면과 애니메이션 보기</strong></summary>
@@ -171,6 +171,16 @@ macOS 버전과 표시 언어에 따라 버튼 이름이나 화면 구성은 조
 5. **⌘,**로 설정을 열어 한국어·영어 변경, 개발자 소개, 제거 기능을 사용할 수 있습니다.
 
 업데이트 후 첫 연결은 Riot/LoL 클라이언트를 완전히 종료한 상태에서 MINER를 시작한 뒤 클라이언트를 실행하세요. 원래 연결이 바뀌거나 다른 VPN이 활성화되면 중지 후 재연결하세요. 지정되지 않은 서비스·브라우저 자체 보안 DNS(DoH)는 별도 확인이 필요합니다.
+
+### v1.2.2 안정성 업데이트
+
+macOS에서 CLI 응답을 무기한 기다리던 경로에 시간 제한을 추가했습니다. `40000` 연결 준비 중에도 **연결 취소**와 창 닫기를 요청할 수 있으며, 취소된 관리자 작업이 뒤늦게 엔진을 시작하지 않도록 처리합니다. 중지·복귀와 백그라운드 상태 확인은 겹치지 않게 실행합니다. 엔진 정리가 확인되었지만 WARP 복귀가 실패한 경우에는 오류를 알리고 앱 종료를 선택할 수 있습니다.
+
+오래된 DNS 복구 오류 때문에 도우미가 반복 재시작하지 않도록 했습니다. 기록에 있던 네트워크 서비스가 삭제된 경우에는 현재 서비스에 MINER DNS가 남아 있는지 확인하고, 남아 있지 않을 때만 이전 기록을 별도로 보관합니다. 모호한 상태는 임의로 초기화하지 않습니다.
+
+게임 프로세스가 보내는 **지정 Riot 서비스 TCP**도 WARP 경로를 사용하도록 규칙 순서를 수정했습니다. 실제 게임 서버 IP의 직접 경로는 유지합니다. 통계창 복귀에 영향을 줄 수 있는 코드 경로를 수정한 것이며, **실제 LoL 통계창·학교망에서의 해결 여부는 사용자 재검증이 필요합니다.** 업데이트 후 처음 한 번은 Riot/LoL 클라이언트를 완전히 종료하고 MINER 연결 후 다시 실행하세요.
+
+macOS 네이티브 명령 취소·시간 제한, 게임 이름의 시험 프로세스가 보내는 Riot TCP 라우팅, OS DNS·일반 HTTPS·설치 교체 검사를 배포 조건으로 사용합니다. 로컬 SOCKS 시험은 실제 WARP·LoL 성공을 의미하지 않습니다. v1.2.1 사용자는 설정의 업데이트 확인·설치 또는 Homebrew 업그레이드를 사용할 수 있습니다.
 
 ### 앱에서 업데이트
 

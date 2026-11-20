@@ -100,12 +100,12 @@ def build_config(profile: Profile) -> dict:
     # WARP owns the encrypted transport. Keep its daemon outside the proxy rule.
     rules = [
         {"port": 53, "action": "hijack-dns"},
-        {"process_name": GAMES[p.platform], "action": "route", "outbound": "direct"},
     ]
     # The kernel sends only Riot synthetic addresses here. Do not depend on
     # renderer process names or expensive per-connection client attribution.
     rules += [
         {"inbound":["schoolnet-tun"],"network":"tcp","action":"route","outbound":"warp"},
+        {"inbound":["schoolnet-tun"],"network":"udp","process_name":GAMES[p.platform],"action":"route","outbound":"direct"},
         {"inbound":["schoolnet-tun"],"network":"udp","action":"reject","method":"default","no_drop":True},
     ]
     dns_rules = [

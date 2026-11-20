@@ -157,3 +157,17 @@ class WarpTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+class TraceDeadlineTests(unittest.TestCase):
+    def test_slow_http_response_has_an_absolute_deadline(self):
+        import threading,time
+        stopped=threading.Event();tls=MagicMock();tls.shutdown.side_effect=lambda *a:stopped.set()
+        context=MagicMock();context.wrap_socket.return_value.__enter__.return_value=tls
+        response=MagicMock()
+        def read(*args):
+            stopped.wait(2);raise TimeoutError('slow response fixture')
+        response.read.side_effect=read
+        begin=time.monotonic()
+        with patch('socket.create_connection'),patch.object(warp,'socks_connect'),patch('ssl.create_default_context',return_value=context),patch('http.client.HTTPResponse',return_value=response),self.assertRaises(TimeoutError):
+            warp.verify_trace(timeout=.15)
+        self.assertLess(time.monotonic()-begin,1)

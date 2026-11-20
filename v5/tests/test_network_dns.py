@@ -83,3 +83,34 @@ class DNSTransactionTests(unittest.TestCase):
         with patch('schoolnet.network_dns.powershell') as run,self.assertRaises(ValueError):
             backend.restore({'schema':1,'system':'Windows','servers':['192.0.2.53'],'guid':"'; bad command"})
         run.assert_not_called()
+
+class RetiredNetworkTests(unittest.TestCase):
+    def test_removed_adapter_record_is_archived_only_when_no_temporary_dns_remains(self):
+        import subprocess
+        from schoolnet.runtime import write_json
+        snapshot=FakeBackend().snapshot
+        with tempfile.TemporaryDirectory() as d:
+            path=Path(d)/'network-dns-v1.json';write_json(path,snapshot)
+            backend=Backend('Darwin')
+            def call(args,**kwargs):
+                if args[1]=='-listallnetworkservices':return 'An asterisk denotes disabled services\nEthernet\n'
+                if args[-1]=='Wi-Fi':raise subprocess.CalledProcessError(1,args)
+                return '192.0.2.53\n'
+            with patch('schoolnet.network_dns.command',side_effect=call),patch.object(backend,'flush'):
+                Lease.recover(d,backend,path)
+            self.assertFalse(path.exists());self.assertEqual(1,len(list(Path(d).glob('network-dns-retired-*.json'))))
+
+    def test_renamed_service_with_temporary_dns_keeps_recovery_record(self):
+        import subprocess
+        from schoolnet.runtime import write_json
+        snapshot=FakeBackend().snapshot
+        with tempfile.TemporaryDirectory() as d:
+            path=Path(d)/'network-dns-v1.json';write_json(path,snapshot)
+            backend=Backend('Darwin')
+            def call(args,**kwargs):
+                if args[1]=='-listallnetworkservices':return 'An asterisk denotes disabled services\nSchool Wi-Fi\n'
+                if args[-1]=='Wi-Fi':raise subprocess.CalledProcessError(1,args)
+                return DNS_V4+'\n'
+            with patch('schoolnet.network_dns.command',side_effect=call),self.assertRaisesRegex(ValueError,'another service'):
+                Lease.recover(d,backend,path)
+            self.assertTrue(path.exists())
