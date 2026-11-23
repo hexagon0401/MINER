@@ -98,7 +98,7 @@ def build(expected_arch, signing="adhoc", identity=None, notary_profile=None, dm
         "CFBundleName": "MINER", "CFBundleDisplayName": "MINER", "CFBundleIconFile": "AppIcon",
         "CFBundleIdentifier": "org.schoolnet.v5.alpha", "CFBundleExecutable": "MINER",
         "CFBundlePackageType": "APPL", "CFBundleShortVersionString": __release_version__,
-        "CFBundleVersion": "502123", "SchoolNetReleaseVersion": __version__, "MINERPublicReleaseVersion": __release_version__,
+        "CFBundleVersion": "5020001", "SchoolNetReleaseVersion": __version__, "MINERPublicReleaseVersion": __release_version__, "MINERPreview": True,
         "LSMinimumSystemVersion": "13.0", "NSHighResolutionCapable": True,
     }
     info.update(macos_icon_info(icon))
@@ -165,7 +165,7 @@ def build(expected_arch, signing="adhoc", identity=None, notary_profile=None, dm
     (stage / "Applications").symlink_to("/Applications")
     output = ROOT / "dist"
     output.mkdir(exist_ok=True)
-    name = f"MINER-v{__version__}-macOS-{'AppleSilicon' if arch == 'arm64' else 'Intel'}.dmg"
+    name = f"MINER-STRATA-v{__release_version__}-preview.1-macOS-{'AppleSilicon' if arch == 'arm64' else 'Intel'}.dmg"
     dmg = output / name
     if dmg.exists():
         raise ValueError(f"output already exists: {dmg}")
