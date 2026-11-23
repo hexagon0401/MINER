@@ -327,6 +327,8 @@ def main():
     kernel.AllocConsole();ctypes.windll.user32.ShowWindow(kernel.GetConsoleWindow(),0)
     app,engine,bridge,window=create_app()
     app.setQuitOnLastWindowClosed(False)
+    # Explicit Quit/update must exit even while the tray keeps Close alive.
+    bridge.closeRequested.connect(app.quit)
     QTimer.singleShot(0,bridge.attachService)
     tray=QSystemTrayIcon(QIcon(str(ART/'AppIcon.png')),app);menu=QMenu()
     menu.addAction('Open MINER / 열기',lambda:window.show())
@@ -334,6 +336,8 @@ def main():
     def quit_cleanly():
         if bridge.dirty:
             bridge.closing=True;bridge.end()
+        elif bridge.worker and bridge.worker.isRunning():
+            bridge.closing=True;bridge.worker.stop_event.set()
         else:app.quit()
     menu.addAction('Quit / 종료',quit_cleanly);tray.setContextMenu(menu)
     tray.activated.connect(lambda reason:window.show() if reason==QSystemTrayIcon.ActivationReason.Trigger else None);tray.show()
