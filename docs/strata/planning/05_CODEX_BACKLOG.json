@@ -104,7 +104,7 @@
         "v5/schoolnet/runtime.py"
       ],
       "definition_of_done": "요청 멱등/중복 방지/비정상 종료 처리",
-      "status": "IMPLEMENTED_NATIVE_CI_PENDING"
+      "status": "IMPLEMENTED_NATIVE_FIXTURE_VERIFIED"
     },
     {
       "id": "G2-02",
@@ -119,7 +119,7 @@
         "v5/schoolnet/dns_guard.py"
       ],
       "definition_of_done": "외부 설정 무단 덮어쓰기 없이 복구",
-      "status": "IMPLEMENTED_NATIVE_CI_PENDING"
+      "status": "IMPLEMENTED_NATIVE_FIXTURE_VERIFIED"
     },
     {
       "id": "G2-03",
@@ -136,7 +136,7 @@
         "v5/macos/App.swift"
       ],
       "definition_of_done": "UI 종료 유지 및 Stop 복구",
-      "status": "IMPLEMENTED_NATIVE_CI_PENDING"
+      "status": "IMPLEMENTED_NATIVE_FIXTURE_VERIFIED"
     },
     {
       "id": "G2-04",
@@ -152,7 +152,7 @@
         "v5/windows/process.py"
       ],
       "definition_of_done": "GUI 강제 종료·복원/장애 복구 확인",
-      "status": "IMPLEMENTED_NATIVE_CI_PENDING"
+      "status": "IMPLEMENTED_NATIVE_FIXTURE_VERIFIED"
     },
     {
       "id": "G2-05",
@@ -167,7 +167,7 @@
         "v5/schoolnet/macos_helper.py"
       ],
       "definition_of_done": "비소유 사용자의 변경 요청 거부",
-      "status": "IMPLEMENTED_NATIVE_CI_PENDING"
+      "status": "IMPLEMENTED_NATIVE_FIXTURE_VERIFIED"
     },
     {
       "id": "G3-01",
@@ -183,7 +183,7 @@
         "v5/diagnostics/log_events.py"
       ],
       "definition_of_done": "원문 DNS/IP/계정/SSID 기록 없음",
-      "status": "IMPLEMENTED_NATIVE_CI_PENDING"
+      "status": "IMPLEMENTED_NATIVE_FIXTURE_VERIFIED"
     },
     {
       "id": "G3-02",
@@ -212,7 +212,7 @@
         "v5/selective_smoke.py"
       ],
       "definition_of_done": "무근거 신규 서버/IP 목록 없이 경계 표기",
-      "status": "IMPLEMENTED_NATIVE_CI_PENDING"
+      "status": "PARTIAL_IPV6_VERIFIED_DOH_CACHE_FIELD_PENDING"
     },
     {
       "id": "G4-02",
@@ -240,7 +240,7 @@
         "reference/schoolnet_warp_riot_network_research_2026-11-04.md"
       ],
       "definition_of_done": "MDM/signing/Vanguard/성능 조건 기준으로 채택·기각",
-      "status": "IMPLEMENTED_NATIVE_CI_PENDING"
+      "status": "ARCHITECTURE_DECISION_RECORDED_POC_DEFERRED"
     },
     {
       "id": "G5-01",
@@ -271,7 +271,7 @@
         "v5/windows/qml/Main.qml"
       ],
       "definition_of_done": "SERVICE/ROUTE/WARP/RIOT/GAME 구분",
-      "status": "IMPLEMENTED_NATIVE_CI_PENDING"
+      "status": "IMPLEMENTED_NATIVE_FIXTURE_VERIFIED"
     },
     {
       "id": "G5-03",
@@ -350,7 +350,7 @@
         "v5/windows/build.py"
       ],
       "definition_of_done": "구버전 업그레이드와 서명/복구 결과",
-      "status": "PREVIEW_ONLY_NATIVE_GATES_PENDING"
+      "status": "PREVIEW_PUBLISHED_STABLE_MANUAL_GATES_PENDING"
     },
     {
       "id": "G0-03",
@@ -443,5 +443,6 @@
     }
   ],
   "planning_revision": "v0.2",
-  "implementation_evidence": "../IMPLEMENTATION_STATUS_KO.md"
+  "implementation_evidence": "../IMPLEMENTATION_STATUS_KO.md",
+  "validation_evidence": "../VALIDATION_RESULTS.json"
 }

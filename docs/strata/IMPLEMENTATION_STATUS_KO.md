@@ -40,8 +40,14 @@ Windows CI는 실제 SCM과 별도 fixture 자식의 Job 소유권, 제어 클�
 PYTHONPATH=v5 python -m unittest discover -s v5/tests -v
 ```
 
-현재 로컬: 고정 sing-box 1.12.0까지 지정하여 **183개 전부 PASS, skip 없음**. Windows persistent controller의 Riot timeout 후 명시적 Stop까지 엔진 유지 및 DNS/WARP 복구도 별도 mock 장애 주입으로 확인했습니다. 최종 native CI는 각 OS의 고정 sing-box 1.12.0을 설치하여 실행하며 결과는 release receipt와 CI run에서 확인합니다. CI 패키지·TUN·가짜 SOCKS·서비스 시험은 게임 성공 증거가 아닙니다.
+현재 로컬: 고정 sing-box 1.12.0까지 지정하여 **184개 전부 PASS, skip 없음**. Windows persistent controller의 Riot timeout 후 명시적 Stop까지 엔진 유지 및 DNS/WARP 복구도 별도 mock 장애 주입으로 확인했습니다. 최종 native CI는 각 OS의 고정 sing-box 1.12.0을 설치하여 실행하며 결과는 release receipt와 CI run에서 확인합니다. CI 패키지·TUN·가짜 SOCKS·서비스 시험은 게임 성공 증거가 아닙니다.
 
-Mac CI에서 `getaddrinfo(AF_INET6)`의 시스템 AAAA 응답이 FakeIP가 아닌 경계를 관측했습니다. 실제 선택 DNS listener의 AAAA 응답과 합성 IPv6 TCP→SOCKS 경로는 별도로 검사하며, receipt의 `os_resolver_aaaa_synthetic`와 `os_resolver_aaaa_boundary`에 OS 결과도 보존합니다. 시스템 scope/cache/IPv6 정책의 원인은 아직 미확인입니다. 이를 통계창의 확정 원인으로 처리하거나 Mac의 모든 IPv6 경로가 포착된다고 주장하지 않습니다.
+최종 Mac CI에서 시스템 AAAA 결과는 두 아키텍처 모두 `synthetic_v4_mapped`로 확인했습니다. 초기 검사에서 합성 IPv6 대역만 비교해 실패했으나, IPv4-mapped 합성 주소도 포착 경로라는 점을 분류에 반영했습니다. 최종 receipt의 `os_resolver_aaaa_synthetic=true`와 합성 IPv6 listener→TCP→SOCKS 검사 PASS를 확인했습니다. 이를 DNS 우회/누출이나 실제 통계창의 원인으로 단정하지 않습니다. 앱 DoH·캐시와 실제 기기 조건은 별도 시험 항목입니다.
 
 실기 기록: [MacBook 시험 안내](MACBOOK_TEST_KO.md), [10회 결과 CSV](STRATA_TEST_RESULTS.csv). G6 미검증 항목을 완료로 채우지 않습니다.
+
+## 최종 자동 검증 및 게시
+
+[최종 native CI](https://github.com/hexagon0401/MINER/actions/runs/45146207265)의 Mac arm64/Intel, Windows SCM, Windows 제품 설치본, publisher가 모두 PASS했습니다. [검증 요약](VALIDATION_RESULTS.json)에 공개 GitHub 자산 digest 비교와 보존 파일 SHA 검사를 기록했습니다. Windows 설치본은 58,231,767바이트로 80MB 목표를 충족합니다.
+
+[STRATA Preview 1](https://github.com/hexagon0401/MINER/releases/tag/miner-strata-v2.0.0-preview.1)을 별도 프리릴리스로 게시했습니다. ALPHA 1.2.3은 계속 정식 최신 버전입니다. 실제 MacBook 게임 10회·Windows 11/Vanguard·성능 및 실기 migration gate는 미검증입니다.

@@ -23,7 +23,7 @@ Mac AppleSilicon·Intel DMG, Windows x64 Setup.exe, 플랫폼별 진단 ZIP, SHA
 
 ## 남은 출시 gate
 
-Mac CI에서 시스템 AAAA 응답이 선택 DNS의 합성 주소와 다른 경계를 관측했습니다. 합성 IPv6의 실제 DNS listener·TCP 전송 검사와 시스템 resolver 결과를 분리해 JSON에 남깁니다. MacBook의 IPv6/scope/cache 조건을 추가 확인해야 하며, 모든 Riot 통신이 포착된다고 보증하지 않습니다.
+최종 Mac CI의 시스템 AAAA 응답은 Apple Silicon·Intel 모두 **IPv4-mapped 합성 주소**로 확인했습니다. 합성 IPv6 listener·TCP→SOCKS 검사도 통과했습니다. 초기의 IPv6 대역 단독 비교를 보완했으며, 이 결과를 DNS 누출이나 통계창 원인으로 단정하지 않습니다. 앱 자체 DoH·캐시와 실제 MacBook 조건은 추가 확인이 필요합니다.
 
 - 실제 MacBook LoL 통계창 연속 10회, 장시간 연결·게임 RTT/FPS/CPU/RAM 비교
 - Windows 11·실제 WARP·Riot/Vanguard 호환성
@@ -31,3 +31,5 @@ Mac CI에서 시스템 AAAA 응답이 선택 DNS의 합성 주소와 다른 경�
 - 실제 실패 통계 종단점 식별, DoH·DNS 캐시와 분류 누락의 현장 검증
 
 프리뷰 자동 업데이트와 정식 cask 승격은 보류합니다. 새 프리뷰는 GitHub에서 수동 교체합니다. 기존 설치 식별자와 데이터 경로를 유지하므로 ALPHA와 동시에 실행하지 마세요.
+
+검증: [전체 native CI PASS](https://github.com/hexagon0401/MINER/actions/runs/45146207265) · 고정 엔진 포함 로컬 184개 PASS · Windows 설치 파일 58.2MB · GitHub 자산 SHA-256과 manifest 대조 완료.
