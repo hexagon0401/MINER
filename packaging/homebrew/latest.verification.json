@@ -1,16 +1,16 @@
 {
   "repository": "hexagon0401/MINER",
-  "release_id": 452142965,
-  "tag": "miner-alpha-v1.2.2",
-  "version": "1.2.2",
+  "release_id": 454962795,
+  "tag": "miner-alpha-v1.2.3",
+  "version": "1.2.3",
   "asset_ids": {
-    "release-manifest.json": 769924804,
-    "MINER-ALPHA-v1.2.2-macOS-AppleSilicon.dmg": 769924740,
-    "MINER-ALPHA-v1.2.2-macOS-Intel.dmg": 769924766
+    "release-manifest.json": 781412664,
+    "MINER-ALPHA-v1.2.3-macOS-AppleSilicon.dmg": 781412543,
+    "MINER-ALPHA-v1.2.3-macOS-Intel.dmg": 781412582
   },
   "sha256": {
-    "arm64": "cd718df042a10abdc313644d2ec07bb84a92661fc802fe690787259a3c88a244",
-    "x86_64": "79f0eb95d1f3c3a8eb7eaee7a4920a8ab03ce22c8a9e1a5c84bde97c82cd0f15"
+    "arm64": "6beb02e26b1f2d3794bdace8b2671ec9edde66c545cda889ee2266dccd12d60f",
+    "x86_64": "ea4a7293a1c9b34c1179ced15f6d345963a899e754ccb4439bbb9547ca0731bc"
   },
   "downloads_verified": true
 }
