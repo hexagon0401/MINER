@@ -2,6 +2,16 @@ import Foundation
 import AppKit
 @main struct StrataHealthSmoke {
     @MainActor static func main() throws {
+        let temp=FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        try FileManager.default.createDirectory(at:temp,withIntermediateDirectories:true)
+        defer { try? FileManager.default.removeItem(at:temp) }
+        let installed=temp.appendingPathComponent("MINER.app"),duplicate=temp.appendingPathComponent("MINER 2.app"),alias=temp.appendingPathComponent("volume-alias")
+        try FileManager.default.createDirectory(at:installed,withIntermediateDirectories:true)
+        try FileManager.default.createDirectory(at:duplicate,withIntermediateDirectories:true)
+        try FileManager.default.createSymbolicLink(at:alias,withDestinationURL:installed)
+        assert(MinerInstallation.sameLocation(installed,alias))
+        assert(!MinerInstallation.sameLocation(installed,duplicate))
+        assert(!MinerInstallation.sameLocation(installed,temp.appendingPathComponent("missing")))
         let model=MinerModel();model.engine=true;model.probeRequest="r1";model.probeGeneration=1
         let event:[String:Any]=["event":"component_status","component":"riot_service","status":"FAIL","request_id":"r1","generation":1,"observed_at":Date().timeIntervalSince1970,"ttl_seconds":60,"reason_code":"RIOT_PROBE_FAILED"]
         model.accept(String(data:try JSONSerialization.data(withJSONObject:event),encoding:.utf8)!)

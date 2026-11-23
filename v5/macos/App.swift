@@ -35,6 +35,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     var operationReadOnly=false
     var stopPending=false
     var quitPending=false
+    var installationHandoffCompleted=false
     let operationTokenKey="MINER.operationCancellation"
     let resources = Bundle.main.resourceURL!
     let dataDirectory = FileManager.default.homeDirectoryForCurrentUser
@@ -43,6 +44,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     var engine: String { resources.appendingPathComponent("bin/sing-box").path }
 
     func applicationDidFinishLaunching(_ notification: Notification) {
+        StartupTrace.record("did_finish_launching")
         window = NSWindow(contentRect: NSRect(x:0,y:0,width:560,height:610), styleMask:[.titled,.closable,.miniaturizable,.resizable], backing:.buffered, defer:false)
         window.title = "MINER"
         window.titleVisibility = .hidden
@@ -80,6 +82,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         NSApp.mainMenu = menu
         window.makeKeyAndOrderFront(nil)
         NSApp.activate(ignoringOtherApps: true)
+        StartupTrace.record("window_presented")
+        DispatchQueue.main.async { StartupTrace.record("event_loop_ready") }
         if let index = CommandLine.arguments.firstIndex(of:"--ui-smoke"), CommandLine.arguments.count > index+2 {
             runDeltaSmoke(output:URL(fileURLWithPath:CommandLine.arguments[index+1]),arch:CommandLine.arguments[index+2])
             return
@@ -102,7 +106,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         let stop=tray.addItem(withTitle:"연결 종료 / Stop",action:#selector(stop),keyEquivalent:"");stop.target=self
         let quit=tray.addItem(withTitle:"종료 / Quit",action:#selector(NSApplication.terminate(_:)),keyEquivalent:"");quit.target=NSApp
         statusItem?.menu=tray
-        append("MINER STRATA 2.0.0 Preview 1: 게임 중에도 연결을 유지하세요. 실제 통계창 복귀는 시험이 필요합니다.")
+        append("MINER "+(Bundle.main.object(forInfoDictionaryKey:"MINERDisplayVersion") as? String ?? "STRATA Preview")+": 게임 중에도 연결을 유지하세요. 실제 통계창 복귀는 시험이 필요합니다.")
         refresh()
         DispatchQueue.main.asyncAfter(deadline:.now()+4) { if self.model.autoUpdates { self.checkUpdate() } }
         updateTimer=Timer.scheduledTimer(withTimeInterval:21600,repeats:true) { _ in if self.model.autoUpdates { self.checkUpdate() } }
@@ -110,7 +114,30 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         NSWorkspace.shared.notificationCenter.addObserver(forName:NSWorkspace.didWakeNotification,object:nil,queue:.main) { [weak self] _ in self?.checkSessionHealth() }
     }
 
-    @objc func showMainWindow() { window.makeKeyAndOrderFront(nil);NSApp.activate(ignoringOtherApps:true) }
+    @objc func showMainWindow() { guard let window=window else { return };window.makeKeyAndOrderFront(nil);NSApp.activate(ignoringOtherApps:true) }
+    func applicationShouldHandleReopen(_ sender:NSApplication,hasVisibleWindows flag:Bool) -> Bool {
+        StartupTrace.record("reopen_received");guard let window=window else { return false };window.deminiaturize(nil);showMainWindow();return true
+    }
+    @objc func openInstalledApplication() {
+        guard !busy && !running && !managedWarp else { return }
+        guard !CommandLine.arguments.contains("--installed-handoff"),MinerInstallation.compatibleInstalledBundle() != nil else {
+            model.phase="error"
+            model.error=model.tr("Applications의 MINER.app과 실행 중인 복사본의 버전이 다르거나 실행 경로가 임시 경로입니다. 앱을 종료하고 /Applications/MINER.app을 Finder에서 다시 여세요.","The installed copy differs or is still translocated. Quit and reopen /Applications/MINER.app in Finder.")
+            return
+        }
+        setBusy(true);model.phase="opening_installed"
+        let configuration=NSWorkspace.OpenConfiguration();configuration.createsNewApplicationInstance=true
+        configuration.activates=true;configuration.arguments=["--installed-handoff"]
+        NSWorkspace.shared.openApplication(at:MinerInstallation.installedURL,configuration:configuration) { application,error in
+            DispatchQueue.main.async {
+                self.setBusy(false)
+                guard application != nil,error == nil else {
+                    self.model.phase="error";self.model.error=self.model.redact(error?.localizedDescription ?? "Installed MINER could not open");return
+                }
+                StartupTrace.record("installed_handoff_completed");self.installationHandoffCompleted=true;NSApp.terminate(nil)
+            }
+        }
+    }
     func append(_ text: String) {
         model.logs += model.redact(text) + "\n"
         if model.logs.count > 64000 { model.logs = String(model.logs.suffix(64000)) }
@@ -287,8 +314,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
     @objc func start() {
         guard !busy && !model.updateInstalling && !running else { return }
-        guard Bundle.main.bundleURL.path == "/Applications/MINER.app" else {
-            model.phase="error";model.error=model.tr("DMG에서 앱을 Applications로 복사한 뒤 실행하세요.","Copy MINER from the DMG to Applications before starting."); return
+        guard MinerInstallation.isInstalled() else {
+            StartupTrace.record("installation_check_rejected")
+            if !managedWarp && MinerInstallation.compatibleInstalledBundle() != nil && !CommandLine.arguments.contains("--installed-handoff") {
+                openInstalledApplication();return
+            }
+            model.phase="error"
+            model.error=model.tr("실행 위치: ","Running from: ")+model.redact(Bundle.main.bundleURL.path)+model.tr(" · /Applications/MINER.app을 다시 열어주세요. 사용자 Applications 폴더와 DMG 실행은 설치본과 다릅니다."," · Reopen /Applications/MINER.app. Home Applications and mounted DMG copies are different locations.");return
         }
         engineStoppedConfirmed=false; model.phase = "cli_check"; model.completed = 0; model.error = ""
         operation({
@@ -480,7 +512,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             return result
         }, completion: {
             self.running = false; self.managedWarp = false
-            guard Bundle.main.bundleURL.path == "/Applications/MINER.app" else { return }
+            guard MinerInstallation.isInstalled() else { return }
             NSWorkspace.shared.recycle([Bundle.main.bundleURL]) { _, error in
                 DispatchQueue.main.async {
                     if let error = error { self.append("서비스 제거 완료. 앱은 Finder에서 제거하세요: " + error.localizedDescription) }
@@ -491,6 +523,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
     func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool { false }
     func applicationShouldTerminate(_ sender: NSApplication) -> NSApplication.TerminateReply {
+        if installationHandoffCompleted && !running && !managedWarp { return .terminateNow }
         if model.updateInstalling { return .terminateCancel }
         if busy {
             quitPending=true
@@ -525,11 +558,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 #if !STRATA_HEALTH_TESTS
 @main struct MinerApplication {
     @MainActor static func main() {
+        StartupTrace.record("process_started")
         let app = NSApplication.shared
         let delegate = AppDelegate()
         app.delegate = delegate
         app.setActivationPolicy(.regular)
-        app.run()
+        StartupTrace.record("delegate_retained")
+        withExtendedLifetime(delegate) { app.run() }
     }
 }
 
