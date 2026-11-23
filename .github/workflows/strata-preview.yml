@@ -12,6 +12,40 @@ concurrency:
   group: miner-strata-preview
   cancel-in-progress: false
 jobs:
+  windows-scm:
+    runs-on: windows-2025
+    timeout-minutes: 12
+    env:
+      PYTHONUTF8: '1'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install pyinstaller==6.22.3 pywin32==311
+      - name: Fast isolated SCM and lifetime gates
+        working-directory: v5
+        shell: python
+        run: |
+          import os,sys,subprocess,json
+          from pathlib import Path
+          root=Path(os.environ['ProgramFiles'])/'MINER-SCM-CI';root.mkdir()
+          work=Path(os.environ['RUNNER_TEMP'])/'strata-scm-fast';work.mkdir()
+          entry=work/'service-entry.py'
+          entry.write_text("import sys\nfrom windows.strata_service import host,install,maintenance\nif '--strata-service' in sys.argv: host()\nelif '--strata-install' in sys.argv: install()\nelif '--strata-maintenance' in sys.argv: maintenance('--remove-service' in sys.argv)\nelse: raise SystemExit(2)\n")
+          subprocess.run([sys.executable,'-m','PyInstaller','--noconfirm','--clean','--onedir','--console','--name','MINER','--paths',str(Path.cwd()),'--hidden-import','win32timezone','--distpath',str(root),'--workpath',str(work/'build'),'--specpath',str(work),str(entry)],check=True,timeout=300)
+          from windows.service_smoke import run
+          from windows.service_lifetime_smoke import run as lifetime
+          report={'packaged_boundary':run(root/'MINER/MINER.exe'),'lifetime':lifetime(root,work)}
+          print(json.dumps(report),flush=True)
+      - name: Annotate native failure
+        if: failure()
+        shell: python
+        run: |
+          import os
+          from pathlib import Path
+          for p in (Path(os.environ['LOCALAPPDATA'])/'MINER/Beta1/startup-error.log',Path(os.environ['SystemRoot'])/'System32/config/systemprofile/AppData/Local/MINER/Beta1/startup-error.log'):
+              if p.exists():print('::error::'+p.read_text(errors='replace')[-4000:].replace('%','%25').replace('\n','%0A'))
   macos:
     strategy:
       fail-fast: false
@@ -85,6 +119,7 @@ jobs:
             ${{ runner.temp }}/strata-release-*.log
             ${{ runner.temp }}/miner-ui-${{ matrix.arch }}*
   windows:
+    needs: windows-scm
     runs-on: windows-2025
     timeout-minutes: 45
     env:
@@ -133,7 +168,7 @@ jobs:
             ${{ runner.temp }}/strata-release-build-windows.log
             ${{ runner.temp }}/miner-windows-diagnostics/**
   publish:
-    needs: [macos, windows]
+    needs: [macos, windows, windows-scm]
     runs-on: ubuntu-latest
     permissions:
       contents: write
