@@ -123,7 +123,9 @@ def install_runtime(base, resources, profile):
 
 
 def prepare(resources, profile_dir):
-    if resources is None or resources.resolve() != APP_RESOURCES:
+    try:installed=resources is not None and resources.samefile(APP_RESOURCES)
+    except (OSError,ValueError):installed=False
+    if not installed:
         raise ValueError("Install MINER.app in /Applications before starting")
     if profile_dir is None:
         raise ValueError("missing user profile")

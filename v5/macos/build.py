@@ -16,7 +16,7 @@ import urllib.request
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 from install_engine import install
-from schoolnet import __version__, __release_version__
+from schoolnet import __version__, __release_version__, __preview_revision__
 from icon_assets import bundle_icon, install_macos_icon, macos_icon_info
 from macos.signing import developer_identity, notarize, sign_app, validate_notary_credentials
 
@@ -74,7 +74,7 @@ def build(expected_arch, signing="adhoc", identity=None, notary_profile=None, dm
     execute(*packager, ROOT / "main.py")
     execute("xcrun", "swiftc", "-swift-version", "5", "-parse-as-library", "-O", "-framework", "AppKit", "-framework", "SwiftUI",
             "-target", f"{arch}-apple-macosx13.0", ROOT / "macos" / "App.swift",
-            ROOT / "macos" / "CommandRunner.swift", ROOT / "macos" / "MinerUI.swift", ROOT / "macos" / "DeltaUI.swift",
+            ROOT / "macos" / "CommandRunner.swift", ROOT / "macos" / "AppLifecycle.swift", ROOT / "macos" / "MinerUI.swift", ROOT / "macos" / "DeltaUI.swift",
             ROOT / "macos" / "DeltaSmoke.swift", ROOT / "macos" / "DeveloperAbout.swift", "-o", contents / "MacOS" / "MINER")
     ui_assets = resources / "UIAssets"
     ui_assets.mkdir()
@@ -98,7 +98,8 @@ def build(expected_arch, signing="adhoc", identity=None, notary_profile=None, dm
         "CFBundleName": "MINER", "CFBundleDisplayName": "MINER", "CFBundleIconFile": "AppIcon",
         "CFBundleIdentifier": "org.schoolnet.v5.alpha", "CFBundleExecutable": "MINER",
         "CFBundlePackageType": "APPL", "CFBundleShortVersionString": __release_version__,
-        "CFBundleVersion": "5020001", "SchoolNetReleaseVersion": __version__, "MINERPublicReleaseVersion": __release_version__, "MINERPreview": True,
+        "CFBundleVersion": "502000"+str(__preview_revision__), "SchoolNetReleaseVersion": __version__, "MINERPublicReleaseVersion": __release_version__, "MINERPreview": True,
+        "MINERDisplayVersion": f"STRATA {__release_version__} Preview {__preview_revision__}",
         "LSMinimumSystemVersion": "13.0", "NSHighResolutionCapable": True,
     }
     info.update(macos_icon_info(icon))
@@ -165,7 +166,7 @@ def build(expected_arch, signing="adhoc", identity=None, notary_profile=None, dm
     (stage / "Applications").symlink_to("/Applications")
     output = ROOT / "dist"
     output.mkdir(exist_ok=True)
-    name = f"MINER-STRATA-v{__release_version__}-preview.1-macOS-{'AppleSilicon' if arch == 'arm64' else 'Intel'}.dmg"
+    name = f"MINER-STRATA-v{__release_version__}-preview.{__preview_revision__}-macOS-{'AppleSilicon' if arch == 'arm64' else 'Intel'}.dmg"
     dmg = output / name
     if dmg.exists():
         raise ValueError(f"output already exists: {dmg}")

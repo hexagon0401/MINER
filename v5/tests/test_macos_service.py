@@ -104,6 +104,23 @@ class ServiceTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "/Applications"):
             service.prepare(Path("/Volumes/SchoolNet/SchoolNet v5 Alpha.app/Contents/Resources"), Path("/tmp/profile"))
 
+    def test_canonical_installed_alias_reaches_profile_validation(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root=Path(directory);installed=root/'Applications/MINER.app/Contents/Resources';installed.mkdir(parents=True)
+            alias=root/'volume-alias';alias.symlink_to(installed,target_is_directory=True)
+            with patch.object(service,'APP_RESOURCES',installed),patch.object(service,'load_profile',side_effect=ValueError('profile validation reached')) as profile,patch.object(service,'doctor') as doctor:
+                with self.assertRaisesRegex(ValueError,'profile validation reached'):service.prepare(alias,root/'profile')
+                profile.assert_called_once();doctor.assert_not_called()
+
+    def test_different_copy_and_missing_install_never_reach_privileged_preparation(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root=Path(directory);installed=root/'Applications/MINER.app/Contents/Resources';installed.mkdir(parents=True)
+            duplicate=root/'Downloads/MINER.app/Contents/Resources';duplicate.mkdir(parents=True)
+            with patch.object(service,'APP_RESOURCES',installed),patch.object(service,'load_profile') as profile,patch.object(service,'doctor') as doctor:
+                for path in (duplicate,root/'AppTranslocation/missing',None):
+                    with self.subTest(path=path),self.assertRaisesRegex(ValueError,'/Applications'):service.prepare(path,root/'profile')
+                profile.assert_not_called();doctor.assert_not_called()
+
 
 if __name__ == "__main__":
     unittest.main()

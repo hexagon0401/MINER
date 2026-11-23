@@ -1,4 +1,4 @@
-# STRATA Preview 1 — 사용자 MacBook 시험
+# STRATA Preview 2 — 사용자 MacBook 시험
 
 이 패키지는 정식 2.0.0이 아닙니다. 실제 WARP·학교망·LoL 통계창의 해결 여부는 아직 미검증입니다. 설치 전에 기존 ALPHA 1.2.3 DMG와 설정을 보관하세요. ALPHA와 STRATA를 동시에 실행하지 마세요.
 
