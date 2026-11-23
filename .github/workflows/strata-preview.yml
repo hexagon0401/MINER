@@ -113,6 +113,14 @@ jobs:
       - name: Annotate failure diagnostics
         if: failure()
         run: python automation/packaging/icons/annotate_failure.py
+      - name: Annotate packaged UI failure
+        if: failure()
+        shell: python
+        run: |
+          import os
+          from pathlib import Path
+          for p in (Path(os.environ['RUNNER_TEMP'])/'miner-windows-diagnostics').rglob('*error.log'):
+              print('::error::'+(str(p)+'\n'+p.read_text(errors='replace')[-4000:]).replace('%','%25').replace('\n','%0A'))
       - uses: actions/upload-artifact@v4
         if: always()
         with:
@@ -124,3 +132,25 @@ jobs:
             source/v5/dist-windows/*.verification.json
             ${{ runner.temp }}/strata-release-build-windows.log
             ${{ runner.temp }}/miner-windows-diagnostics/**
+  publish:
+    needs: [macos, windows]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      actions: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: strata-release-*
+          path: platform-assets
+      - name: Validate all native receipts
+        run: python3 packaging/strata-preview/assemble.py platform-assets release-assets
+      - name: Publish isolated STRATA preview
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          gh release create miner-strata-v2.0.0-preview.1 --target "$GITHUB_SHA" --draft --prerelease --title 'MINER STRATA 2.0.0 Preview 1' --notes-file packaging/strata-preview/RELEASE_NOTES.md
+          gh release upload miner-strata-v2.0.0-preview.1 release-assets/* docs/strata/MACBOOK_TEST_KO.md docs/strata/STRATA_TEST_RESULTS.csv
+          gh release edit miner-strata-v2.0.0-preview.1 --draft=false --prerelease=true --latest=false

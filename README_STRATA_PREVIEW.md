@@ -74,3 +74,9 @@ Connection Supervisor (planned)
 ---
 
 <sub>MINER STRATA 2.0.0 · README design preview · 2026-11-23</sub>
+
+## Preview 1 시험판
+
+[STRATA Preview 1 다운로드](https://github.com/hexagon0401/MINER/releases/tag/miner-strata-v2.0.0-preview.1) · [MacBook 시험 안내](docs/strata/MACBOOK_TEST_KO.md) · [구현/미검증 범위](docs/strata/IMPLEMENTATION_STATUS_KO.md)
+
+정식 ALPHA와 Homebrew는 유지합니다. 통계창 10회와 Windows 11/Vanguard·실측 성능은 아직 미검증입니다. 프리뷰는 수동 설치하며 ALPHA와 동시에 실행하지 마세요.
