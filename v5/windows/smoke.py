@@ -81,7 +81,10 @@ def run(output):
         def metadata(*args):
             release.wait(timeout=2)
             return {'available':False,'version':'1.2.0'}
-        with patch('schoolnet.updates.check',side_effect=metadata):
+        with patch('schoolnet.updates.check') as check:
+            b.testing=False;b.checkUpdate();assert not b.update_busy;check.assert_not_called();b.testing=True
+        checks.append('STRATA preview does not query or automatically install the stable channel')
+        with patch('schoolnet.__preview__',False),patch('schoolnet.updates.check',side_effect=metadata):
             b.testing=False;b.checkUpdate()
             try:
                 assert b.update_busy and b.state['canStart']
