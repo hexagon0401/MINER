@@ -1,0 +1,81 @@
+name: MINER standalone local diagnostics v1
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: miner-diagnostics-v1
+  cancel-in-progress: false
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runner: macos-26
+            platform: macOS-AppleSilicon
+          - runner: macos-15-intel
+            platform: macOS-Intel
+          - runner: windows-2025
+            platform: Windows-x64
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 15
+    env:
+      PYTHONUTF8: '1'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install pyinstaller==6.22.3 certifi==2026.10.23
+      - name: Privacy and restoration regression tests
+        working-directory: v5
+        run: |
+          python -m unittest discover -s tests -p test_diagnostics.py -v
+          python -m unittest discover -s tests -p test_warp.py -v
+      - name: Package and execute standalone read-only recorder
+        working-directory: v5
+        shell: bash
+        run: |
+          set -o pipefail
+          python diagnostics/build.py 2>&1 | tee "$RUNNER_TEMP/diagnostics-release-build.log"
+      - name: Bounded failure diagnostics
+        if: failure()
+        run: python packaging/icons/annotate_failure.py
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: diagnostics-v1-${{ matrix.platform }}
+          path: v5/dist-diagnostics/*
+  publish:
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: diagnostics-v1-*
+          merge-multiple: true
+          path: diagnostics-assets
+      - name: Verify all native receipts
+        run: |
+          python3 - <<'PY'
+          import hashlib,json,os
+          from pathlib import Path
+          for kind in ['macOS-AppleSilicon','macOS-Intel','Windows-x64']:
+              p=Path('diagnostics-assets')/f'MINER-Diagnostics-v1.0.0-{kind}.zip'
+              d=json.loads(p.with_suffix('.zip.verification.json').read_text())
+              assert d['ok'] and d['packaged_recorder_executed'] and d['read_only_report_verified']
+              assert d['source_commit']==os.environ['GITHUB_SHA']
+              assert d['sha256']==hashlib.sha256(p.read_bytes()).hexdigest()
+          PY
+      - name: Publish separate diagnostics prerelease, preserving stable MINER and Homebrew
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          gh release create miner-diagnostics-v1.0.0 --target "$GITHUB_SHA" --draft --prerelease --title 'MINER Local Diagnostics v1.0.0' --notes-file v5/diagnostics/RELEASE_NOTES.md
+          gh release upload miner-diagnostics-v1.0.0 diagnostics-assets/*
+          gh release edit miner-diagnostics-v1.0.0 --draft=false --prerelease=true --latest=false
