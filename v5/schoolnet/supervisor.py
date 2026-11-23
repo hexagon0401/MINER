@@ -22,7 +22,14 @@ class Supervisor:
             if generation is not None and generation!=self.generation:return
             value=replace(value,request_id=self.session_id,generation=self.generation)
             old=self.components.get(value.component)
-            if old and value.observed_at<=old['observed_at']:return
+            if old and value.observed_at<old['observed_at']:return
+            if old and value.observed_at==old['observed_at']:
+                # Windows Python 3.12 can report consecutive wall timestamps in
+                # one clock tick. Wait for a real tick; never invent future UTC.
+                deadline=time.monotonic()+.05
+                while time.time()<=old['observed_at'] and time.monotonic()<deadline:time.sleep(.001)
+                if time.time()<=old['observed_at']:return
+                value=replace(value,observed_at=time.time())
             self.components[value.component]=value.event()
     def phase(self,phase,count):
         with self.lock:
