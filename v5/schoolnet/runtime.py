@@ -162,7 +162,7 @@ def run(directory, engine="sing-box", warp_cli=None, managed_helper=False):
             engine_log=None
             if managed_helper:
                 from .engine_log import EngineLog
-                engine_log=EngineLog(child.stdout,directory/'engine-runtime.log')
+                engine_log=EngineLog(child.stdout,directory.parent/'engine-runtime.log')
             previous={};stop_deadline=None
             def stop(signum,frame):
                 nonlocal stop_deadline

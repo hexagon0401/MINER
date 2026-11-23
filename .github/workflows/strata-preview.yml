@@ -27,7 +27,8 @@ jobs:
         working-directory: v5
         shell: python
         run: |
-          import os,sys,subprocess,json
+          import os,sys,subprocess,json,traceback
+          sys.excepthook=lambda *exc: print('::error::'+''.join(traceback.format_exception(*exc))[-5000:].replace('%','%25').replace('\n','%0A'))
           from pathlib import Path
           root=Path(os.environ['ProgramFiles'])/'MINER-SCM-CI';root.mkdir()
           work=Path(os.environ['RUNNER_TEMP'])/'strata-scm-fast';work.mkdir()

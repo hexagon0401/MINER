@@ -114,7 +114,9 @@ def host(backend_factory=Backend):
             if old['unfinished']:self.actor.state='RECOVERY_REQUIRED';self.actor.reason='PREVIOUS_SESSION_UNFINISHED'
             security=pywintypes.SECURITY_ATTRIBUTES()
             security.SECURITY_DESCRIPTOR=win32security.ConvertStringSecurityDescriptorToSecurityDescriptor('D:P(A;;GA;;;SY)(A;;GA;;;'+owner+')',1)
-            handle=win32pipe.CreateNamedPipe(PIPE,3|0x00080000,4|2|1,1,65536,65536,3000,security)
+            # Blocking accept has unambiguous connection semantics. SvcStop's
+            # local dummy client wakes it. Only reads/writes use bounded NOWAIT.
+            handle=win32pipe.CreateNamedPipe(PIPE,3|0x00080000,4|2|8,1,65536,65536,3000,security)
             try:
                 while not self.quit.is_set():
                     connected=False
@@ -127,6 +129,7 @@ def host(backend_factory=Backend):
                                 except pywintypes.error:pass
                                 time.sleep(.05);continue
                         connected=True
+                        win32pipe.SetNamedPipeHandleState(handle,2|1,None,None)
                         deadline=time.monotonic()+3;data=None
                         while not self.quit.is_set() and time.monotonic()<deadline:
                             try:data=win32file.ReadFile(handle,16384)[1];break
@@ -157,6 +160,7 @@ def host(backend_factory=Backend):
                         if connected:
                             try:win32pipe.DisconnectNamedPipe(handle)
                             except pywintypes.error:pass
+                            win32pipe.SetNamedPipeHandleState(handle,2,None,None)
             finally:handle.Close()
             if self.actor.worker:self.actor.worker.join(65)
     servicemanager.Initialize();servicemanager.PrepareToHostSingle(Service);servicemanager.StartServiceCtrlDispatcher()
@@ -179,7 +183,7 @@ def request(operation,generation=0,profile=None):
         while True:
             try:data=win32file.ReadFile(handle,65536)[1];break
             except pywintypes.error as exc:
-                if exc.winerror!=232:raise
+                if exc.winerror not in (232,233,536):raise
                 if time.monotonic()>=deadline:raise TimeoutError('Service response deadline')
                 time.sleep(.05)
         response=json.loads(data)

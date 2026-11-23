@@ -28,6 +28,7 @@ class EngineLog:
                     if self.path.is_symlink() or previous.is_symlink():raise ValueError('Log path is a link')
                     if self.path.exists() and self.path.stat().st_size+len(encoded)>self.limit:os.replace(self.path,previous)
                     with self.path.open('ab') as output:output.write(encoded)
+                    if os.name!='nt':self.path.chmod(0o644)  # Sanitized categories readable by the non-root diagnostic recorder.
         except Exception as exc:self.error=type(exc).__name__
         finally:self.stream.close()
     def finish(self):
