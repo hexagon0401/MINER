@@ -5,7 +5,7 @@ import time
 
 def run(executable):
     import win32serviceutil,win32service
-    from windows.strata_service import NAME,request
+    from windows.strata_service import NAME,request,service_pid
     try:subprocess.run([str(executable),'--strata-install'],check=True,timeout=45)
     except Exception:
         import os
@@ -23,10 +23,10 @@ def run(executable):
         states=[request('status') for _ in range(4)]
         assert all(value['state']=='STOPPED' and value['statistics_verified'] is False for value in states)
         # Authorized client detaches; a new client attaches to the same service.
-        process=win32serviceutil.QueryServiceStatusEx(NAME)['ProcessId']
+        process=service_pid()
         assert process>0
         assert request('status')['generation']==states[0]['generation']
-        assert win32serviceutil.QueryServiceStatusEx(NAME)['ProcessId']==process
+        assert service_pid()==process
         request('prepare_update',states[0]['generation'])
         return {'scm_installed_host_executed':True,'owner_pipe_authenticated':True,
                 'server_process_verified':True,'reattach_same_service':True,

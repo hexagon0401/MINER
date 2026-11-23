@@ -20,6 +20,14 @@ def session_id():
     value=ctypes.c_ulong()
     if not ctypes.windll.kernel32.ProcessIdToSessionId(os.getpid(),ctypes.byref(value)):raise ctypes.WinError()
     return value.value
+def service_pid():
+    import win32service
+    manager=win32service.OpenSCManager(None,None,win32service.SC_MANAGER_CONNECT)
+    try:
+        service=win32service.OpenService(manager,NAME,win32service.SERVICE_QUERY_STATUS)
+        try:return win32service.QueryServiceStatusEx(service)['ProcessId']
+        finally:win32service.CloseServiceHandle(service)
+    finally:win32service.CloseServiceHandle(manager)
 def config():
     p=root()/'strata-service.json'
     if p.is_symlink():raise ValueError('Invalid service config')
@@ -164,7 +172,7 @@ def request(operation,generation=0,profile=None):
         identify=ctypes.windll.kernel32.GetNamedPipeServerProcessId
         identify.argtypes=[ctypes.c_void_p,ctypes.POINTER(ctypes.c_ulong)];identify.restype=ctypes.c_int
         if not identify(int(handle),ctypes.byref(server)):raise ctypes.WinError()
-        if server.value!=win32serviceutil.QueryServiceStatusEx(NAME)['ProcessId']:raise ValueError('Untrusted service endpoint')
+        if server.value!=service_pid():raise ValueError('Untrusted service endpoint')
         win32pipe.SetNamedPipeHandleState(handle,2|1,None,None)
         win32file.WriteFile(handle,json.dumps(message).encode())
         deadline=time.monotonic()+12

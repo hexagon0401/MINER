@@ -21,7 +21,7 @@ def until(check,timeout=15):
 
 def run(installation,work):
     import win32api,win32con,win32security,win32net,win32netcon,win32serviceutil,win32service,pywintypes
-    from windows.strata_service import NAME,root,request
+    from windows.strata_service import NAME,root,request,service_pid
     base=Path(__file__).resolve().parents[1]
     subprocess.run([sys.executable,'-m','PyInstaller','--noconfirm','--clean','--onedir','--console','--name','MINER-SCM-Fixture',
         '--hidden-import','win32timezone','--paths',str(base),'--distpath',str(installation/'SCMFixture'),
@@ -41,7 +41,7 @@ def run(installation,work):
         child=win32api.OpenProcess(win32con.SYNCHRONIZE,False,proof['child'])
         import win32event
         assert win32event.WaitForSingleObject(child,0)==win32con.WAIT_TIMEOUT
-        assert proof['service']==win32serviceutil.QueryServiceStatusEx(NAME)['ProcessId']
+        assert proof['service']==service_pid()
         # Real nonowner kernel token; the pipe ACL must reject access.
         win32net.NetUserAdd(None,1,{'name':username,'password':'A!'+secrets.token_urlsafe(24),'priv':win32netcon.USER_PRIV_USER,
             'home_dir':None,'comment':'Disposable MINER CI peer','flags':win32netcon.UF_SCRIPT,'script_path':None})
