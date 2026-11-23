@@ -84,6 +84,8 @@ def host(backend_factory=Backend):
     from schoolnet.lease_owner import Ownership
     class Service(win32serviceutil.ServiceFramework):
         _svc_name_=NAME;_svc_display_name_='MINER STRATA Connection Service'
+        def __init__(self,args):
+            self.quit=threading.Event();super().__init__(args)
         def GetAcceptedControls(self):
             return super().GetAcceptedControls() | win32service.SERVICE_ACCEPT_SESSIONCHANGE
         def SvcOtherEx(self,control,event_type,data):
@@ -99,7 +101,7 @@ def host(backend_factory=Backend):
             except Exception:pass
         def SvcDoRun(self):
             ctypes.windll.kernel32.AllocConsole()
-            self.quit=threading.Event();owner=config()['owner'];record=Ownership(root()/'strata-owner.json',owner);old=record.read()
+            owner=config()['owner'];record=Ownership(root()/'strata-owner.json',owner);old=record.read()
             self.actor=Supervisor(owner,backend_factory(),record.save,old['generation'])
             if old['unfinished']:self.actor.state='RECOVERY_REQUIRED';self.actor.reason='PREVIOUS_SESSION_UNFINISHED'
             security=pywintypes.SECURITY_ATTRIBUTES()
@@ -133,6 +135,15 @@ def host(backend_factory=Backend):
                         try:response={'ok':True,'status':self.actor.request(json.loads(data),peer)}
                         except (ValueError,TypeError,KeyError):response={'ok':False,'error':'REQUEST_REJECTED'}
                         win32file.WriteFile(handle,json.dumps(response).encode())
+                        # DisconnectNamedPipe discards unread output. Wait for a
+                        # client ACK after its read, with a bounded deadline;
+                        # FlushFileBuffers would block forever for a stuck peer.
+                        deadline=time.monotonic()+3
+                        while not self.quit.is_set() and time.monotonic()<deadline:
+                            try:win32file.ReadFile(handle,32);break
+                            except pywintypes.error as exc:
+                                if exc.winerror!=232:raise
+                                time.sleep(.01)
                     except (pywintypes.error,ValueError):pass
                     finally:
                         if connected:
@@ -164,6 +175,7 @@ def request(operation,generation=0,profile=None):
                 if time.monotonic()>=deadline:raise TimeoutError('Service response deadline')
                 time.sleep(.05)
         response=json.loads(data)
+        win32file.WriteFile(handle,b'ACK')
         if not response.get('ok'):raise ValueError(response.get('error','SERVICE_ERROR'))
         return response['status']
     finally:handle.Close()

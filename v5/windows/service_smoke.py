@@ -6,7 +6,15 @@ import time
 def run(executable):
     import win32serviceutil,win32service
     from windows.strata_service import NAME,request
-    subprocess.run([str(executable),'--strata-install'],check=True,timeout=45)
+    try:subprocess.run([str(executable),'--strata-install'],check=True,timeout=45)
+    except Exception:
+        import os
+        from pathlib import Path
+        paths=[Path(os.environ['LOCALAPPDATA'])/'MINER/Beta1/startup-error.log',
+               Path(os.environ['SystemRoot'])/'System32/config/systemprofile/AppData/Local/MINER/Beta1/startup-error.log']
+        for path in paths:
+            if path.exists():print('SCM startup diagnostic: '+path.read_text(errors='replace')[-3500:],flush=True)
+        raise
     try:
         deadline=time.monotonic()+15
         while win32serviceutil.QueryServiceStatus(NAME)[1]!=win32service.SERVICE_RUNNING:
