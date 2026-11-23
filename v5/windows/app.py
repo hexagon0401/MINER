@@ -9,10 +9,11 @@ import webbrowser
 
 from PySide6.QtCore import QObject, Property, QThread, Signal, Slot, QUrl, Qt, QTimer
 from PySide6.QtGui import QGuiApplication, QFont, QFontDatabase, QIcon
+from PySide6.QtWidgets import QApplication as QGuiApplication, QSystemTrayIcon, QMenu
 from PySide6.QtQml import QQmlApplicationEngine
 from PySide6.QtQuick import QQuickWindow, QSGRendererInterface
 from PySide6.QtQuickControls2 import QQuickStyle
-from windows.controller import session
+from windows.service_client import session
 from schoolnet.health_model import HealthState,Observation
 from windows.platform_ui import WORDS, windows_appearance
 from windows.version import LABEL
@@ -25,10 +26,10 @@ DATA=Path(os.environ.get('LOCALAPPDATA',str(Path.home())))/'MINER'/'Beta1'
 
 class Worker(QThread):
     observation=Signal(object);progress=Signal(str,int);failed=Signal(str)
-    def __init__(self,restore=False):
-        super().__init__();self.stop_event=threading.Event();self.emergency_event=threading.Event();self.restore=restore
+    def __init__(self,restore=False,attach=False):
+        super().__init__();self.stop_event=threading.Event();self.emergency_event=threading.Event();self.restore=restore;self.attach=attach
     def run(self):
-        try:session(DATA,ROOT/'engine/sing-box.exe',self.stop_event,lambda p,c:self.progress.emit(p,c),self.restore,self.emergency_event,lambda event:self.observation.emit(event))
+        try:session(DATA,ROOT/'engine/sing-box.exe',self.stop_event,lambda p,c:self.progress.emit(p,c),self.restore,self.emergency_event,lambda event:self.observation.emit(event),attach_only=self.attach)
         except Exception as exc:self.failed.emit(str(exc))
 
 
@@ -107,11 +108,13 @@ class Bridge(QObject):
     def begin(self):
         if not self.state['canStart'] or self.testing:return
         self.startup_blocked=False;self.dirty=True;self.detail='';self.phase='cli_check';self.count=0;self.effect.emit('start');self.launch(False)
-    def launch(self,restore):
+    def launch(self,restore,attach=False):
         if self.worker and self.worker.isRunning():return
-        self.worker=Worker(restore);self.worker.progress.connect(self.update_state)
+        self.worker=Worker(restore,attach);self.worker.progress.connect(self.update_state)
         self.worker.observation.connect(self.component_state);self.worker.failed.connect(self.failure);self.worker.finished.connect(self.finished)
         self.worker.start();self.changed.emit()
+    def attachService(self):
+        self.launch(False,True)
     def component_state(self,event):
         try:
             observation=Observation(**{key:event[key] for key in Observation.__dataclass_fields__})
@@ -126,6 +129,8 @@ class Bridge(QObject):
         if self.worker and self.worker.stop_event.is_set() and phase not in ('restored','disconnected'):
             phase='disconnecting' if self.worker.emergency_event.is_set() else 'restoring';count=0
         previous=self.phase;self.detail='';self.phase=phase;self.count=count
+        if phase in ('engine_start','running','connection_warning','error'):self.dirty=True
+        elif phase=='idle':self.dirty=False
         if phase=='disconnected':self.dirty=False;self.pending_kill=False
         elif phase=='restored':
             if self.pending_kill:self.phase='disconnecting'
@@ -153,8 +158,7 @@ class Bridge(QObject):
         if self.testing:return True
         if self.installing_update:return False
         if self.dirty or (self.worker and self.worker.isRunning()):
-            self.closing=True
-            if self.phase not in ('restoring','disconnecting'):self.end()
+            if hasattr(self,'window'):self.window.hide()
             return False
         return True
     @Slot(str)
@@ -309,13 +313,25 @@ def main():
     kernel.CreateMutexW.argtypes=[ctypes.c_void_p,ctypes.c_int,ctypes.c_wchar_p];kernel.CreateMutexW.restype=ctypes.c_void_p
     kernel.CloseHandle.argtypes=[ctypes.c_void_p];kernel.GetConsoleWindow.restype=ctypes.c_void_p
     ctypes.windll.user32.ShowWindow.argtypes=[ctypes.c_void_p,ctypes.c_int]
-    mutex=kernel.CreateMutexW(None,False,'Global\\MINER.Beta1.Windows')
+    # The legacy guardian mutex remains an installer barrier, not a GUI lock.
+    mutex=kernel.CreateMutexW(None,False,'Local\\MINER.Strata.UI')
     if not mutex:raise ctypes.WinError(ctypes.get_last_error())
     if ctypes.get_last_error()==183:
         ctypes.windll.user32.MessageBoxW(None,'MINER is already running. / MINER가 이미 실행 중입니다.','MINER',0x40)
         kernel.CloseHandle(mutex);return 1
     kernel.AllocConsole();ctypes.windll.user32.ShowWindow(kernel.GetConsoleWindow(),0)
     app,engine,bridge,window=create_app()
+    app.setQuitOnLastWindowClosed(False)
+    QTimer.singleShot(0,bridge.attachService)
+    tray=QSystemTrayIcon(QIcon(str(ART/'AppIcon.png')),app);menu=QMenu()
+    menu.addAction('Open MINER / 열기',lambda:window.show())
+    menu.addAction('Stop connection / 연결 종료',bridge.end)
+    def quit_cleanly():
+        if bridge.dirty:
+            bridge.closing=True;bridge.end()
+        else:app.quit()
+    menu.addAction('Quit / 종료',quit_cleanly);tray.setContextMenu(menu)
+    tray.activated.connect(lambda reason:window.show() if reason==QSystemTrayIcon.ActivationReason.Trigger else None);tray.show()
     code=app.exec()
     if bridge.update_worker:bridge.update_worker.cancelled.set()
     import shiboken6

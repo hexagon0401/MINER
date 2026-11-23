@@ -8,6 +8,15 @@ import traceback
 
 def run():
     try:
+        if '--strata-install' in sys.argv:
+            from windows.strata_service import install
+            install();return 0
+        if '--strata-service' in sys.argv:
+            from windows.strata_service import host
+            return host()
+        if '--strata-maintenance' in sys.argv:
+            from windows.strata_service import maintenance
+            maintenance('--remove-service' in sys.argv);return 0
         if '--dns-guard' in sys.argv:
             from schoolnet.dns_guard import run as guard
             index=sys.argv.index('--dns-guard')
@@ -21,7 +30,7 @@ def run():
               Path(os.environ.get('LOCALAPPDATA',str(Path.home())))/'MINER'/'Beta1')
         root.mkdir(parents=True,exist_ok=True)
         (root/'startup-error.log').write_text(text,encoding='utf-8')
-        if not test and '--dns-guard' not in sys.argv and sys.platform=='win32':
+        if not test and not any(x in sys.argv for x in ('--dns-guard','--strata-service','--strata-maintenance')) and sys.platform=='win32':
             ctypes.windll.user32.MessageBoxW(None,'MINER could not start. / MINER를 시작할 수 없습니다.\n'+str(root/'startup-error.log'),'MINER',0x10)
         return 1
 

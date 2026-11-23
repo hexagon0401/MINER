@@ -43,7 +43,7 @@ def stop_engine(child):
         raise ValueError('Engine forced to stop. Check Windows routes and DNS before reconnecting.')
 
 
-def session(directory, engine, stop, emit, restore_only=False, emergency=None, observe=None):
+def session(directory, engine, stop, emit, restore_only=False, emergency=None, observe=None,persistent=False):
     from dataclasses import replace
     from schoolnet.dns_forwarder import Forwarder
     from schoolnet.network_dns import Lease, probe_dns
@@ -93,9 +93,12 @@ def session(directory, engine, stop, emit, restore_only=False, emergency=None, o
                             try:warp.verify_client_service(profile.proxy_port)
                             except Exception as exc:
                                 error=exc if isinstance(exc,ServiceProbeError) else ServiceProbeError(exc)
-                                observe(probe_event(request_id,generation,error=error));raise error from exc
-                            observe(probe_event(request_id,generation))
-                            if not stop.is_set():emit('running',5)
+                                observe(probe_event(request_id,generation,error=error))
+                                if not persistent:raise error from exc
+                                emit('connection_warning',5)
+                            else:
+                                observe(probe_event(request_id,generation))
+                                if not stop.is_set():emit('running',5)
                         last_health=time.monotonic();last_warning=None
                         while child.poll() is None and not stop.wait(.25):
                             if time.monotonic()-last_health>=15:
@@ -104,7 +107,7 @@ def session(directory, engine, stop, emit, restore_only=False, emergency=None, o
                                 if warning and warning!=last_warning:print(warning,file=log,flush=True)
                                 if not stop.is_set():emit('connection_warning' if health.get('healthy') is False else 'running',5)
                                 last_warning=warning
-                                last_health=time.monotonic();last_warning=None
+                                last_health=time.monotonic()
                         if not stop.is_set():raise ValueError('Network engine exited. Ordinary DNS is being recovered.')
         except Exception as exc:
             failure=exc

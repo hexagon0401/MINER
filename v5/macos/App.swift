@@ -14,6 +14,7 @@ func appleString(_ value: String) -> String {
 }
 
 final class AppDelegate: NSObject, NSApplicationDelegate {
+    var statusItem:NSStatusItem?
     var window: NSWindow!
     let model = MinerModel()
     var settingsWindow: NSWindow?
@@ -95,6 +96,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             }
             catch { DispatchQueue.main.async { self.append(error.localizedDescription) } }
         }
+        statusItem=NSStatusBar.system.statusItem(withLength:NSStatusItem.variableLength)
+        statusItem?.button?.title="MINER"
+        let tray=NSMenu();let show=tray.addItem(withTitle:"MINER 열기 / Open",action:#selector(showMainWindow),keyEquivalent:"");show.target=self
+        let stop=tray.addItem(withTitle:"연결 종료 / Stop",action:#selector(stop),keyEquivalent:"");stop.target=self
+        let quit=tray.addItem(withTitle:"종료 / Quit",action:#selector(NSApplication.terminate(_:)),keyEquivalent:"");quit.target=NSApp
+        statusItem?.menu=tray
         append("MINER ALPHA v1.2.3: 게임 중에도 MINER와 WARP Local Proxy 연결을 유지하세요.")
         refresh()
         DispatchQueue.main.asyncAfter(deadline:.now()+4) { if self.model.autoUpdates { self.checkUpdate() } }
@@ -102,6 +109,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         healthTimer=Timer.scheduledTimer(withTimeInterval:15,repeats:true) { _ in self.model.observationClock=Date();self.checkSessionHealth() }
     }
 
+    @objc func showMainWindow() { window.makeKeyAndOrderFront(nil);NSApp.activate(ignoringOtherApps:true) }
     func append(_ text: String) {
         model.logs += model.redact(text) + "\n"
         if model.logs.count > 64000 { model.logs = String(model.logs.suffix(64000)) }
@@ -195,7 +203,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                         if active {
                             self.engineStoppedConfirmed=false;self.managedWarp=true
                             if info["ready"] as? Bool == false { self.model.phase="error";self.model.completed=0;self.model.error=self.model.tr("이전 연결이 준비되지 않았습니다. 중지 후 다시 연결하세요.","Previous engine is not ready. Stop and reconnect.") }
-                            else { self.model.phase="running";self.model.completed=5 }
+                            else { self.model.phase=self.model.effectiveProbeStatus == "PASS" ? "running" : "connection_warning";self.model.completed=5 }
                         }
                     }
                     completion?()
@@ -472,7 +480,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             }
         })
     }
-    func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool { true }
+    func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool { false }
     func applicationShouldTerminate(_ sender: NSApplication) -> NSApplication.TerminateReply {
         if model.updateInstalling { return .terminateCancel }
         if busy {
