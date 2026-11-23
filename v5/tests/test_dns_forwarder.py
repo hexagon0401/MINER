@@ -15,7 +15,7 @@ class UDP(socketserver.BaseRequestHandler):
     def handle(self):
         query,sock=self.request
         self.server.requests.append(query)
-        sock.sendto(ANSWER,self.client_address)
+        sock.sendto(getattr(self.server,"answer",ANSWER),self.client_address)
 
 class TCP(socketserver.BaseRequestHandler):
     def handle(self):
@@ -74,3 +74,19 @@ class ForwarderTests(unittest.TestCase):
     def test_dns_scope_cannot_become_powershell_code(self):
         self.assertEqual([],addresses(["fe80::1%';Write-Output bad;#",'1.2.3.4%en0','198.18.0.1','172.30.255.2']))
         self.assertEqual(['fe80::1%en0','fe80::1%12'],addresses(['fe80::1%en0','fe80::1%12']))
+
+class TruncatedReplyTests(unittest.TestCase):
+    def test_udp_truncation_retries_tcp_to_same_original_resolver(self):
+        udp=socketserver.ThreadingUDPServer(('127.0.0.1',0),UDP)
+        tcp=socketserver.ThreadingTCPServer(('127.0.0.1',udp.server_address[1]),TCP)
+        udp.answer=QUERY[:2]+b'\x83\x80'+QUERY[4:]
+        for server in (udp,tcp):server.requests=[];threading.Thread(target=server.serve_forever,daemon=True).start()
+        lookup=socket.getaddrinfo;hosts=[]
+        def resolve(host,port,*args):
+            hosts.append(host);return lookup(host,udp.server_address[1],*args)
+        try:
+            with patch('schoolnet.dns_forwarder.socket.getaddrinfo',side_effect=resolve),Forwarder(['127.0.0.1']) as relay:
+                self.assertEqual(relay.exchange(QUERY),ANSWER)
+            self.assertEqual(udp.requests,[QUERY]);self.assertEqual(tcp.requests,[QUERY]);self.assertEqual(set(hosts),{'127.0.0.1'})
+        finally:
+            for server in (udp,tcp):server.shutdown();server.server_close()

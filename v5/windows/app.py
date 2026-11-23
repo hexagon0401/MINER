@@ -51,7 +51,7 @@ class Bridge(QObject):
     changed=Signal();effect=Signal(str);closeRequested=Signal()
     def __init__(self,testing=False):
         super().__init__();self.testing=testing;self.worker=None;self.closing=False;self.detail='';self.count=0
-        self.settings_open=False;self.fixture_busy=False;self.pending_kill=False;self.effects_supported=False
+        self.startup_blocked=False;self.settings_open=False;self.fixture_busy=False;self.pending_kill=False;self.effects_supported=False
         self.update_worker=None;self.update_busy=False;self.installing_update=False;self.update_message='';self.update_info=None;self.pending_installer=None
         failure=DATA/'Updates/install-error.txt'
         if failure.is_file():
@@ -85,10 +85,10 @@ class Bridge(QObject):
             'dark':False,'controlLayout':self.control_layout,'effectsSupported':self.effects_supported,
             'reduced':self.reduced or self.appearance['reduced'],'systemReduced':self.appearance['reduced'],
             'contrast':self.appearance['contrast'],'phase':self.phase,'completed':self.count,
-            'detail':self.detail,'canStart':not self.dirty and not active and not self.installing_update,
+            'startupBlocked':self.startup_blocked,'detail':self.detail,'canStart':not self.dirty and not active and not self.installing_update,
             'canStop':self.dirty and self.phase not in ('restoring','disconnecting'),
             'canKill':self.phase not in ('disconnecting','disconnected'),
-            'busy':(active or self.fixture_busy) and self.phase not in ('running','restoring','disconnecting','error','restored','disconnected'),
+            'busy':(active or self.fixture_busy) and self.phase not in ('running','connection_warning','restoring','disconnecting','error','restored','disconnected'),
             'settingsOpen':self.settings_open,'latinFontFamily':self.font_family,'fontFamily':self.korean_font if self.language=='ko' else self.font_family,'version':LABEL,
             'art':QUrl.fromLocalFile(str(ART.resolve())+os.sep).toString(),
             'pearlArt':QUrl.fromLocalFile(str((ART/'pearl' if (ART/'pearl').exists() else ROOT/'windows/pearl').resolve())+os.sep).toString(),
@@ -105,7 +105,7 @@ class Bridge(QObject):
     @Slot()
     def begin(self):
         if not self.state['canStart'] or self.testing:return
-        self.dirty=True;self.detail='';self.phase='cli_check';self.count=0;self.effect.emit('start');self.launch(False)
+        self.startup_blocked=False;self.dirty=True;self.detail='';self.phase='cli_check';self.count=0;self.effect.emit('start');self.launch(False)
     def launch(self,restore):
         if self.worker and self.worker.isRunning():return
         self.worker=Worker(restore);self.worker.progress.connect(self.update_state)
@@ -122,6 +122,8 @@ class Bridge(QObject):
         self.changed.emit()
         if phase=='running' and previous!='running':self.effect.emit('success')
     def failure(self,message):
+        self.startup_blocked='MINER_SESSION_BLOCKED' in message
+        if self.startup_blocked:self.dirty=False;message=message.replace('MINER_SESSION_BLOCKED: ','')
         self.detail=message;self.phase='error';self.pending_kill=False;self.closing=False;self.changed.emit();self.effect.emit('cancel')
     def finished(self):
         if self.worker and self.worker.isRunning():return

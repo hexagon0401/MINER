@@ -8,6 +8,7 @@ import threading
 import time
 
 from schoolnet import warp
+from schoolnet.session_safety import require_clean_start
 from schoolnet.config import Profile, build_config
 from schoolnet.runtime import check_engine, instance_lock, is_admin, write_json
 
@@ -46,6 +47,7 @@ def session(directory, engine, stop, emit, restore_only=False, emergency=None):
     from schoolnet.dns_guard import spawn as spawn_guard
     emergency = emergency or threading.Event()
     if not is_admin(): raise ValueError('Administrator permission is required. Restart MINER as administrator.')
+    if not restore_only:require_clean_start()
     directory=Path(directory).resolve();directory.mkdir(parents=True,exist_ok=True)
     profile=None if restore_only else prepare(directory)
     marker=directory/'session.json'
@@ -79,13 +81,18 @@ def session(directory, engine, stop, emit, restore_only=False, emergency=None):
                         if not stop.is_set():
                             guardian=spawn_guard(directory,child.pid)
                             lease.activate()
-                            emit('running',5)
-                        last_health=time.monotonic()
+                            emit('service_verify',4)
+                            warp.verify_client_service(profile.proxy_port)
+                            if not stop.is_set():emit('running',5)
+                        last_health=time.monotonic();last_warning=None
                         while child.poll() is None and not stop.wait(.25):
                             if time.monotonic()-last_health>=15:
                                 health=warp.maintain_proxy(profile.proxy_port)
-                                if health.get('warning'):print(health['warning'],file=log,flush=True)
-                                last_health=time.monotonic()
+                                warning=health.get('warning')
+                                if warning and warning!=last_warning:print(warning,file=log,flush=True)
+                                if not stop.is_set():emit('connection_warning' if health.get('healthy') is False else 'running',5)
+                                last_warning=warning
+                                last_health=time.monotonic();last_warning=None
                         if not stop.is_set():raise ValueError('Network engine exited. Ordinary DNS is being recovered.')
         except Exception as exc:
             failure=exc

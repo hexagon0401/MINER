@@ -9,6 +9,8 @@ from windows import controller
 
 class WindowsLifecycleTests(unittest.TestCase):
     def setUp(self):
+        guard=patch.object(controller,'require_clean_start');guard.start();self.addCleanup(guard.stop)
+        service=patch.object(controller.warp,'verify_client_service',return_value={'client_service_tls':True});service.start();self.addCleanup(service.stop)
         self.lease=MagicMock();self.lease.prepare.return_value=['192.0.2.53']
         lease=patch('schoolnet.network_dns.Lease',return_value=self.lease);lease.start();self.addCleanup(lease.stop)
         relay=MagicMock();relay.port=40001
@@ -16,6 +18,18 @@ class WindowsLifecycleTests(unittest.TestCase):
         forward=patch('schoolnet.dns_forwarder.Forwarder',return_value=relay_factory);forward.start();self.addCleanup(forward.stop)
         check=patch.object(controller,'check_engine');check.start();self.addCleanup(check.stop)
         guard=patch('schoolnet.dns_guard.spawn',return_value=None);guard.start();self.addCleanup(guard.stop)
+
+    def test_warm_client_rejection_precedes_all_warp_changes(self):
+        with tempfile.TemporaryDirectory() as d:
+            with patch.object(controller,'is_admin',return_value=True),patch.object(controller,'require_clean_start',side_effect=ValueError('MINER_SESSION_BLOCKED')),patch.object(controller.warp,'activate') as activate,patch.object(controller.warp,'restore') as restore:
+                with self.assertRaisesRegex(ValueError,'MINER_SESSION_BLOCKED'):controller.session(d,'engine',threading.Event(),lambda *a:None)
+            activate.assert_not_called();restore.assert_not_called();self.assertFalse((Path(d)/'session.json').exists())
+
+    def test_riot_service_failure_never_emits_connected_and_recovers_dns(self):
+        child=MagicMock();child.poll.return_value=None;events=[]
+        with tempfile.TemporaryDirectory() as d,patch.object(controller,'is_admin',return_value=True),patch.object(controller.warp,'activate'),patch.object(controller.warp,'verify_client_service',side_effect=ValueError('Riot TLS failed')),patch.object(controller,'stop_engine') as stop_engine,patch.object(controller.subprocess,'Popen',return_value=child),patch.object(controller.subprocess,'CREATE_NEW_PROCESS_GROUP',512,create=True),patch('windows.process.Job'),patch('schoolnet.network_dns.probe_dns',return_value=True):
+            with self.assertRaisesRegex(ValueError,'Riot TLS failed'):controller.session(d,'engine',threading.Event(),lambda *a:events.append(a))
+        self.assertNotIn(('running',5),events);self.assertIn(('service_verify',4),events);self.lease.close.assert_called_once();stop_engine.assert_called_once_with(child)
 
     def test_profile_preserves_edits_and_rejects_other_platform(self):
         with tempfile.TemporaryDirectory() as d:

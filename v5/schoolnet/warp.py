@@ -168,22 +168,54 @@ def inspect(port=40000, warp_cli=None):
     return {**verify_trace(port), "mode": "WarpProxy"}
 
 
-def maintain_proxy(port=40000,warp_cli=None):
-    """Repair a disconnected local proxy without toggling a healthy tunnel."""
-    cli=resolve_cli(warp_cli)
+def verify_client_service(port=40000,timeout=5):
+    """Confirm a fixed Riot TLS endpoint through SOCKS, never login or game success."""
+    host='auth.riotgames.com'
+    deadline=time.monotonic()+timeout;active=[None]
+    def abort():
+        try:
+            if active[0] is not None:active[0].shutdown(socket.SHUT_RDWR)
+        except OSError:pass
+    timer=threading.Timer(timeout,abort);timer.daemon=True;timer.start()
     try:
-        settings=command(cli,'settings',timeout=2)
+        with socket.create_connection(('127.0.0.1',port),timeout=timeout) as sock:
+            active[0]=sock;socks_connect(sock,host,443)
+            context=ssl.create_default_context()
+            if getattr(sys,'frozen',False):context.load_verify_locations(cafile=str(Path(sys._MEIPASS)/'cacert.pem'))
+            remaining=deadline-time.monotonic()
+            if remaining<=0:raise TimeoutError('Riot TLS check timed out')
+            sock.settimeout(remaining)
+            with context.wrap_socket(sock,server_hostname=host) as tls:
+                active[0]=tls;remaining=deadline-time.monotonic()
+                if remaining<=0:raise TimeoutError('Riot HTTPS check timed out')
+                tls.settimeout(remaining);tls.sendall(b'HEAD / HTTP/1.1\r\nHost: auth.riotgames.com\r\nConnection: close\r\n\r\n')
+                response=http.client.HTTPResponse(tls);response.begin();status=response.status
+                if not 100<=status<=599:raise ValueError('Invalid Riot HTTPS status')
+        return {'client_service_tls':True,'host':host,'http_status':status,'via':'socks5h','tls_verified':True,'direct_fallback':False,'game_or_statistics_verified':False}
+    except (OSError,ValueError,http.client.HTTPException) as exc:
+        raise ValueError('Riot 서비스 연결 확인 실패 / Riot service check failed ('+type(exc).__name__+'). 엔진 준비와 실제 서비스 연결은 다릅니다. Stop and retry; no direct fallback.') from exc
+    finally:timer.cancel()
+
+
+def maintain_proxy(port=40000,warp_cli=None):
+    """No mode changes, no reconnect churn while Connecting, verify local SOCKS."""
+    cli=resolve_cli(warp_cli)
+    try:settings=command(cli,'settings',timeout=2)
     except (OSError,ValueError,subprocess.TimeoutExpired):
-        return {'reconnecting':False,'warning':'WARP status unavailable; preserving the engine and retrying.'}
+        return {'healthy':False,'reconnecting':False,'warning':'WARP status unavailable; preserving the engine and retrying.'}
     if not proxy_mode(settings,port):
         raise ValueError('WARP mode changed outside MINER; stop and reconnect MINER. Do not toggle WARP during a match.')
     try:
-        if not connected(command(cli,'status',timeout=2)):
-            command(cli,'connect',timeout=2)
-            return {'reconnecting':True}
+        status=command(cli,'status',timeout=2)
+        if connected(status):
+            proxy_ready(port,timeout=1)
+            return {'healthy':True,'reconnecting':False}
+        # Connecting/unknown statuses must not cause a connect every 15 seconds.
+        disconnected=bool(re.search(r"^\s*(?:Status(?: update)?:\s*)?Disconnected(?:[.:\s].*)?$",status,re.M|re.I))
+        if disconnected:command(cli,'connect',timeout=2)
+        return {'healthy':False,'reconnecting':True,'warning':'WARP reconnect pending; existing engine is preserved.'}
     except (OSError,ValueError,subprocess.TimeoutExpired):
-        return {'reconnecting':True,'warning':'WARP reconnect pending; preserving the engine and retrying.'}
-    return {'reconnecting':False}
+        return {'healthy':False,'reconnecting':False,'warning':'WARP local proxy is not responding; engine preserved. Retry Stop if this continues.'}
 
 
 def deactivate(warp_cli=None):

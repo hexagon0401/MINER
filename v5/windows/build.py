@@ -24,6 +24,9 @@ def execute(*args, timeout=600):
 
 def main():
     if sys.platform!='win32': raise ValueError('Windows runner required')
+    from schoolnet.session_safety import require_clean_start
+    startup_guard=require_clean_start()
+    assert startup_guard['supported']
     os.chdir(BASE)
     if os.environ.get('GITHUB_REF_TYPE') == 'tag' and os.environ.get('GITHUB_REF_NAME') != TAG:
         raise ValueError('Git tag and packaged Windows version disagree')
@@ -118,7 +121,7 @@ def main():
       'ui_theme':'Pearl White','default_controls':'A rounded floating','alternative_controls':'B flush integrated',
       'supplied_asset_sha256':{name:hashlib.sha256((art/'pearl/mascot'/name).read_bytes()).hexdigest() for name in ('miner-transparent.png','MINER-wordmark-transparent.png')},'ui_engine':'Qt Quick RHI + Fluent controls and functional Pearl buttons','network_engine':'sing-box 1.12.0 Windows TUN',
       'ui_scale_factors':[1,1.25,1.5,2],'windows_11_live_tested':False,'vanguard_tested':False,
-      'uninstaller_verified':True,'school_network_tested':False,'warp_live_tested':False,'source_commit':os.environ.get('GITHUB_SHA'),
+      'uninstaller_verified':True,'school_network_tested':False,'warp_live_tested':False,'startup_guard_native':startup_guard,'source_commit':os.environ.get('GITHUB_SHA'),
       'package_optimization':size_report,'installer_bytes':setup.stat().st_size,'size_target_bytes':80_000_000,
       'size_target_met':setup.stat().st_size<=80_000_000}
     for path in [setup]:

@@ -1,6 +1,6 @@
-# MINER ALPHA v1.2.2 — 소스·연결 구조
+# MINER ALPHA v1.2.3 — 소스·연결 구조
 
-[설치 파일·한국어 설치 안내](../README.md#다운로드) · [릴리스](https://github.com/hexagon0401/MINER/releases/tag/miner-alpha-v1.2.2) · [서명 설정](docs/SIGNING.md)
+[설치 파일·한국어 설치 안내](../README.md#다운로드) · [릴리스](https://github.com/hexagon0401/MINER/releases/tag/miner-alpha-v1.2.3) · [서명 설정](docs/SIGNING.md)
 
 macOS는 SwiftUI·AppKit, Windows는 Qt Quick·Fluent/Pearl White UI를 유지합니다. 개인용 Cloudflare WARP는 별도 설치·등록해야 합니다. ALPHA는 제품 세대의 코드명입니다. 기존 버전·베타 소스와 릴리스는 보존합니다.
 
@@ -36,7 +36,7 @@ macOS에서는 설정의 **관리자 승인 항상 허용 · 도우미 재사용
 
 ## 빌드·검증
 
-배포 워크플로는 [miner-alpha-v122.yml](../.github/workflows/miner-alpha-v122.yml)입니다. Mac Apple Silicon·Intel과 Windows의 필수 검사가 모두 통과해야 새 정식 태그로 게시합니다. 서명·공증 설정이 있으면 그 검증도 필수입니다. 미설정 Mac은 ad-hoc, Windows는 Authenticode 미서명입니다.
+배포 워크플로는 [miner-alpha-v123.yml](../.github/workflows/miner-alpha-v123.yml)입니다. Mac Apple Silicon·Intel과 Windows의 필수 검사가 모두 통과해야 새 정식 태그로 게시합니다. 서명·공증 설정이 있으면 그 검증도 필수입니다. 미설정 Mac은 ad-hoc, Windows는 Authenticode 미서명입니다.
 
 ```bash
 cd v5
@@ -81,3 +81,9 @@ python3 main.py doctor --directory local/mac --engine "$PWD/local/bin/sing-box"
 CLI 출력과 대기를 제한하고 취소된 작업의 진행 이벤트를 무시합니다. 관리자 시작 요청에는 소유 사용자·유효기간·취소 표식을 사용해 늦은 승인이 엔진을 다시 띄우지 않도록 합니다. 읽기 전용 초기 상태 확인 동안 닫기는 상태 확인 종료 후 처리합니다. 중지·복귀는 완료 전 다시 취소하지 않습니다. 실행 PID와 DNS 준비 상태를 구분합니다. 복구 오류는 도우미 소켓을 유지한 채 표시하며, 원래 네트워크 서비스가 사라진 기록은 현재 서비스에 임시 DNS가 남지 않았음을 확인한 경우에만 보관 처리합니다.
 
 런타임 SIGTERM은 복구를 신호 처리기 안에서 재진입하지 않고 DNS 적용 종료 후 정상 정리 경로에서 수행합니다. WARP HTTPS 확인은 인증서 검증과 SOCKS 원격 DNS를 유지하며 전체 응답 시간 제한을 둡니다. 네이티브 `CommandSmoke.swift`는 상속된 stdout·무응답 명령·취소를 확인합니다. `selective_smoke.py`는 게임 이름의 프로세스에서 새 Riot 서비스 TCP가 SOCKS로 전달되는지 확인합니다. 이는 실제 게임 통계창이나 학교망 검증을 대신하지 않습니다.
+
+## v1.2.3 애플리케이션 업데이트
+
+시작 전 정확한 게임/League 클라이언트 실행 파일명을 확인하고, 실행 중이면 WARP 변경 전에 중단합니다. Riot 런처만 실행 중인 경우는 허용합니다. 관리자 승인이나 프로세스 강제 종료로 이를 해결하지 않습니다. MINER 연결 후 클라이언트를 실행하는 순서를 사용합니다. CLI `session-preflight`는 읽기 전용입니다. 고급 수동 CLI 호출은 사용자가 순서를 관리해야 합니다.
+
+`warp service-check`는 auth.riotgames.com의 SOCKS 원격 DNS·TLS·HEAD 응답을 제한 시간 내 확인합니다. 4xx는 서버 응답으로 구분하며 로그인이나 통계 요청 성공으로 간주하지 않습니다. GUI는 이 검사를 통과하기 전 5/5 완료를 표시하지 않습니다. WARP 상태 감시는 Connected+SOCKS 응답을 확인하고 Connecting/알 수 없는 상태에서 connect를 반복하지 않습니다. 경고는 동일 내용의 반복 로그를 줄이고 엔진을 유지합니다. 복귀의 모드 반영 지연·멱등 재시도 수정과 DNS UDP TC의 같은 서버 TCP 재시도를 포함합니다. native receipt의 startup_guard_native는 실제 OS 프로세스 검사 결과이며 실제 게임 호환성 증거는 아닙니다.

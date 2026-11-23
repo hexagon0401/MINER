@@ -64,7 +64,14 @@ class Forwarder:
                         response = recv_exact(upstream,struct.unpack('!H',recv_exact(upstream,2))[0])
                     else:
                         upstream.send(query); response = upstream.recv(65535)
-                if len(response) >= 12 and response[:2] == query[:2] and response[2] & 0x80 and response[3]&15 not in (2,5):
+                # Large CNAME/IPv6 replies may be truncated over UDP. Retry TCP
+                # to the SAME original resolver, never a public replacement.
+                if not tcp and len(response)>=12 and response[:2]==query[:2] and response[2]&0x80 and response[2]&0x02:
+                    with socket.socket(family,socket.SOCK_STREAM) as upstream:
+                        upstream.settimeout(1.0);upstream.connect(address)
+                        upstream.sendall(struct.pack('!H',len(query))+query)
+                        response=recv_exact(upstream,struct.unpack('!H',recv_exact(upstream,2))[0])
+                if len(response) >= 12 and response[:2] == query[:2] and response[2] & 0x80 and not response[2]&0x02 and response[3]&15 not in (2,5):
                     return response
             except OSError: continue
         # Preserve the transaction/question; report failure without changing the

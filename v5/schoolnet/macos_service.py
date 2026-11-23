@@ -228,7 +228,7 @@ def manage(operation, resources=None, profile=None, owner=None, session=None):
         if cancelled():raise ValueError('Connection cancelled before engine startup')
         subprocess.run(command, check=True, capture_output=True, text=True, timeout=10)
         result=wait_ready(base,offset,cancelled)
-        progress("running", 5)
+        progress("service_verify", 4)
         print(json.dumps(result))
     elif operation == "stop":
         print(json.dumps(stop()))

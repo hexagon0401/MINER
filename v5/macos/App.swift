@@ -95,7 +95,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             }
             catch { DispatchQueue.main.async { self.append(error.localizedDescription) } }
         }
-        append("MINER ALPHA v1.2.2: 게임 중에도 MINER와 WARP Local Proxy 연결을 유지하세요.")
+        append("MINER ALPHA v1.2.3: 게임 중에도 MINER와 WARP Local Proxy 연결을 유지하세요.")
         refresh()
         DispatchQueue.main.asyncAfter(deadline:.now()+4) { if self.model.autoUpdates { self.checkUpdate() } }
         updateTimer=Timer.scheduledTimer(withTimeInterval:21600,repeats:true) { _ in if self.model.autoUpdates { self.checkUpdate() } }
@@ -136,7 +136,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             let command=([cli]+scoped).map(shellQuote).joined(separator:" ")
             executable="/usr/bin/osascript";parameters=["-e","do shell script "+appleString(command)+" with administrator privileges"]
         } else { executable=cli;parameters=scoped }
-        let quick=arguments.prefix(2).elementsEqual(["desktop","status"]) || arguments.prefix(2).elementsEqual(["desktop","helper-status"])
+        let quick=arguments.prefix(2).elementsEqual(["desktop","status"]) || arguments.prefix(2).elementsEqual(["desktop","helper-status"]) || arguments.first=="session-preflight"
         let timeout:TimeInterval=quick ? 8 : arguments.prefix(2).elementsEqual(["warp","maintain"]) ? 12 : arguments.first=="update" ? 300 : administrator ? 120 : 90
         return try CommandRunner.run(executable,parameters,timeout:timeout,cancellation:cancellation,interruptible:!protected) { line in
             if cancellation?.cancelled != true { self.model.accept(line,allowed:{ cancellation?.cancelled != true }) }
@@ -192,7 +192,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                         }
                     }
                     completion?()
-                case .failure(let error): self.model.recoveryNeeded=true; self.model.phase = "error"; self.model.error = self.model.redact(error.localizedDescription); self.append(error.localizedDescription); self.window.makeKeyAndOrderFront(nil)
+                case .failure(let error): self.model.recoveryNeeded = self.managedWarp || self.running || !error.localizedDescription.contains("MINER_SESSION_BLOCKED"); self.model.phase = "error"; self.model.error = self.model.redact(error.localizedDescription).replacingOccurrences(of:"MINER_SESSION_BLOCKED: ",with:""); self.append(error.localizedDescription); self.window.makeKeyAndOrderFront(nil)
                 }
                 if self.quitPending { self.quitPending=false;NSApp.terminate(nil) }
             }
@@ -212,8 +212,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
     @objc func connectWarp() {
         guard !busy && !model.updateInstalling && !running else { return }
-        engineStoppedConfirmed=false;managedWarp = true; model.phase = "cli_check"; model.completed = 0; model.error = ""
-        operation({ try self.execute(self.warpArguments("connect")) }, completion: { self.model.phase = "warp_ready"; self.model.warp = true; self.model.completed = 3 })
+        engineStoppedConfirmed=false; model.phase = "cli_check"; model.completed = 0; model.error = ""
+        operation({
+            _ = try self.execute(["session-preflight"])
+            DispatchQueue.main.sync { self.managedWarp=true }
+            return try self.execute(self.warpArguments("connect"))
+        }, completion: { self.model.phase = "warp_ready"; self.model.warp = true; self.model.completed = 3 })
     }
     @objc func showSettings() {
         if settingsWindow == nil {
@@ -232,7 +236,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         refresh()
     }
     @objc func checkWarp() {
-        operation { try self.execute(self.warpArguments("status")) }
+        operation {
+            _ = try self.execute(self.warpArguments("status"))
+            return try self.execute(["warp","service-check","--proxy-port",String(self.currentProxyPort)])
+        }
     }
     @objc func disconnectWarp() {
         let alert = NSAlert()
@@ -267,16 +274,23 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         guard Bundle.main.bundleURL.path == "/Applications/MINER.app" else {
             model.phase="error";model.error=model.tr("DMG에서 앱을 Applications로 복사한 뒤 실행하세요.","Copy MINER from the DMG to Applications before starting."); return
         }
-        engineStoppedConfirmed=false;managedWarp = true; model.phase = "cli_check"; model.completed = 0; model.error = ""
+        engineStoppedConfirmed=false; model.phase = "cli_check"; model.completed = 0; model.error = ""
         operation({
+            _ = try self.execute(["session-preflight"])
+            DispatchQueue.main.sync { self.managedWarp=true }
             try self.ensureProfile()
             _ = try self.execute(self.warpArguments("connect"))
+            let engineResult:String
             if self.model.alwaysAllow {
                 try self.ensureHelper()
-                return try self.execute(["desktop", "helper-start", "--profile", self.dataDirectory.path])
-            }
-            return try self.execute(["desktop", "start", "--resources", self.resources.path,
+                engineResult = try self.execute(["desktop", "helper-start", "--profile", self.dataDirectory.path])
+            } else {
+            engineResult = try self.execute(["desktop", "start", "--resources", self.resources.path,
                                      "--profile", self.dataDirectory.path,"--owner",String(getuid())], administrator: true)
+            }
+            DispatchQueue.main.sync { self.running=true;self.model.phase="service_verify";self.model.completed=4 }
+            _ = try self.execute(["warp","service-check","--proxy-port",String(self.currentProxyPort),"--progress"])
+            return engineResult
         }, completion: { self.running = true; self.model.phase = "running"; self.model.completed = 5; self.model.warp = true })
     }
     @objc func stop() {
@@ -326,19 +340,29 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                 let status=try self.execute(["desktop","status"])
                 let info=try JSONSerialization.jsonObject(with:Data(status.utf8)) as? [String:Any] ?? [:]
                 guard info["running"] as? Bool == true else { throw NSError(domain:"MINER.engineGone",code:1,userInfo:[NSLocalizedDescriptionKey:"네트워크 엔진이 종료되었습니다. 일반 DNS를 복구한 뒤 다시 연결하세요."]) }
+                guard info["ready"] as? Bool == true else { throw NSError(domain:"MINER.dnsNotReady",code:1,userInfo:[NSLocalizedDescriptionKey:"DNS 엔진 응답을 확인하지 못했습니다. 중지 후 다시 연결하세요. / DNS engine is not responding; stop and reconnect."]) }
                 let health=try self.execute(["warp","maintain","--proxy-port",String(self.currentProxyPort)])
-                if let state=try JSONSerialization.jsonObject(with:Data(health.utf8)) as? [String:Any],let warning=state["warning"] as? String {
-                    DispatchQueue.main.async { self.append(warning) }
-                }
-                DispatchQueue.main.async {
-                    self.healthBusy=false
-                    guard !self.busy && self.running else { return }
-                    if self.model.phase=="error" && self.model.error==self.healthFailure { self.model.error="";self.model.phase="running" }
-                    self.healthFailure=""
+                let state=try JSONSerialization.jsonObject(with:Data(health.utf8)) as? [String:Any] ?? [:]
+                if state["healthy"] as? Bool != true {
+                    let warning=(state["warning"] as? String) ?? "WARP 프록시 확인 필요 / WARP proxy needs attention."
+                    DispatchQueue.main.async {
+                        self.healthBusy=false
+                        guard !token.cancelled && !self.busy && self.running else { return }
+                        let message=self.model.redact(warning)
+                        if self.healthFailure != message { self.append(message) }
+                        self.healthFailure=message;self.model.error=message;self.model.phase="connection_warning"
+                    }
+                } else {
+                    DispatchQueue.main.async {
+                        self.healthBusy=false
+                        guard !token.cancelled && !self.busy && self.running else { return }
+                        if ["error","connection_warning"].contains(self.model.phase) && self.model.error==self.healthFailure { self.model.error="";self.model.phase="running" }
+                        self.healthFailure=""
+                    }
                 }
             } catch { DispatchQueue.main.async {
                 self.healthBusy=false
-                guard !self.busy && self.running else { return }
+                guard !token.cancelled && !self.busy && self.running else { return }
                 let message=self.model.redact(error.localizedDescription)
                 if self.healthFailure != message { self.append(message) }
                 self.healthFailure=message;self.model.error=message;self.model.phase="error"
@@ -450,7 +474,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                 _ = try self.execute(["warp", "restore"])
                 DispatchQueue.main.async { self.managedWarp = false; self.model.restored = true;self.model.recoveryNeeded=false; NSApp.reply(toApplicationShouldTerminate:true) }
             } catch {
-                DispatchQueue.main.async { self.setBusy(false); self.model.phase = "error"; self.model.error = self.model.redact(error.localizedDescription); self.append(error.localizedDescription); self.window.makeKeyAndOrderFront(nil)
+                DispatchQueue.main.async { self.setBusy(false); self.model.phase = "error"; self.model.error = self.model.redact(error.localizedDescription).replacingOccurrences(of:"MINER_SESSION_BLOCKED: ",with:""); self.append(error.localizedDescription); self.window.makeKeyAndOrderFront(nil)
                     if self.engineStoppedConfirmed {
                         let alert=NSAlert();alert.messageText=self.model.tr("MINER는 중지됐지만 WARP 복귀를 확인하지 못했습니다.","MINER stopped, but WARP restoration could not be confirmed.")
                         alert.informativeText=self.model.tr("앱을 종료한 뒤 WARP 앱에서 연결 상태를 확인할 수 있습니다.","You can quit and check the connection in the WARP app.")

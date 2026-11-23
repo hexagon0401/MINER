@@ -119,6 +119,11 @@ extension AppDelegate {
                 self.model.updateBusy = true
                 try require(!self.model.updateInstalling,"Background update checks do not lock network operations")
                 self.model.updateBusy = false
+                self.model.engine=true;self.model.phase="service_verify";self.model.completed=4
+                try require(self.model.completed==4 && self.model.title.contains("Riot"),"Riot service verification remains below completion")
+                self.model.phase="connection_warning";self.model.error="Proxy test warning"
+                try require(self.model.detail=="Proxy test warning" && self.model.engine,"Proxy warning stays visible without killing engine")
+                self.model.error="";self.model.engine=false
                 self.model.phase="proxy_connect";self.setBusy(true)
                 let cancellation=CommandCancellation();self.operationCancellation=cancellation
                 self.stop()

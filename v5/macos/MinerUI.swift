@@ -34,14 +34,14 @@ final class MinerModel: ObservableObject {
         return object
     }()
     func tr(_ ko: String, _ en: String) -> String { language == "ko" ? ko : en }
-    var mining: Bool { busy && ["cli_check", "proxy_connect", "tls_verify", "routing"].contains(phase) }
+    var mining: Bool { busy && ["cli_check", "proxy_connect", "tls_verify", "routing", "service_verify"].contains(phase) }
     var title: String {
         if phase == "stopping" { return tr("중지 및 WARP 복귀 중…", "Stopping and restoring WARP…") }
         if language == "ko", let table = copy["systemStatus"] as? [String: [String: String]], let text = table[phase]?["title"] { return text }
-        return ["idle":"Ready to dig", "cli_check":"Checking WARP CLI…", "proxy_connect":"Connecting Local Proxy…", "tls_verify":"Verifying secure connection…", "admin_auth":"Approving the network helper…", "routing":"Configuring split routing…", "warp_ready":"WARP is ready", "running":"Connected", "stopped":"Connection stopped", "error":"Network connection failed"][phase] ?? "MINER"
+        return ["idle":"Ready to dig", "cli_check":"Checking WARP CLI…", "proxy_connect":"Connecting Local Proxy…", "tls_verify":"Verifying secure connection…", "admin_auth":"Approving the network helper…", "routing":"Configuring split routing…", "warp_ready":"WARP is ready", "service_verify":"Checking Riot service…", "connection_warning":"Proxy needs attention", "running":"Connected", "stopped":"Connection stopped", "error":"Network connection failed"][phase] ?? "MINER"
     }
     var detail: String {
-        if phase == "error" { return error }
+        if ["error","connection_warning"].contains(phase) { return error }
         if phase == "stopped" && restored { return tr("엔진 중지 · WARP UDP Traffic and DNS 복귀 확인", "Engine stopped · WARP UDP Traffic and DNS restored") }
         if language == "ko", let table = copy["systemStatus"] as? [String: [String: String]], let text = table[phase]?["detail"] { return text }
         return ["idle":"Start to inspect the connection path.", "cli_check":"Checking WARP CLI capabilities", "proxy_connect":"Verifying Local Proxy on port 40000", "tls_verify":"Verifying TLS and warp=on", "admin_auth":"Use the native macOS authorization dialog", "routing":"Starting the split-routing engine", "warp_ready":"Proxy verified · routing engine not started", "running":"Split-routing engine is running", "stopping":"Waiting for shutdown and WARP restoration", "stopped":"Engine stopped · WARP state shown separately"][phase] ?? ""

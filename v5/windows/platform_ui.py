@@ -43,3 +43,9 @@ WORDS['ko']['auto_updates']='새 버전 자동 확인·알림'
 WORDS['en']['auto_updates']='Automatically check and notify'
 WORDS['ko']['hint']='게임·일반 앱 직접 연결 · 경기 중 연결 유지'
 WORDS['en']['hint']='Game and ordinary apps direct · keep MINER connected'
+
+WORDS['ko'].update({'service_verify':'Riot 서비스 연결 확인','connection_warning':'프록시 응답 확인 필요'})
+WORDS['en'].update({'service_verify':'Checking Riot service connection','connection_warning':'Proxy needs attention'})
+
+WORDS['ko']['clean_start']='LoL 클라이언트를 완전히 종료한 뒤 시작하세요.'
+WORDS['en']['clean_start']='Quit the LoL client, then start MINER.'

@@ -32,6 +32,7 @@ def main(argv=None):
         command.add_argument("--engine", default="sing-box")
         command.add_argument("--warp-cli")
         if name == "run": command.add_argument("--managed-helper", action="store_true")
+    commands.add_parser("session-preflight",help="read-only game/client startup safety check")
     probe = commands.add_parser("benchmark", help="compare TCP connection times, not game ping")
     probe.add_argument("--host", required=True)
     probe.add_argument("--port", type=int, default=443)
@@ -39,7 +40,7 @@ def main(argv=None):
     probe.add_argument("--proxy-port", type=int, default=40000)
     probe.add_argument("--timeout", type=float, default=3)
     warp = commands.add_parser("warp", help="configure or inspect the installed WARP Local Proxy")
-    warp.add_argument("operation", choices=["connect", "status", "disconnect", "restore", "maintain"])
+    warp.add_argument("operation", choices=["connect", "status", "disconnect", "restore", "maintain", "service-check"])
     warp.add_argument("--progress", action="store_true")
     warp.add_argument("--proxy-port", type=int, default=40000)
     warp.add_argument("--warp-cli")
@@ -64,7 +65,10 @@ def main(argv=None):
     community.add_argument("--engine", required=True)
     args = parser.parse_args(argv)
     try:
-        if args.command == "update":
+        if args.command == "session-preflight":
+            from schoolnet.session_safety import require_clean_start
+            print(json.dumps(require_clean_start()));return 0
+        elif args.command == "update":
             from schoolnet import updates
             if args.operation in {'prepare','apply','finish'}:
                 if args.platform=='macos':
@@ -127,7 +131,7 @@ def main(argv=None):
                         from schoolnet.warp import progress
                         progress("routing", 4)
                     result = helper.request(operation, load_profile(args.profile) if operation == "start" else None,args.session_id)
-                    if operation == "start" and result.get("running"): progress("running", 5)
+                    if operation == "start" and result.get("running"): progress("service_verify", 4)
                 print(json.dumps(result)); return 0
             from schoolnet.macos_service import manage
             return manage(args.operation, args.resources, args.profile, args.owner,args.session_id)
@@ -136,13 +140,16 @@ def main(argv=None):
                 from schoolnet.warp import WarpCancelled
                 def cancel_command(signum,frame):raise WarpCancelled('WARP operation cancelled')
                 signal.signal(signal.SIGTERM,cancel_command)
-            from schoolnet.warp import activate, deactivate, inspect, restore, progress, maintain_proxy
+            from schoolnet.warp import activate, deactivate, inspect, restore, progress, maintain_proxy, verify_client_service
             if args.operation == "connect":
                 result = activate(args.proxy_port, args.warp_cli, notify=progress if args.progress else None)
             elif args.operation == "restore":
                 result = restore(args.warp_cli)
             elif args.operation == "status":
                 result = inspect(args.proxy_port, args.warp_cli)
+            elif args.operation == "service-check":
+                if args.progress:progress("service_verify",4)
+                result=verify_client_service(args.proxy_port)
             elif args.operation == "maintain":
                 result = maintain_proxy(args.proxy_port,args.warp_cli)
             else:

@@ -195,3 +195,30 @@ class RestorationTests(unittest.TestCase):
         with patch.object(warp,'resolve_cli',return_value='fixture'),patch.object(warp,'command',side_effect=command):
             self.assertFalse(warp.restore()['reconfigured'])
         self.assertNotIn(('disconnect',),calls);self.assertNotIn(('connect',),calls)
+
+class ProxyHealthAndServiceTests(unittest.TestCase):
+    def test_connected_without_socks_is_not_healthy_and_does_not_disconnect(self):
+        def command(cli,*args,**kw):return 'Mode: WarpProxy on port 40000' if args==('settings',) else 'Status update: Connected'
+        with patch.object(warp,'resolve_cli',return_value='fixture'),patch.object(warp,'command',side_effect=command) as call,patch.object(warp,'proxy_ready',side_effect=ConnectionRefusedError):
+            self.assertFalse(warp.maintain_proxy()['healthy'])
+        self.assertNotIn(('disconnect',),[c.args[1:] for c in call.call_args_list])
+
+    def test_connecting_status_does_not_reissue_connect(self):
+        def command(cli,*args,**kw):return 'Mode: WarpProxy on port 40000' if args==('settings',) else 'Status update: Connecting'
+        with patch.object(warp,'resolve_cli',return_value='fixture'),patch.object(warp,'command',side_effect=command) as call:
+            self.assertFalse(warp.maintain_proxy()['healthy'])
+        self.assertEqual(call.call_count,2)
+
+    def test_riot_check_uses_remote_dns_and_validates_tls_even_for_auth_http_error(self):
+        tls=MagicMock();tls.makefile.return_value=io.BytesIO(b'HTTP/1.1 403 Forbidden\r\nContent-Length: 0\r\n\r\n')
+        context=MagicMock();context.wrap_socket.return_value.__enter__.return_value=tls
+        sock=MagicMock()
+        with patch('socket.create_connection',return_value=sock),patch.object(warp,'socks_connect') as connect,patch('ssl.create_default_context',return_value=context):
+            result=warp.verify_client_service()
+        self.assertTrue(result['tls_verified']);self.assertFalse(result['game_or_statistics_verified']);self.assertEqual(result['http_status'],403)
+        connect.assert_called_once_with(sock.__enter__.return_value,'auth.riotgames.com',443)
+        context.wrap_socket.assert_called_once_with(sock.__enter__.return_value,server_hostname='auth.riotgames.com')
+
+    def test_riot_failure_does_not_fall_back_to_direct(self):
+        with patch('socket.create_connection',side_effect=ConnectionRefusedError) as connect,self.assertRaisesRegex(ValueError,'no direct fallback'):warp.verify_client_service()
+        connect.assert_called_once_with(('127.0.0.1',40000),timeout=5)

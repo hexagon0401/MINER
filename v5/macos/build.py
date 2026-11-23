@@ -39,6 +39,9 @@ def build(expected_arch, signing="adhoc", identity=None, notary_profile=None, dm
     arch = platform.machine()
     if arch != expected_arch:
         raise ValueError(f"runner architecture is {arch}, expected {expected_arch}")
+    from schoolnet.session_safety import require_clean_start
+    startup_guard=require_clean_start()
+    assert startup_guard['supported']
     import certifi
     signed = signing == "developer-id"
     if signed:
@@ -95,7 +98,7 @@ def build(expected_arch, signing="adhoc", identity=None, notary_profile=None, dm
         "CFBundleName": "MINER", "CFBundleDisplayName": "MINER", "CFBundleIconFile": "AppIcon",
         "CFBundleIdentifier": "org.schoolnet.v5.alpha", "CFBundleExecutable": "MINER",
         "CFBundlePackageType": "APPL", "CFBundleShortVersionString": __release_version__,
-        "CFBundleVersion": "502122", "SchoolNetReleaseVersion": __version__, "MINERPublicReleaseVersion": __release_version__,
+        "CFBundleVersion": "502123", "SchoolNetReleaseVersion": __version__, "MINERPublicReleaseVersion": __release_version__,
         "LSMinimumSystemVersion": "13.0", "NSHighResolutionCapable": True,
     }
     info.update(macos_icon_info(icon))
@@ -212,7 +215,7 @@ def build(expected_arch, signing="adhoc", identity=None, notary_profile=None, dm
         "dmg_to_disk_signature_verified": True, "sha256": digest,
         "finder_background_layout_verified": dmg_background is not None,
         "app_name": app.name, "native_ui_smoke": ui_report,
-        "commands":command_report,"updater":updater_report,"developer": developer, "helper_smoke": helper_report, "selective_network":selective_report, "source_commit": os.environ.get("GITHUB_SHA"), "release_channel": icon["channel"], "app_icon_sha256": hashlib.sha256((ui_assets / "AppIcon.png").read_bytes()).hexdigest(),
+        "startup_guard_native":startup_guard,"commands":command_report,"updater":updater_report,"developer": developer, "helper_smoke": helper_report, "selective_network":selective_report, "source_commit": os.environ.get("GITHUB_SHA"), "release_channel": icon["channel"], "app_icon_sha256": hashlib.sha256((ui_assets / "AppIcon.png").read_bytes()).hexdigest(),
     }, indent=2), encoding="utf-8")
     print(f"Verified DMG: {dmg}")
 

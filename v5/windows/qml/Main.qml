@@ -175,7 +175,7 @@ ApplicationWindow {
                     CopyText { id: statusText; objectName: "statusLabel"; Layout.fillWidth: true; text: s.text[s.phase] || s.phase; horizontalAlignment: Text.AlignHCenter; font.pixelSize: 25; font.weight: Font.ExtraBold; wrapMode: Text.WordWrap }
                     CopyText {
                         Layout.fillWidth: true; color: win.muted; font.pixelSize: 14; wrapMode: Text.WordWrap; horizontalAlignment: Text.AlignHCenter
-                        text: s.phase === "error" || s.phase === "interrupted" ? s.text.recovery : s.phase === "disconnected" ? s.text.disconnected_hint : s.phase === "running" ? s.text.hint : s.busy ? s.text.opening : s.text.help
+                        text: s.startupBlocked ? s.text.clean_start : s.phase === "error" || s.phase === "interrupted" ? s.text.recovery : s.phase === "disconnected" ? s.text.disconnected_hint : s.phase === "connection_warning" ? s.text.recovery : s.phase === "running" ? s.text.hint : s.busy ? s.text.opening : s.text.help
                     }
                 }
                 RowLayout {
