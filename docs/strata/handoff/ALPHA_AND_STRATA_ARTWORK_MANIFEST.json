@@ -1,0 +1,49 @@
+{
+  "project": "MINER STRATA 2.0.0",
+  "status": "development preview only; NOT official release",
+  "original_alpha_assets_verified_in_git_tree": {
+    "docs/assets/miner-alpha-v1-release-banner.png": {
+      "git_blob_sha": "ba41d762effb1e0ce6f26f70f530b61816698045",
+      "git_blob_size": 1531378
+    },
+    "docs/assets/miner-readme-banner.png": {
+      "git_blob_sha": "793f44568c5a97be783e7535df751e03321f8a6f",
+      "git_blob_size": 1336246
+    }
+  },
+  "verified_git_commit": "7889545ea4c41301b0f75995f541d9c8164e9d16",
+  "new_assets": {
+    "proposal/docs/assets/miner-strata-release-preview-banner.png": {
+      "width": 2172,
+      "height": 724,
+      "format": "PNG",
+      "sha256": "763e2568c95926b0bf891f7d867183a62ac3285b54024b83cd439e8be38e42ce"
+    },
+    "artwork_archive/strata_first_full_banner_sheet.png": {
+      "width": 2172,
+      "height": 724,
+      "format": "PNG",
+      "sha256": "a2fea667a8c2b569666f5b2d9bab1a5bfaf946161fde07aa920c14f1db292de8"
+    },
+    "artwork_archive/strata_alternate_full_banner_sheet.png": {
+      "width": 2172,
+      "height": 724,
+      "format": "PNG",
+      "sha256": "66bb45e6b18ac15fa0f427b8a366e5f6503d254bdc7c9e888423f053c776de40"
+    },
+    "artwork_archive/strata_concise_preview.png": {
+      "width": 2908,
+      "height": 541,
+      "format": "PNG",
+      "sha256": "5151be6fffeaa699cf33a47d0f21dd8e9a2dc1b334556e594bedb40d712b898f"
+    },
+    "artwork_archive/strata_dig_your_way_out_wide.png": {
+      "width": 2908,
+      "height": 541,
+      "format": "PNG",
+      "sha256": "5151be6fffeaa699cf33a47d0f21dd8e9a2dc1b334556e594bedb40d712b898f"
+    }
+  },
+  "original_alpha_image_binaries_included": false,
+  "instruction": "Original ALPHA images remain in full GitHub checkout, never delete/overwrite them. Image size and font of ALPHA release banner have NOT been visually verified in this package; compare before final publication."
+}

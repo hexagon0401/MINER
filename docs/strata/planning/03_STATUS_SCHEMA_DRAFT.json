@@ -1,0 +1,106 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "MINER 2.0.0 read-only status response - proposed not implemented",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "api_version",
+    "generation",
+    "observed_at",
+    "service",
+    "route",
+    "warp",
+    "riot_service",
+    "game",
+    "recovery"
+  ],
+  "properties": {
+    "api_version": {
+      "const": "2.0-draft"
+    },
+    "generation": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "observed_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "service": {
+      "$ref": "#/$defs/observedState"
+    },
+    "route": {
+      "$ref": "#/$defs/observedState"
+    },
+    "warp": {
+      "$ref": "#/$defs/observedState"
+    },
+    "riot_service": {
+      "$ref": "#/$defs/observedState"
+    },
+    "game": {
+      "$ref": "#/$defs/observedState"
+    },
+    "recovery": {
+      "type": "object",
+      "required": [
+        "lease_present",
+        "owner_valid",
+        "required"
+      ],
+      "properties": {
+        "lease_present": {
+          "type": "boolean"
+        },
+        "owner_valid": {
+          "type": "boolean"
+        },
+        "required": {
+          "type": "boolean"
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "$defs": {
+    "observedState": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "status",
+        "reason_code",
+        "evidence",
+        "observed_at",
+        "ttl_seconds"
+      ],
+      "properties": {
+        "status": {
+          "type": "string"
+        },
+        "reason_code": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "evidence": {
+          "enum": [
+            "CODE_TEST",
+            "LIVE_PROBE",
+            "PASSIVE_OBSERVATION",
+            "USER_REPORT",
+            "NONE"
+          ]
+        },
+        "observed_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "ttl_seconds": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    }
+  }
+}

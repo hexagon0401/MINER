@@ -1,0 +1,25 @@
+{
+  "repository": "https://github.com/hexagon0401/MINER",
+  "repository_full_name": "hexagon0401/MINER",
+  "reference_branch": "main",
+  "reference_sha": "7889545ea4c41301b0f75995f541d9c8164e9d16",
+  "reference_tree_entries_including_directories": 1478,
+  "reference_tree_blob_files": 1228,
+  "reference_blob_total_bytes": 227257771,
+  "archive_binary_files_exist": true,
+  "bundled_source_kind": "previously audited partial source snapshot, not full clone",
+  "source_of_truth": "authenticated full git checkout at reference commit or a reviewed descendant",
+  "requires_codex_to_fetch_repository": true,
+  "no_shipping_claims": true,
+  "required_paths": [
+    "README.md",
+    "v5/main.py",
+    "v5/schoolnet/config.py",
+    "v5/windows/controller.py",
+    "v5/macos/App.swift",
+    "v5/community/catalog.py",
+    "v5/macos/dmg_layout.py",
+    "v5/macos/retry_release.py",
+    "packaging/homebrew/generate.py"
+  ]
+}
