@@ -17,12 +17,14 @@ class WarpTests(unittest.TestCase):
 
     def test_restore_explicit_udp_mode_and_validate(self):
         calls = []
+        settings=iter(['Mode: WarpProxy','Mode: Warp'])
         def call(cli, *args, **kwargs):
             calls.append(args)
-            return {("mode", "--help"): "warp warp+doh proxy", ("status",): "Connected", ("settings",): "Mode: Warp\n"}.get(args, "Success")
+            if args==('settings',):return next(settings)
+            return {("mode", "--help"): "warp warp+doh proxy", ("status",): "Connected"}.get(args, "Success")
         with patch.object(warp, "resolve_cli", return_value="warp-cli"), patch.object(warp, "command", side_effect=call):
             self.assertTrue(warp.restore()["restored"])
-        self.assertEqual(calls[1:4], [("disconnect",), ("mode", "warp"), ("connect",)])
+        self.assertEqual(calls[2:5], [("disconnect",), ("mode", "warp"), ("connect",)])
 
     def test_progress_follows_real_checks(self):
         calls, call = self.cli_fixture()
@@ -39,7 +41,7 @@ class WarpTests(unittest.TestCase):
     def test_restore_wrong_dns_mode_is_not_success(self):
         def call(cli, *args, **kwargs):
             return {("mode", "--help"): "warp proxy", ("status",): "Connected", ("settings",): "Mode: WarpWithDnsOverHttps\n"}.get(args, "Success")
-        with patch.object(warp, "resolve_cli", return_value="warp-cli"), patch.object(warp, "command", side_effect=call), self.assertRaisesRegex(ValueError, "did not confirm UDP"):
+        with patch.object(warp, "resolve_cli", return_value="warp-cli"), patch.object(warp, "command", side_effect=call), patch.object(warp.time,"monotonic",side_effect=[0,0,31]), patch.object(warp.time,"sleep"), self.assertRaisesRegex(ValueError, "restoration timed out"):
             warp.restore()
     def cli_fixture(self, mode="full", status="Disconnected", supported=True):
         calls = []
@@ -171,3 +173,25 @@ class TraceDeadlineTests(unittest.TestCase):
         with patch('socket.create_connection'),patch.object(warp,'socks_connect'),patch('ssl.create_default_context',return_value=context),patch('http.client.HTTPResponse',return_value=response),self.assertRaises(TimeoutError):
             warp.verify_trace(timeout=.15)
         self.assertLess(time.monotonic()-begin,1)
+
+class RestorationTests(unittest.TestCase):
+    def test_connected_status_does_not_prematurely_fail_during_mode_transition(self):
+        calls=[];settings=iter(['Mode: WarpProxy','Mode: WarpProxy','Mode: Warp'])
+        def command(cli,*args,**kw):
+            calls.append(args)
+            if args==('mode','--help'):return 'warp proxy'
+            if args==('settings',):return next(settings)
+            if args==('status',):return 'Status update: Connected'
+            return 'Success'
+        with patch.object(warp,'resolve_cli',return_value='fixture'),patch.object(warp,'command',side_effect=command),patch.object(warp.time,'sleep'):
+            self.assertTrue(warp.restore()['restored'])
+        self.assertEqual(calls.count(('disconnect',)),1)
+
+    def test_restoration_retry_preserves_already_restored_connection(self):
+        calls=[]
+        def command(cli,*args,**kw):
+            calls.append(args)
+            return 'warp proxy' if args==('mode','--help') else 'Mode: Warp' if args==('settings',) else 'Status update: Connected'
+        with patch.object(warp,'resolve_cli',return_value='fixture'),patch.object(warp,'command',side_effect=command):
+            self.assertFalse(warp.restore()['reconfigured'])
+        self.assertNotIn(('disconnect',),calls);self.assertNotIn(('connect',),calls)

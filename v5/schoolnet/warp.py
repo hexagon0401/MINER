@@ -202,6 +202,10 @@ def restore(warp_cli=None, wait_seconds=30):
     help_text = command(cli, "mode", "--help")
     if not re.search(r"(?<![\w+\-])warp(?![\w+\-])", help_text):
         raise ValueError("installed WARP CLI does not advertise UDP mode warp; restoration was not attempted")
+    # Retrying a completed restore must not tear down healthy client sessions.
+    settings = command(cli, "settings")
+    if re.search(r"^\s*(?:\([^\n)]*\)\s*)?Mode:\s*Warp\s*$", settings, re.MULTILINE) and connected(command(cli,"status")):
+        return {"connected":True,"mode":"Warp","dns_transport":"UDP","restored":True,"reconfigured":False}
     command(cli, "disconnect")
     command(cli, "mode", "warp")
     command(cli, "connect")
@@ -211,6 +215,9 @@ def restore(warp_cli=None, wait_seconds=30):
             settings = command(cli, "settings", timeout=5)
             if re.search(r"^\s*(?:\([^\n)]*\)\s*)?Mode:\s*Warp\s*$", settings, re.MULTILINE):
                 return {"connected": True, "mode": "Warp", "dns_transport": "UDP", "restored": True}
-            raise ValueError("WARP did not confirm UDP Traffic and DNS mode; inspect warp-cli settings")
+            # CLI settings can lag behind a Connected status after mode changes.
+            # Do not abort on the first intermediate observation; verify both
+            # state and mode until the bounded deadline.
+
         time.sleep(.5)
     raise ValueError("WARP UDP restoration timed out; inspect warp-cli status/settings")
