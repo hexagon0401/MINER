@@ -99,7 +99,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         refresh()
         DispatchQueue.main.asyncAfter(deadline:.now()+4) { if self.model.autoUpdates { self.checkUpdate() } }
         updateTimer=Timer.scheduledTimer(withTimeInterval:21600,repeats:true) { _ in if self.model.autoUpdates { self.checkUpdate() } }
-        healthTimer=Timer.scheduledTimer(withTimeInterval:15,repeats:true) { _ in self.checkSessionHealth() }
+        healthTimer=Timer.scheduledTimer(withTimeInterval:15,repeats:true) { _ in self.model.observationClock=Date();self.checkSessionHealth() }
     }
 
     func append(_ text: String) {
@@ -128,6 +128,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             DispatchQueue.main.async {
                 guard cancellation?.cancelled != true else { return }
                 self.model.phase="admin_auth";self.model.completed=3
+            }
+        }
+        if arguments.prefix(2).elementsEqual(["warp","service-check"]) {
+            DispatchQueue.main.sync {
+                self.model.probeGeneration+=1;self.model.probeRequest=cancellation?.session ?? UUID().uuidString
+                self.model.riotProbeStatus="NOT_RUN";self.model.probeObservedAt=0
+                scoped += ["--request-id",self.model.probeRequest,"--generation",String(self.model.probeGeneration)]
             }
         }
         let executable:String
@@ -289,9 +296,20 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                                      "--profile", self.dataDirectory.path,"--owner",String(getuid())], administrator: true)
             }
             DispatchQueue.main.sync { self.running=true;self.model.phase="service_verify";self.model.completed=4 }
-            _ = try self.execute(["warp","service-check","--proxy-port",String(self.currentProxyPort),"--progress"])
+            do { _ = try self.execute(["warp","service-check","--proxy-port",String(self.currentProxyPort),"--progress"]) }
+            catch {
+                if (error as NSError).domain == "MINER.cancelled" { throw error }
+                DispatchQueue.main.sync { self.model.error=self.model.tr("분리 경로 준비됨 · Riot 서비스 확인 실패. 실제 통계 기능은 미검증입니다.","Routing ready · Riot check failed. Statistics remain unverified.") }
+                self.appendProbeFailure(error)
+            }
             return engineResult
-        }, completion: { self.running = true; self.model.phase = "running"; self.model.completed = 5; self.model.warp = true })
+        }, completion: {
+            self.running=true;self.model.completed=5;self.model.warp=true
+            self.model.phase=self.model.effectiveProbeStatus == "PASS" ? "running" : "connection_warning"
+        })
+    }
+    func appendProbeFailure(_ error:Error) {
+        DispatchQueue.main.async { self.append(error.localizedDescription) }
     }
     @objc func stop() {
         if busy {
@@ -356,7 +374,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                     DispatchQueue.main.async {
                         self.healthBusy=false
                         guard !token.cancelled && !self.busy && self.running else { return }
-                        if ["error","connection_warning"].contains(self.model.phase) && self.model.error==self.healthFailure { self.model.error="";self.model.phase="running" }
+                        if self.model.effectiveProbeStatus == "PASS" && ["error","connection_warning"].contains(self.model.phase) && self.model.error==self.healthFailure { self.model.error="";self.model.phase="running" }
                         self.healthFailure=""
                     }
                 }
@@ -487,6 +505,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 }
 
+#if !STRATA_HEALTH_TESTS
 @main struct MinerApplication {
     @MainActor static func main() {
         let app = NSApplication.shared
@@ -496,3 +515,5 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         app.run()
     }
 }
+
+#endif

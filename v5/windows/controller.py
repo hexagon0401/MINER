@@ -6,6 +6,9 @@ import signal
 import subprocess
 import threading
 import time
+import uuid
+from schoolnet.protocol_output import ServiceProbeError,probe_event
+from schoolnet.health_model import Observation
 
 from schoolnet import warp
 from schoolnet.session_safety import require_clean_start
@@ -40,11 +43,15 @@ def stop_engine(child):
         raise ValueError('Engine forced to stop. Check Windows routes and DNS before reconnecting.')
 
 
-def session(directory, engine, stop, emit, restore_only=False, emergency=None):
+def session(directory, engine, stop, emit, restore_only=False, emergency=None, observe=None):
     from dataclasses import replace
     from schoolnet.dns_forwarder import Forwarder
     from schoolnet.network_dns import Lease, probe_dns
     from schoolnet.dns_guard import spawn as spawn_guard
+    observe=observe or (lambda event:None)
+    request_id=uuid.uuid4().hex;generation=time.monotonic_ns()
+    def status(component,state,reason):
+        observe(Observation(component,state,request_id,generation,time.time(),60,'PASSIVE_OBSERVATION',reason).event())
     emergency = emergency or threading.Event()
     if not is_admin(): raise ValueError('Administrator permission is required. Restart MINER as administrator.')
     if not restore_only:require_clean_start()
@@ -81,8 +88,13 @@ def session(directory, engine, stop, emit, restore_only=False, emergency=None):
                         if not stop.is_set():
                             guardian=spawn_guard(directory,child.pid)
                             lease.activate()
+                            status('engine','READY','ENGINE_READY');status('route','ACTIVE','ROUTE_ACTIVE')
                             emit('service_verify',4)
-                            warp.verify_client_service(profile.proxy_port)
+                            try:warp.verify_client_service(profile.proxy_port)
+                            except Exception as exc:
+                                error=exc if isinstance(exc,ServiceProbeError) else ServiceProbeError(exc)
+                                observe(probe_event(request_id,generation,error=error));raise error from exc
+                            observe(probe_event(request_id,generation))
                             if not stop.is_set():emit('running',5)
                         last_health=time.monotonic();last_warning=None
                         while child.poll() is None and not stop.wait(.25):
@@ -125,7 +137,10 @@ def session(directory, engine, stop, emit, restore_only=False, emergency=None):
                 if emergency.is_set():
                     try:warp.deactivate();disconnected=True
                     except Exception as exc:cleanup.append(str(exc))
-            if cleanup:raise ValueError('Recovery needs retry: '+'; '.join(cleanup)) from failure
+            if cleanup:
+                status('route','FAILED','CLEANUP_FAILED')
+                raise ValueError('Recovery needs retry: '+'; '.join(cleanup)) from failure
+            status('engine','STOPPED','ENGINE_STOPPED');status('route','RESTORED','CLEANUP_COMPLETED')
         if failure is not None and not emergency.is_set():raise failure
         marker.unlink(missing_ok=True)
         emit('disconnected' if disconnected else 'restored',0)

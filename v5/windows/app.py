@@ -13,6 +13,7 @@ from PySide6.QtQml import QQmlApplicationEngine
 from PySide6.QtQuick import QQuickWindow, QSGRendererInterface
 from PySide6.QtQuickControls2 import QQuickStyle
 from windows.controller import session
+from schoolnet.health_model import HealthState,Observation
 from windows.platform_ui import WORDS, windows_appearance
 from windows.version import LABEL
 
@@ -23,11 +24,11 @@ DATA=Path(os.environ.get('LOCALAPPDATA',str(Path.home())))/'MINER'/'Beta1'
 
 
 class Worker(QThread):
-    progress=Signal(str,int);failed=Signal(str)
+    observation=Signal(object);progress=Signal(str,int);failed=Signal(str)
     def __init__(self,restore=False):
         super().__init__();self.stop_event=threading.Event();self.emergency_event=threading.Event();self.restore=restore
     def run(self):
-        try:session(DATA,ROOT/'engine/sing-box.exe',self.stop_event,lambda p,c:self.progress.emit(p,c),self.restore,self.emergency_event)
+        try:session(DATA,ROOT/'engine/sing-box.exe',self.stop_event,lambda p,c:self.progress.emit(p,c),self.restore,self.emergency_event,lambda event:self.observation.emit(event))
         except Exception as exc:self.failed.emit(str(exc))
 
 
@@ -51,7 +52,7 @@ class Bridge(QObject):
     changed=Signal();effect=Signal(str);closeRequested=Signal()
     def __init__(self,testing=False):
         super().__init__();self.testing=testing;self.worker=None;self.closing=False;self.detail='';self.count=0
-        self.startup_blocked=False;self.settings_open=False;self.fixture_busy=False;self.pending_kill=False;self.effects_supported=False
+        self.health=HealthState();self.component_states={};self.startup_blocked=False;self.settings_open=False;self.fixture_busy=False;self.pending_kill=False;self.effects_supported=False
         self.update_worker=None;self.update_busy=False;self.installing_update=False;self.update_message='';self.update_info=None;self.pending_installer=None
         failure=DATA/'Updates/install-error.txt'
         if failure.is_file():
@@ -85,7 +86,7 @@ class Bridge(QObject):
             'dark':False,'controlLayout':self.control_layout,'effectsSupported':self.effects_supported,
             'reduced':self.reduced or self.appearance['reduced'],'systemReduced':self.appearance['reduced'],
             'contrast':self.appearance['contrast'],'phase':self.phase,'completed':self.count,
-            'startupBlocked':self.startup_blocked,'detail':self.detail,'canStart':not self.dirty and not active and not self.installing_update,
+            'components':{key:{**value,'status':self.health.status(key)} for key,value in self.component_states.items()},'startupBlocked':self.startup_blocked,'detail':self.detail,'canStart':not self.dirty and not active and not self.installing_update,
             'canStop':self.dirty and self.phase not in ('restoring','disconnecting'),
             'canKill':self.phase not in ('disconnecting','disconnected'),
             'busy':(active or self.fixture_busy) and self.phase not in ('running','connection_warning','restoring','disconnecting','error','restored','disconnected'),
@@ -109,8 +110,18 @@ class Bridge(QObject):
     def launch(self,restore):
         if self.worker and self.worker.isRunning():return
         self.worker=Worker(restore);self.worker.progress.connect(self.update_state)
-        self.worker.failed.connect(self.failure);self.worker.finished.connect(self.finished)
+        self.worker.observation.connect(self.component_state);self.worker.failed.connect(self.failure);self.worker.finished.connect(self.finished)
         self.worker.start();self.changed.emit()
+    def component_state(self,event):
+        try:
+            observation=Observation(**{key:event[key] for key in Observation.__dataclass_fields__})
+            if observation.generation<self.health.generation:return
+            if observation.generation>self.health.generation:self.component_states.clear()
+            component=observation.component
+            if observation.generation>self.health.generation or component not in self.health.pending:
+                self.health.begin(component,observation.request_id,observation.generation)
+            if self.health.accept(observation):self.component_states[component]=event;self.changed.emit()
+        except (KeyError,TypeError,ValueError):return
     def update_state(self,phase,count):
         if self.worker and self.worker.stop_event.is_set() and phase not in ('restored','disconnected'):
             phase='disconnecting' if self.worker.emergency_event.is_set() else 'restoring';count=0
@@ -183,7 +194,7 @@ class Bridge(QObject):
 
     def launch_kill(self):
         self.worker=Worker(True);self.worker.emergency_event.set()
-        self.worker.progress.connect(self.update_state);self.worker.failed.connect(self.failure);self.worker.finished.connect(self.finished)
+        self.worker.progress.connect(self.update_state);self.worker.observation.connect(self.component_state);self.worker.failed.connect(self.failure);self.worker.finished.connect(self.finished)
         self.worker.start();self.changed.emit()
 
     @Slot(bool)

@@ -17,6 +17,13 @@ final class CommandCancellation {
 // Read only available bytes; a grandchild inheriting stdout cannot hold the UI
 // operation forever after its actual child has exited.
 enum CommandRunner {
+    static func userFailure(_ text:String)->String {
+        let lines=text.components(separatedBy:.newlines).filter { line in
+            guard let data=line.data(using:.utf8),let json=try? JSONSerialization.jsonObject(with:data) as? [String:Any] else { return !line.isEmpty }
+            return json["event"] == nil
+        }
+        return lines.isEmpty ? "명령 실패. 상세 상태를 확인하세요. / Command failed; inspect component status." : String(lines.joined(separator:"\n").suffix(4000))
+    }
     static func run(_ executable:String,_ arguments:[String],timeout:TimeInterval,
                     cancellation:CommandCancellation?=nil,interruptible:Bool=true,onLine:((String)->Void)?=nil) throws -> String {
         let process=Process();process.executableURL=URL(fileURLWithPath:executable);process.arguments=arguments
@@ -66,7 +73,7 @@ enum CommandRunner {
             throw NSError(domain:cancelled ? "MINER.cancelled":"MINER.timeout",code:1,userInfo:[NSLocalizedDescriptionKey:cancelled ? "연결 작업을 취소했습니다. / Connection cancelled.":"명령 응답 시간이 초과됐습니다. 중지 및 복구를 다시 시도하세요. / Command timed out; retry Stop and recovery."])
         }
         let text=String(decoding:output,as:UTF8.self)
-        guard process.terminationStatus==0 else { throw NSError(domain:"MINER.command",code:Int(process.terminationStatus),userInfo:[NSLocalizedDescriptionKey:String(text.suffix(4000))]) }
+        guard process.terminationStatus==0 else { throw NSError(domain:"MINER.command",code:Int(process.terminationStatus),userInfo:[NSLocalizedDescriptionKey:userFailure(text)]) }
         return text
     }
 }

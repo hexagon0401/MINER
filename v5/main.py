@@ -41,6 +41,8 @@ def main(argv=None):
     probe.add_argument("--timeout", type=float, default=3)
     warp = commands.add_parser("warp", help="configure or inspect the installed WARP Local Proxy")
     warp.add_argument("operation", choices=["connect", "status", "disconnect", "restore", "maintain", "service-check"])
+    warp.add_argument("--request-id",default="cli")
+    warp.add_argument("--generation",type=int,default=0)
     warp.add_argument("--progress", action="store_true")
     warp.add_argument("--proxy-port", type=int, default=40000)
     warp.add_argument("--warp-cli")
@@ -149,7 +151,15 @@ def main(argv=None):
                 result = inspect(args.proxy_port, args.warp_cli)
             elif args.operation == "service-check":
                 if args.progress:progress("service_verify",4)
-                result=verify_client_service(args.proxy_port)
+                from schoolnet.protocol_output import ServiceProbeError,emit_probe
+                # Validate correlation metadata before any probe traffic.
+                from schoolnet.protocol_output import probe_event
+                probe_event(args.request_id,args.generation)
+                try:result=verify_client_service(args.proxy_port)
+                except ServiceProbeError as exc:
+                    emit_probe(args.request_id,args.generation,exc)
+                    print(str(exc),file=sys.stderr);return 1
+                emit_probe(args.request_id,args.generation)
             elif args.operation == "maintain":
                 result = maintain_proxy(args.proxy_port,args.warp_cli)
             else:
