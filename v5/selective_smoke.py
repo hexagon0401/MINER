@@ -145,7 +145,12 @@ def run(engine,directory,guardian_executable=None):
                     from schoolnet.config import FAKE_V6
                     try:os_ipv6=socket.getaddrinfo('login.riotgames.com',443,socket.AF_INET6,socket.SOCK_STREAM)[0][4][0]
                     except socket.gaierror:os_ipv6=None
-                    report['os_resolver_aaaa_synthetic']=bool(os_ipv6 and ipaddress.ip_address(os_ipv6) in ipaddress.ip_network(FAKE_V6))
+                    resolved=ipaddress.ip_address(os_ipv6) if os_ipv6 else None
+                    mapped=resolved.ipv4_mapped if resolved else None
+                    native_synthetic=bool(resolved and resolved in ipaddress.ip_network(FAKE_V6))
+                    mapped_synthetic=bool(mapped and mapped in ipaddress.ip_network(FAKE_V4))
+                    report['os_resolver_aaaa_address_class']='synthetic_v6' if native_synthetic else 'synthetic_v4_mapped' if mapped_synthetic else 'non_synthetic_v6' if resolved else 'no_result'
+                    report['os_resolver_aaaa_synthetic']=native_synthetic or mapped_synthetic
                     if system=='Windows':assert report['os_resolver_aaaa_synthetic'],'Windows OS AAAA selective DNS regression'
                     report['os_resolver_aaaa_boundary']='NONE_OBSERVED' if report['os_resolver_aaaa_synthetic'] else 'OS_SCOPE_CACHE_OR_IPV6_POLICY_REQUIRES_FIELD_TEST'
                     ipv6=(synthetic_aaaa('login.riotgames.com'),443)

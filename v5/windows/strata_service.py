@@ -144,7 +144,7 @@ def host(backend_factory=Backend):
                                 if exc.winerror!=232:raise
                                 time.sleep(.05)
                         if not data:continue
-                        stage='authenticate';win32pipe.ImpersonateNamedPipeClient(handle)
+                        stage='authenticate';win32security.ImpersonateNamedPipeClient(handle)
                         try:
                             token=win32security.OpenThreadToken(__import__('win32api').GetCurrentThread(),win32security.TOKEN_QUERY,True)
                             try:peer=win32security.ConvertSidToStringSid(win32security.GetTokenInformation(token,win32security.TokenUser)[0])
@@ -181,8 +181,15 @@ def request(operation,generation=0,profile=None):
     import win32file,win32pipe,win32serviceutil,pywintypes,ctypes
     message={'api_version':'strata-2','request_id':uuid.uuid4().hex,'expected_generation':generation,'operation':operation}
     if profile is not None:message['profile']=profile.to_dict()
-    win32pipe.WaitNamedPipe(PIPE,5000)
-    handle=win32file.CreateFile(PIPE,0xC0000000,0,None,3,0,None)
+    connect_deadline=time.monotonic()+5
+    while True:
+        try:
+            win32pipe.WaitNamedPipe(PIPE,max(1,int((connect_deadline-time.monotonic())*1000)))
+            handle=win32file.CreateFile(PIPE,0xC0000000,0,None,3,0x00110000,None)  # Identification-only SQOS.
+            break
+        except pywintypes.error as exc:
+            if exc.winerror not in (2,121,231) or time.monotonic()>=connect_deadline:raise
+            time.sleep(.05)
     try:
         server=ctypes.c_ulong()
         identify=ctypes.windll.kernel32.GetNamedPipeServerProcessId

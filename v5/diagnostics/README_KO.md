@@ -1,6 +1,8 @@
-# MINER 로컬 진단 패키지 v1.0.1
+# MINER 로컬 진단 패키지 — STRATA Preview 1
 
-우선 확인 대상: **macOS / WARP 2026.8.2100.0 / MINER 1.2.2**. Windows도 같은 형식으로 비교합니다. 이 도구는 MINER나 WARP를 설치·업데이트·복구하거나 게임을 실행하지 않습니다. 기존 1.2.2 앱을 그대로 둔 상태에서 사용합니다.
+확인 대상: **macOS·Windows / 개인용 WARP / MINER STRATA 2.0.0 Preview 1**. 기존 ALPHA도 같은 형식으로 비교할 수 있습니다. 이 도구는 MINER나 WARP를 설치·업데이트·복구하거나 게임을 실행하지 않습니다.
+
+STRATA 시험에서는 `--interactive --cycle 1`처럼 회차(1~10)를 지정할 수 있습니다. 통계창 단계에서 표시됨·30초 이상 로딩·오류를 고르면 USER_REPORT로 기록합니다. 실제 통계 API를 검증했다고 표시하지 않습니다. 같이 제공한 `MACBOOK_TEST_KO.md`와 CSV를 사용하세요. 아래 v1.0.1 절은 진단 형식의 변경 기록으로 보존합니다.
 
 ## 실행
 
