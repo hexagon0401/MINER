@@ -78,7 +78,7 @@ class Backend:
         except Exception as exc:observe(probe_event(rid,0,error=ServiceProbeError(exc)));raise
         observe(probe_event(rid,0))
 
-def host():
+def host(backend_factory=Backend):
     import servicemanager,win32service,win32serviceutil,win32event,win32pipe,win32file,win32security,pywintypes,ctypes
     from schoolnet.supervisor import Supervisor
     from schoolnet.lease_owner import Ownership
@@ -100,13 +100,14 @@ def host():
         def SvcDoRun(self):
             ctypes.windll.kernel32.AllocConsole()
             self.quit=threading.Event();owner=config()['owner'];record=Ownership(root()/'strata-owner.json',owner);old=record.read()
-            self.actor=Supervisor(owner,Backend(),record.save,old['generation'])
+            self.actor=Supervisor(owner,backend_factory(),record.save,old['generation'])
             if old['unfinished']:self.actor.state='RECOVERY_REQUIRED';self.actor.reason='PREVIOUS_SESSION_UNFINISHED'
             security=pywintypes.SECURITY_ATTRIBUTES()
             security.SECURITY_DESCRIPTOR=win32security.ConvertStringSecurityDescriptorToSecurityDescriptor('D:P(A;;GA;;;SY)(A;;GA;;;'+owner+')',1)
             handle=win32pipe.CreateNamedPipe(PIPE,3|0x00080000,4|2|1,1,65536,65536,3000,security)
             try:
                 while not self.quit.is_set():
+                    connected=False
                     try:
                         try:win32pipe.ConnectNamedPipe(handle,None)
                         except pywintypes.error as exc:
@@ -115,6 +116,7 @@ def host():
                                 try:win32pipe.DisconnectNamedPipe(handle)
                                 except pywintypes.error:pass
                                 time.sleep(.05);continue
+                        connected=True
                         deadline=time.monotonic()+3;data=None
                         while not self.quit.is_set() and time.monotonic()<deadline:
                             try:data=win32file.ReadFile(handle,16384)[1];break
@@ -133,8 +135,9 @@ def host():
                         win32file.WriteFile(handle,json.dumps(response).encode())
                     except (pywintypes.error,ValueError):pass
                     finally:
-                        try:win32pipe.DisconnectNamedPipe(handle)
-                        except pywintypes.error:pass
+                        if connected:
+                            try:win32pipe.DisconnectNamedPipe(handle)
+                            except pywintypes.error:pass
             finally:handle.Close()
             if self.actor.worker:self.actor.worker.join(65)
     servicemanager.Initialize();servicemanager.PrepareToHostSingle(Service);servicemanager.StartServiceCtrlDispatcher()
@@ -147,7 +150,9 @@ def request(operation,generation=0,profile=None):
     handle=win32file.CreateFile(PIPE,0xC0000000,0,None,3,0,None)
     try:
         server=ctypes.c_ulong()
-        if not ctypes.windll.kernel32.GetNamedPipeServerProcessId(int(handle),ctypes.byref(server)):raise ctypes.WinError()
+        identify=ctypes.windll.kernel32.GetNamedPipeServerProcessId
+        identify.argtypes=[ctypes.c_void_p,ctypes.POINTER(ctypes.c_ulong)];identify.restype=ctypes.c_int
+        if not identify(int(handle),ctypes.byref(server)):raise ctypes.WinError()
         if server.value!=win32serviceutil.QueryServiceStatusEx(NAME)['ProcessId']:raise ValueError('Untrusted service endpoint')
         win32pipe.SetNamedPipeHandleState(handle,2|1,None,None)
         win32file.WriteFile(handle,json.dumps(message).encode())

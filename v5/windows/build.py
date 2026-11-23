@@ -121,6 +121,8 @@ def main():
     execute(setup,'/VERYSILENT','/SUPPRESSMSGBOXES','/NORESTART',f'/DIR={service_install}')
     from windows.service_smoke import run as service_smoke
     scm=service_smoke(service_install/'MINER.exe')
+    from windows.service_lifetime_smoke import run as lifetime_smoke
+    scm['lifetime_fixture']=lifetime_smoke(service_install,work)
     execute(service_install/'unins000.exe','/VERYSILENT','/SUPPRESSMSGBOXES','/NORESTART')
     import platform
     report={'test_os':platform.platform(),'version':VERSION,'base':'MINER Beta 1.1','architecture':'x64','strata_service':scm,

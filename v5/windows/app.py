@@ -322,6 +322,8 @@ def main():
     if ctypes.get_last_error()==183:
         ctypes.windll.user32.MessageBoxW(None,'MINER is already running. / MINER가 이미 실행 중입니다.','MINER',0x40)
         kernel.CloseHandle(mutex);return 1
+    installer_barrier=kernel.CreateMutexW(None,False,'Global\\MINER.Beta1.Windows')
+    if not installer_barrier:kernel.CloseHandle(mutex);raise ctypes.WinError(ctypes.get_last_error())
     kernel.AllocConsole();ctypes.windll.user32.ShowWindow(kernel.GetConsoleWindow(),0)
     app,engine,bridge,window=create_app()
     app.setQuitOnLastWindowClosed(False)
@@ -339,7 +341,7 @@ def main():
     if bridge.update_worker:bridge.update_worker.cancelled.set()
     import shiboken6
     shiboken6.delete(window);shiboken6.delete(engine)
-    kernel.CloseHandle(mutex);return code
+    kernel.CloseHandle(installer_barrier);kernel.CloseHandle(mutex);return code
 
 
 if __name__=='__main__':sys.exit(main())

@@ -123,9 +123,9 @@ def run(output):
         class FakeSignal:
             def connect(self,*a):pass
         class FakeWorker:
-            def __init__(self,restore=False):
+            def __init__(self,restore=False,attach=False):
                 self.stop_event=threading.Event();self.emergency_event=threading.Event()
-                self.progress=FakeSignal();self.failed=FakeSignal();self.finished=FakeSignal();self.running=False
+                self.progress=FakeSignal();self.observation=FakeSignal();self.failed=FakeSignal();self.finished=FakeSignal();self.running=False
             def start(self):self.running=True
             def isRunning(self):return self.running
         with patch.object(ui,'Worker',FakeWorker):
