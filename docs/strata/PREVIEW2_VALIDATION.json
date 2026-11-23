@@ -1,0 +1,50 @@
+{
+  "release_url": "https://github.com/hexagon0401/MINER/releases/tag/miner-strata-v2.0.0-preview.2",
+  "native_ci": "https://github.com/hexagon0401/MINER/actions/runs/45157421198",
+  "native_ci_result": "PASS",
+  "local_pinned_engine_tests": 186,
+  "skipped": 0,
+  "github_asset_digests_match": true,
+  "macos": [
+    {
+      "architecture": "arm64",
+      "source_commit": "0989f008c3f8455b18bb50e8287bb0ff31530847",
+      "sha256": "96de1970ac3662790987aeb0454759a58196e9e70c3ebf62dac46e9592d95cde",
+      "normal_launch": {
+        "ok": true,
+        "launch_services_normal_startup": true,
+        "ui_smoke_mode": false,
+        "event_loop_ready": true,
+        "finished_launching": true,
+        "visible_main_window": true,
+        "reopen_received": true,
+        "normal_quit": true,
+        "installation_identity": "system_applications",
+        "start_button_invoked": false,
+        "warp_or_tun_activation_requested": false
+      },
+      "signing": "adhoc"
+    },
+    {
+      "architecture": "x86_64",
+      "source_commit": "0989f008c3f8455b18bb50e8287bb0ff31530847",
+      "sha256": "f82ae4d3cb92e7603bcfa624b0e8c0644dd62f27386edb96549b6fe7ba7176cc",
+      "normal_launch": {
+        "ok": true,
+        "launch_services_normal_startup": true,
+        "ui_smoke_mode": false,
+        "event_loop_ready": true,
+        "finished_launching": true,
+        "visible_main_window": true,
+        "reopen_received": true,
+        "normal_quit": true,
+        "installation_identity": "system_applications",
+        "start_button_invoked": false,
+        "warp_or_tun_activation_requested": false
+      },
+      "signing": "adhoc"
+    }
+  ],
+  "user_machine_root_cause": "not confirmed; reinstall resolved bouncing; executed path not captured",
+  "real_game_tested": false
+}
