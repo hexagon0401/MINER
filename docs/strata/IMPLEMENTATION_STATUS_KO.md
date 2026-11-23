@@ -40,6 +40,8 @@ Windows CI는 실제 SCM과 별도 fixture 자식의 Job 소유권, 제어 클�
 PYTHONPATH=v5 python -m unittest discover -s v5/tests -v
 ```
 
-현재 로컬: 183개 수집, PASS, 엔진 지정이 필요한 3개는 미실행. 최종 native CI는 각 OS의 고정 sing-box 1.12.0을 설치하여 해당 검사를 실행하며 결과는 release receipt와 CI run에서 확인합니다. CI 패키지·TUN·가짜 SOCKS·서비스 시험은 게임 성공 증거가 아닙니다.
+현재 로컬: 고정 sing-box 1.12.0까지 지정하여 **183개 전부 PASS, skip 없음**. Windows persistent controller의 Riot timeout 후 명시적 Stop까지 엔진 유지 및 DNS/WARP 복구도 별도 mock 장애 주입으로 확인했습니다. 최종 native CI는 각 OS의 고정 sing-box 1.12.0을 설치하여 실행하며 결과는 release receipt와 CI run에서 확인합니다. CI 패키지·TUN·가짜 SOCKS·서비스 시험은 게임 성공 증거가 아닙니다.
+
+Mac CI에서 `getaddrinfo(AF_INET6)`의 시스템 AAAA 응답이 FakeIP가 아닌 경계를 관측했습니다. 실제 선택 DNS listener의 AAAA 응답과 합성 IPv6 TCP→SOCKS 경로는 별도로 검사하며, receipt의 `os_resolver_aaaa_synthetic`와 `os_resolver_aaaa_boundary`에 OS 결과도 보존합니다. 시스템 scope/cache/IPv6 정책의 원인은 아직 미확인입니다. 이를 통계창의 확정 원인으로 처리하거나 Mac의 모든 IPv6 경로가 포착된다고 주장하지 않습니다.
 
 실기 기록: [MacBook 시험 안내](MACBOOK_TEST_KO.md), [10회 결과 CSV](STRATA_TEST_RESULTS.csv). G6 미검증 항목을 완료로 채우지 않습니다.

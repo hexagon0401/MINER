@@ -12,6 +12,8 @@ permissions:
   contents: read
 jobs:
   build:
+    # STRATA has its own mandatory native/SCM/packaging workflow.
+    if: github.event_name != 'pull_request' || !startsWith(github.head_ref, 'codex/strata-')
     runs-on: windows-2025
     timeout-minutes: 40
     env:
@@ -71,7 +73,7 @@ jobs:
           TAG: ${{ github.ref_name }}
         run: gh release create "$TAG" release-assets/* --verify-tag --prerelease --title 'MINER BETA 1 — Windows' --notes-file v5/windows/RELEASE_NOTES.md
   report:
-    if: always() && (github.ref_type == 'tag' || (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository))
+    if: always() && (github.ref_type == 'tag' || (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository && !startsWith(github.head_ref, 'codex/strata-')))
     needs: [build, release]
     runs-on: ubuntu-latest
     permissions:

@@ -23,6 +23,8 @@ Mac AppleSilicon·Intel DMG, Windows x64 Setup.exe, 플랫폼별 진단 ZIP, SHA
 
 ## 남은 출시 gate
 
+Mac CI에서 시스템 AAAA 응답이 선택 DNS의 합성 주소와 다른 경계를 관측했습니다. 합성 IPv6의 실제 DNS listener·TCP 전송 검사와 시스템 resolver 결과를 분리해 JSON에 남깁니다. MacBook의 IPv6/scope/cache 조건을 추가 확인해야 하며, 모든 Riot 통신이 포착된다고 보증하지 않습니다.
+
 - 실제 MacBook LoL 통계창 연속 10회, 장시간 연결·게임 RTT/FPS/CPU/RAM 비교
 - Windows 11·실제 WARP·Riot/Vanguard 호환성
 - 로그아웃 시 사용자 WARP 완전 복귀, 다중 사용자·실기 업그레이드/롤백

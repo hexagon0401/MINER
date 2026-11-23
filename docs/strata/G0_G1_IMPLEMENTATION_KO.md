@@ -1,5 +1,7 @@
 # STRATA G0/G1 작업 기록
 
+이 문서는 G0/G1 완료 당시의 보관 기록입니다. 이후 G2~G6 진행과 프리뷰 배포 경계는 [현재 구현 상태](IMPLEMENTATION_STATUS_KO.md)를 확인하세요.
+
 ## 범위와 기준선
 
 - 기준 전체 체크아웃: `7889545ea4c41301b0f75995f541d9c8164e9d16`, tracked blob 1,228개. 첨부 partial snapshot으로 소스를 덮어쓰지 않았다.
