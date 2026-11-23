@@ -249,7 +249,7 @@ struct DeltaRoot: View {
             header.frame(width:size.width-52,height:44).position(x:size.width/2,y:85*sy)
             Text(jokeText).font(.system(size:11)).foregroundStyle(.white.opacity(0.53)).lineLimit(1)
                 .frame(width:size.width-100).position(x:size.width/2,y:374*sy)
-            statusPanel.frame(width:size.width-80,height:model.phase == "error" ? 72 : 58)
+            statusPanel.frame(width:size.width-80,height:["error","connection_warning"].contains(model.phase) ? 72 : 58)
                 .position(x:size.width/2,y:(389+29)*sy)
             startButton(size).position(x:size.width/2,y:459*sy+24)
             stopButton(size).position(x:size.width/2,y:515*sy+18)
@@ -282,8 +282,8 @@ struct DeltaRoot: View {
                 Spacer()
                 Text("\(model.completed)/5").font(.system(size:11)).foregroundStyle(.white.opacity(0.6))
             }
-            Text(model.detail).font(.system(size:11)).lineLimit(model.phase == "error" ? 2 : 1)
-                .foregroundStyle(model.phase == "error" ? Color.red : Color.white.opacity(0.7))
+            Text(model.detail).font(.system(size:11)).lineLimit(["error","connection_warning"].contains(model.phase) ? 2 : 1)
+                .foregroundStyle(["error","connection_warning"].contains(model.phase) ? Color.red : Color.white.opacity(0.7))
             HStack(spacing:5) {
                 ForEach(0..<5) { index in Capsule().fill(index < model.completed ? Color.green : Color.gray.opacity(0.24)).frame(height:4) }
             }
@@ -379,7 +379,7 @@ struct DeltaRoot: View {
                 }
             }
         }
-        if ["error","stopping","stopped","warp_ready"].contains(model.phase) {
+        if ["error","connection_warning","stopping","stopped","warp_ready"].contains(model.phase) {
             cancelVisuals()
             if model.phase != "warp_ready" { successPlayed = false }
             if model.phase == "error" {

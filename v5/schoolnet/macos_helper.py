@@ -10,6 +10,8 @@ import struct
 import subprocess
 import sys
 import time
+import uuid
+from collections import OrderedDict
 
 from . import __version__
 from .config import Profile
@@ -50,6 +52,7 @@ def receive(connection):
 
 
 def request(operation, profile=None, session=None):
+    generation=request('status')['generation'] if operation!='status' else 0
     entry = SOCKET.lstat()
     if not stat.S_ISSOCK(entry.st_mode) or entry.st_uid != os.getuid():
         raise ValueError("Helper endpoint does not belong to this user")
@@ -58,7 +61,7 @@ def request(operation, profile=None, session=None):
         connection.connect(str(SOCKET))
         if peer_uid(connection) != 0:
             raise ValueError("Helper is not a root-owned process")
-        message = {"operation": operation, "version": __version__}
+        message = {"operation": operation, "version": __version__,"request_id":uuid.uuid4().hex,"expected_generation":generation}
         if session is not None:message["session"]=session
         if profile is not None:
             message["profile"] = profile.to_dict()
@@ -91,11 +94,48 @@ def dispatch(message, uid, owner):
     return {"ok": True, "version": __version__, "helper_pid": os.getpid(), **result}
 
 
+class CommandGate:
+    """Serialized launchd command boundary; DNS journal format remains unchanged."""
+    def __init__(self,owner,record=None):
+        self.owner=owner;self.record=record;self.memory={'generation':0,'unfinished':False};self.cache=OrderedDict()
+    def state(self):return self.record.read() if self.record else self.memory
+    def save(self,value):
+        if self.record:self.record.save(value)
+        else:self.memory=value
+    def execute(self,message,uid):
+        import re
+        if uid!=self.owner:raise ValueError('Only the installing user can control MINER')
+        if set(message)-{'operation','version','profile','session','request_id','expected_generation'}:raise ValueError('Unsupported helper fields')
+        rid=message.get('request_id');operation=message.get('operation')
+        if not isinstance(rid,str) or not re.fullmatch('[a-f0-9]{32}',rid) or type(message.get('expected_generation')) is not int:raise ValueError('Invalid helper request')
+        signature=json.dumps(message,sort_keys=True)
+        if rid in self.cache:
+            previous,response=self.cache[rid]
+            if previous!=signature:raise ValueError('Request ID reused')
+            return response
+        state=self.state()
+        if operation!='status' and message['expected_generation']!=state['generation']:raise ValueError('Generation conflict; refresh before retrying')
+        if operation=='start':
+            if service.status()['running']:raise ValueError('MINER is already running')
+            state={'generation':state['generation']+1,'unfinished':True}
+            self.save(state)  # Durable before any DNS/engine mutation.
+        response=dispatch(message,uid,self.owner)
+        if operation=='stop':
+            state={'generation':state['generation'],'unfinished':False};self.save(state)
+        response.update(generation=state['generation'],unfinished=state['unfinished'],statistics_verified=False)
+        if operation!='status':
+            self.cache[rid]=(signature,response)
+            while len(self.cache)>128:self.cache.popitem(last=False)
+        return response
+
+
 def serve(owner):
     if os.geteuid() != 0 or type(owner) is not int or owner <= 0:
         raise ValueError("Helper requires root and a non-root installing user")
     from .network_dns import Lease
     recovery_error=None
+    from .lease_owner import Ownership
+    gate=CommandGate(owner,Ownership(service.BASE/'strata-owner.json',str(owner)) if service.BASE.exists() else None)
     try:
         if not service.status()['running']:Lease.recover(service.BASE/'profile')
     except (OSError,ValueError,subprocess.SubprocessError) as exc:recovery_error=type(exc).__name__
@@ -110,6 +150,13 @@ def serve(owner):
         while True:
             try:connection, _ = server.accept()
             except socket.timeout:
+                # The engine remains launchd-owned after a UI crash/Close. A real
+                # console logout/user switch removes only our engine/DNS lease.
+                # Per-user WARP restoration is left to an explicit GUI Stop.
+                try:
+                    if sys.platform=='darwin' and os.stat('/dev/console').st_uid!=owner and service.status()['running']:
+                        service.stop()
+                except (OSError,ValueError,subprocess.SubprocessError) as exc:recovery_error=type(exc).__name__
                 from .network_dns import JOURNAL
                 if time.monotonic()-last_recovery>=5 and (service.BASE/'profile'/JOURNAL).exists():
                     try:
@@ -126,7 +173,7 @@ def serve(owner):
                     uid=peer_uid(connection)
                     if recovery_error and message.get('operation')=='start':
                         raise ValueError('Previous DNS recovery is pending. Use Stop to retry before connecting.')
-                    response = dispatch(message, uid, owner)
+                    response = gate.execute(message, uid)
                     if message.get('operation')=='stop':recovery_error=None
                     response['recovery_pending']=recovery_error is not None
                 except (ValueError, TypeError, OSError, subprocess.SubprocessError) as exc:

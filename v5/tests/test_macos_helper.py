@@ -52,3 +52,23 @@ class HelperTests(unittest.TestCase):
 
 
 if __name__=="__main__":unittest.main()
+
+
+class MacLeaseGateTests(unittest.TestCase):
+    def test_repeated_request_is_idempotent_and_restart_rejects_old_generation(self):
+        import tempfile
+        from pathlib import Path
+        from schoolnet.lease_owner import Ownership
+        with tempfile.TemporaryDirectory() as d:
+            record=Ownership(Path(d)/'owner.json','501');gate=helper.CommandGate(501,record)
+            request={'operation':'start','version':helper.__version__,'request_id':'a'*32,'expected_generation':0,'profile':{'platform':'macos'}}
+            with patch.object(helper.service,'status',return_value={'running':False}),patch.object(helper.service,'start_installed',return_value={'running':True}) as start:
+                self.assertEqual(gate.execute(request,501)['generation'],1)
+                gate.execute(request,501);start.assert_called_once()
+                with self.assertRaises(ValueError):helper.CommandGate(501,record).execute(request,501)
+                with self.assertRaises(ValueError):gate.execute(dict(request,request_id='b'*32),502)
+                with self.assertRaises(ValueError):gate.execute(dict(request,command='shell'),501)
+            self.assertTrue(record.read()['unfinished'])
+            with patch.object(helper.service,'stop',return_value={'running':False}):
+                gate.execute({'operation':'stop','version':helper.__version__,'request_id':'c'*32,'expected_generation':1},501)
+            self.assertFalse(record.read()['unfinished'])

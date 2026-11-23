@@ -50,8 +50,11 @@ var
   RuntimeStaged, RuntimeMoved, InstallFinished: Boolean;
 
 function InitializeUninstall(): Boolean;
+var Code: Integer;
 begin
   Result := not CheckForMutexes('Global\MINER.Beta1.Windows');
+  if Result and RegKeyExists(HKLM, 'SYSTEM\CurrentControlSet\Services\MINERStrata') then
+    Result := Exec(ExpandConstant('{app}\MINER.exe'), '--strata-maintenance --remove-service', '', SW_HIDE, ewWaitUntilTerminated, Code) and (Code = 0);
   if not Result then MsgBox(CustomMessage('CloseMiner'), mbError, MB_OK);
 end;
 
@@ -64,9 +67,14 @@ begin
 end;
 
 function PrepareToInstall(var NeedsRestart: Boolean): String;
-var Owner: AnsiString;
+var Owner: AnsiString; Code: Integer;
 begin
   Result := '';
+  if RegKeyExists(HKLM, 'SYSTEM\CurrentControlSet\Services\MINERStrata') then begin
+    if not Exec(ExpandConstant('{app}\MINER.exe'), '--strata-maintenance', '', SW_HIDE, ewWaitUntilTerminated, Code) or (Code <> 0) then begin
+      Result := CustomMessage('CloseMiner'); exit;
+    end;
+  end;
   if DirExists(ExpandConstant('{app}\.MINER-upgrade-backup')) then begin
     if not LoadStringFromFile(ExpandConstant('{app}\.MINER-upgrade-state'), Owner) or (Owner <> 'CC8E6450-572D-4EC7-A85E-715E3F3A5021') then begin
       Result := 'Unrecognized backup directory; preserving it.'; exit;

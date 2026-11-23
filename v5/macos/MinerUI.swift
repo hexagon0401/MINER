@@ -3,6 +3,14 @@ import SwiftUI
 import Combine
 
 final class MinerModel: ObservableObject {
+    @Published var riotProbeStatus="NOT_RUN"
+    @Published var probeReason=""
+    var probeRequest=""
+    var probeGeneration=0
+    @Published var observationClock=Date()
+    var probeObservedAt=0.0
+    var probeTTL=60.0
+    var effectiveProbeStatus:String { observationClock.timeIntervalSince1970-probeObservedAt < probeTTL && observationClock.timeIntervalSince1970>=probeObservedAt ? riotProbeStatus : "UNKNOWN" }
     @Published var phase = "idle"
     @Published var completed = 0
     @Published var busy = false
@@ -47,7 +55,21 @@ final class MinerModel: ObservableObject {
         return ["idle":"Start to inspect the connection path.", "cli_check":"Checking WARP CLI capabilities", "proxy_connect":"Verifying Local Proxy on port 40000", "tls_verify":"Verifying TLS and warp=on", "admin_auth":"Use the native macOS authorization dialog", "routing":"Starting the split-routing engine", "warp_ready":"Proxy verified · routing engine not started", "running":"Split-routing engine is running", "stopping":"Waiting for shutdown and WARP restoration", "stopped":"Engine stopped · WARP state shown separately"][phase] ?? ""
     }
     func accept(_ line: String,allowed:@escaping ()->Bool = { true }) {
-        guard let data = line.data(using: .utf8), let event = try? JSONSerialization.jsonObject(with: data) as? [String: Any], event["event"] as? String == "progress", let p = event["phase"] as? String, let n = event["completed"] as? Int else { return }
+        guard let data = line.data(using: .utf8), let event = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else { return }
+        if event["event"] as? String == "component_status" {
+            DispatchQueue.main.async {
+                guard allowed(),event["component"] as? String == "riot_service",
+                      event["request_id"] as? String == self.probeRequest,event["generation"] as? Int == self.probeGeneration,
+                      let status=event["status"] as? String,["PASS","FAIL","TIMEOUT"].contains(status),
+                      let observed=event["observed_at"] as? Double,let ttl=event["ttl_seconds"] as? Double,
+                      observed>self.probeObservedAt,ttl>0,ttl<=300,
+                      Date().timeIntervalSince1970>=observed,Date().timeIntervalSince1970-observed<ttl else { return }
+                self.observationClock=Date();self.probeObservedAt=observed;self.probeTTL=ttl;self.riotProbeStatus=status
+                self.probeReason=event["reason_code"] as? String ?? ""
+            }
+            return
+        }
+        guard event["event"] as? String == "progress",let p=event["phase"] as? String,let n=event["completed"] as? Int else { return }
         DispatchQueue.main.async {
             guard allowed() else { return }
             self.phase = p; self.completed = min(5, max(0,n))
@@ -194,6 +216,7 @@ struct MinerRoot: View {
     var diagnosticsPanel: some View {
         VStack(alignment:.leading,spacing:12) {
             Text(model.tr("상태·로그","Status & logs")).font(.headline)
+            Text("ENGINE: \(model.engine ? "ON" : "OFF") · RIOT: \(model.effectiveProbeStatus) · \(model.probeReason)").font(.caption)
             Text(model.detail).font(.caption).textSelection(.enabled)
             ScrollView {
                 Text(model.redact(model.logs)).font(.system(size:11,design:.monospaced))

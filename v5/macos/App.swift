@@ -14,6 +14,7 @@ func appleString(_ value: String) -> String {
 }
 
 final class AppDelegate: NSObject, NSApplicationDelegate {
+    var statusItem:NSStatusItem?
     var window: NSWindow!
     let model = MinerModel()
     var settingsWindow: NSWindow?
@@ -95,13 +96,21 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             }
             catch { DispatchQueue.main.async { self.append(error.localizedDescription) } }
         }
-        append("MINER ALPHA v1.2.3: 게임 중에도 MINER와 WARP Local Proxy 연결을 유지하세요.")
+        statusItem=NSStatusBar.system.statusItem(withLength:NSStatusItem.variableLength)
+        statusItem?.button?.title="MINER"
+        let tray=NSMenu();let show=tray.addItem(withTitle:"MINER 열기 / Open",action:#selector(showMainWindow),keyEquivalent:"");show.target=self
+        let stop=tray.addItem(withTitle:"연결 종료 / Stop",action:#selector(stop),keyEquivalent:"");stop.target=self
+        let quit=tray.addItem(withTitle:"종료 / Quit",action:#selector(NSApplication.terminate(_:)),keyEquivalent:"");quit.target=NSApp
+        statusItem?.menu=tray
+        append("MINER STRATA 2.0.0 Preview 1: 게임 중에도 연결을 유지하세요. 실제 통계창 복귀는 시험이 필요합니다.")
         refresh()
         DispatchQueue.main.asyncAfter(deadline:.now()+4) { if self.model.autoUpdates { self.checkUpdate() } }
         updateTimer=Timer.scheduledTimer(withTimeInterval:21600,repeats:true) { _ in if self.model.autoUpdates { self.checkUpdate() } }
-        healthTimer=Timer.scheduledTimer(withTimeInterval:15,repeats:true) { _ in self.checkSessionHealth() }
+        healthTimer=Timer.scheduledTimer(withTimeInterval:15,repeats:true) { _ in self.model.observationClock=Date();self.checkSessionHealth() }
+        NSWorkspace.shared.notificationCenter.addObserver(forName:NSWorkspace.didWakeNotification,object:nil,queue:.main) { [weak self] _ in self?.checkSessionHealth() }
     }
 
+    @objc func showMainWindow() { window.makeKeyAndOrderFront(nil);NSApp.activate(ignoringOtherApps:true) }
     func append(_ text: String) {
         model.logs += model.redact(text) + "\n"
         if model.logs.count > 64000 { model.logs = String(model.logs.suffix(64000)) }
@@ -128,6 +137,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             DispatchQueue.main.async {
                 guard cancellation?.cancelled != true else { return }
                 self.model.phase="admin_auth";self.model.completed=3
+            }
+        }
+        if arguments.prefix(2).elementsEqual(["warp","service-check"]) {
+            DispatchQueue.main.sync {
+                self.model.probeGeneration+=1;self.model.probeRequest=cancellation?.session ?? UUID().uuidString
+                self.model.riotProbeStatus="NOT_RUN";self.model.probeObservedAt=0
+                scoped += ["--request-id",self.model.probeRequest,"--generation",String(self.model.probeGeneration)]
             }
         }
         let executable:String
@@ -188,7 +204,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                         if active {
                             self.engineStoppedConfirmed=false;self.managedWarp=true
                             if info["ready"] as? Bool == false { self.model.phase="error";self.model.completed=0;self.model.error=self.model.tr("이전 연결이 준비되지 않았습니다. 중지 후 다시 연결하세요.","Previous engine is not ready. Stop and reconnect.") }
-                            else { self.model.phase="running";self.model.completed=5 }
+                            else { self.model.phase=self.model.effectiveProbeStatus == "PASS" ? "running" : "connection_warning";self.model.completed=5 }
                         }
                     }
                     completion?()
@@ -289,9 +305,20 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                                      "--profile", self.dataDirectory.path,"--owner",String(getuid())], administrator: true)
             }
             DispatchQueue.main.sync { self.running=true;self.model.phase="service_verify";self.model.completed=4 }
-            _ = try self.execute(["warp","service-check","--proxy-port",String(self.currentProxyPort),"--progress"])
+            do { _ = try self.execute(["warp","service-check","--proxy-port",String(self.currentProxyPort),"--progress"]) }
+            catch {
+                if (error as NSError).domain == "MINER.cancelled" { throw error }
+                DispatchQueue.main.sync { self.model.error=self.model.tr("분리 경로 준비됨 · Riot 서비스 확인 실패. 실제 통계 기능은 미검증입니다.","Routing ready · Riot check failed. Statistics remain unverified.") }
+                self.appendProbeFailure(error)
+            }
             return engineResult
-        }, completion: { self.running = true; self.model.phase = "running"; self.model.completed = 5; self.model.warp = true })
+        }, completion: {
+            self.running=true;self.model.completed=5;self.model.warp=true
+            self.model.phase=self.model.effectiveProbeStatus == "PASS" ? "running" : "connection_warning"
+        })
+    }
+    func appendProbeFailure(_ error:Error) {
+        DispatchQueue.main.async { self.append(error.localizedDescription) }
     }
     @objc func stop() {
         if busy {
@@ -341,6 +368,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                 let info=try JSONSerialization.jsonObject(with:Data(status.utf8)) as? [String:Any] ?? [:]
                 guard info["running"] as? Bool == true else { throw NSError(domain:"MINER.engineGone",code:1,userInfo:[NSLocalizedDescriptionKey:"네트워크 엔진이 종료되었습니다. 일반 DNS를 복구한 뒤 다시 연결하세요."]) }
                 guard info["ready"] as? Bool == true else { throw NSError(domain:"MINER.dnsNotReady",code:1,userInfo:[NSLocalizedDescriptionKey:"DNS 엔진 응답을 확인하지 못했습니다. 중지 후 다시 연결하세요. / DNS engine is not responding; stop and reconnect."]) }
+                if let scope=info["scope"] as? [String:Any],scope["healthy"] as? Bool == false {
+                    throw NSError(domain:"MINER.scopeChanged",code:1,userInfo:[NSLocalizedDescriptionKey:self.model.tr("네트워크 또는 DNS 설정이 변경됐습니다. 중지 후 다시 연결하세요. 설정을 자동으로 덮어쓰지 않습니다.","Network or DNS changed. Stop and reconnect; settings were not overwritten.")])
+                }
                 let health=try self.execute(["warp","maintain","--proxy-port",String(self.currentProxyPort)])
                 let state=try JSONSerialization.jsonObject(with:Data(health.utf8)) as? [String:Any] ?? [:]
                 if state["healthy"] as? Bool != true {
@@ -356,7 +386,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                     DispatchQueue.main.async {
                         self.healthBusy=false
                         guard !token.cancelled && !self.busy && self.running else { return }
-                        if ["error","connection_warning"].contains(self.model.phase) && self.model.error==self.healthFailure { self.model.error="";self.model.phase="running" }
+                        if self.model.effectiveProbeStatus == "PASS" && ["error","connection_warning"].contains(self.model.phase) && self.model.error==self.healthFailure { self.model.error="";self.model.phase="running" }
                         self.healthFailure=""
                     }
                 }
@@ -380,6 +410,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     @objc func manualCheckUpdate() { showSettings();checkUpdate() }
     @objc func checkUpdate() {
         guard !model.updateBusy && !busy else { return }
+        if Bundle.main.object(forInfoDictionaryKey:"MINERPreview") as? Bool == true {
+            model.updateAvailable=false
+            model.updateMessage=model.tr("STRATA 시험판입니다. 새 프리뷰는 GitHub의 STRATA 릴리스에서 수동으로 설치하세요. 정식 ALPHA와 Homebrew는 자동 변경하지 않습니다.","STRATA preview: install new previews from GitHub. Stable ALPHA and Homebrew remain unchanged.")
+            return
+        }
         model.updateBusy = true; model.updateMessage = model.tr("최신 정식 버전을 확인하고 있습니다.","Checking the latest official release.")
         DispatchQueue.global(qos:.utility).async {
             do {
@@ -454,7 +489,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             }
         })
     }
-    func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool { true }
+    func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool { false }
     func applicationShouldTerminate(_ sender: NSApplication) -> NSApplication.TerminateReply {
         if model.updateInstalling { return .terminateCancel }
         if busy {
@@ -487,6 +522,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 }
 
+#if !STRATA_HEALTH_TESTS
 @main struct MinerApplication {
     @MainActor static func main() {
         let app = NSApplication.shared
@@ -496,3 +532,5 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         app.run()
     }
 }
+
+#endif

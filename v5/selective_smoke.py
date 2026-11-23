@@ -45,6 +45,29 @@ class Server(socketserver.ThreadingTCPServer):
     daemon_threads=True
 
 
+def synthetic_aaaa(host):
+    """Query the actual selective DNS listener, independent of OS scope/cache."""
+    question=b''.join(bytes([len(part)])+part.encode('ascii') for part in host.split('.'))+b'\0'
+    query=b'\x61\x62\x01\x00\x00\x01\x00\x00\x00\x00\x00\x00'+question+b'\x00\x1c\x00\x01'
+    with socket.socket(socket.AF_INET,socket.SOCK_DGRAM) as sock:
+        sock.settimeout(3);sock.connect((DNS_V4,53));sock.send(query);reply=sock.recv(4096)
+    if len(reply)<12 or reply[:2]!=query[:2] or reply[3]&15:raise ValueError('AAAA DNS fixture failed')
+    def skip_name(offset):
+        while offset<len(reply):
+            length=reply[offset];offset+=1
+            if length&192==192:return offset+1
+            if length==0:return offset
+            offset+=length
+        raise ValueError('Truncated DNS name')
+    offset=skip_name(12)+4
+    for _ in range(struct.unpack('!H',reply[6:8])[0]):
+        offset=skip_name(offset)
+        kind,cls,ttl,size=struct.unpack('!HHIH',reply[offset:offset+10]);offset+=10
+        if kind==28 and size==16:return socket.inet_ntop(socket.AF_INET6,reply[offset:offset+size])
+        offset+=size
+    raise ValueError('No AAAA DNS fixture answer')
+
+
 def route_interface(ip):
     if platform.system()=='Darwin':
         text=command(['/sbin/route','-n','get',ip])
@@ -117,6 +140,25 @@ def run(engine,directory,guardian_executable=None):
                             ordinary_https()
                     assert proxy.destinations==[('login.riotgames.com',443)],'Session replaced or hostname lost'
                     report['remote_dns_and_continuous_client_tcp']=True
+                    # Explicit AF_INET6 query; no external IPv6 connectivity is
+                    # needed for a synthetic address routed through this TUN.
+                    from schoolnet.config import FAKE_V6
+                    try:os_ipv6=socket.getaddrinfo('login.riotgames.com',443,socket.AF_INET6,socket.SOCK_STREAM)[0][4][0]
+                    except socket.gaierror:os_ipv6=None
+                    resolved=ipaddress.ip_address(os_ipv6) if os_ipv6 else None
+                    mapped=resolved.ipv4_mapped if resolved else None
+                    native_synthetic=bool(resolved and resolved in ipaddress.ip_network(FAKE_V6))
+                    mapped_synthetic=bool(mapped and mapped in ipaddress.ip_network(FAKE_V4))
+                    report['os_resolver_aaaa_address_class']='synthetic_v6' if native_synthetic else 'synthetic_v4_mapped' if mapped_synthetic else 'non_synthetic_v6' if resolved else 'no_result'
+                    report['os_resolver_aaaa_synthetic']=native_synthetic or mapped_synthetic
+                    if system=='Windows':assert report['os_resolver_aaaa_synthetic'],'Windows OS AAAA selective DNS regression'
+                    report['os_resolver_aaaa_boundary']='NONE_OBSERVED' if report['os_resolver_aaaa_synthetic'] else 'OS_SCOPE_CACHE_OR_IPV6_POLICY_REQUIRES_FIELD_TEST'
+                    ipv6=(synthetic_aaaa('login.riotgames.com'),443)
+                    assert ipaddress.ip_address(ipv6[0]) in ipaddress.ip_network(FAKE_V6),'Selective listener AAAA must be synthetic'
+                    with socket.socket(socket.AF_INET6,socket.SOCK_STREAM) as session6:
+                        session6.settimeout(10);session6.connect(ipv6);session6.sendall(b'ipv6');assert recv_exact(session6,4)==b'ipv6'
+                    assert proxy.destinations[-1]==('login.riotgames.com',443)
+                    report['synthetic_ipv6_remote_dns_tcp']=True
                     # A game process also uses Riot HTTPS services. Its TCP must
                     # not fall into the old all-game-traffic direct exception.
                     if system=='Darwin':

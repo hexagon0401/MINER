@@ -1,0 +1,448 @@
+{
+  "product": "MINER STRATA",
+  "target_version": "2.0.0",
+  "created_kst": "2026-11-23",
+  "status": "g0_g1_implemented_pending_operator_review",
+  "baseline": "ALPHA 1.2.3",
+  "tasks": [
+    {
+      "id": "G0-01",
+      "gate": "G0",
+      "priority": "P0",
+      "title": "1.2.3 snapshot/manifest SHA/CI 기준선 검증",
+      "depends_on": [],
+      "source_paths": [
+        "README.md",
+        "v5",
+        "Casks/miner.rb"
+      ],
+      "definition_of_done": "원본 SHA와 baseline 증거를 문서화",
+      "status": "IMPLEMENTED_PENDING_REVIEW"
+    },
+    {
+      "id": "G0-02",
+      "gate": "G0",
+      "priority": "P0",
+      "title": "현장 통계 실패 재현 절차/단계 이벤트 정의",
+      "depends_on": [],
+      "source_paths": [
+        "v5/diagnostics/collect.py"
+      ],
+      "definition_of_done": "사용자 요청 단계/시간과 증거등급 기록",
+      "status": "BLOCKED_ON_FIELD_EVIDENCE"
+    },
+    {
+      "id": "G1-01",
+      "gate": "G1",
+      "priority": "P0",
+      "title": "Mac service_verify 실패를 엔진 상태와 분리",
+      "depends_on": [
+        "G0-01"
+      ],
+      "source_paths": [
+        "v5/macos/App.swift",
+        "v5/macos/MinerUI.swift"
+      ],
+      "definition_of_done": "실패 주입에서도 engine ready vs Riot probe fail 분리",
+      "status": "IMPLEMENTED_PENDING_REVIEW"
+    },
+    {
+      "id": "G1-02",
+      "gate": "G1",
+      "priority": "P0",
+      "title": "Windows service_verify 진단/상태 분리, G2 전 finally 정리 유지",
+      "depends_on": [
+        "G1-01"
+      ],
+      "source_paths": [
+        "v5/windows/controller.py",
+        "v5/windows/app.py"
+      ],
+      "definition_of_done": "G1 단계에서는 현재 안전 DNS/엔진 cleanup 유지, 별도 상태코드 및 테스트 확인. 지속형 DEGRADED는 G2에 귀속",
+      "status": "IMPLEMENTED_PENDING_REVIEW"
+    },
+    {
+      "id": "G1-03",
+      "gate": "G1",
+      "priority": "P0",
+      "title": "오류 출력과 진행 이벤트 JSON 채널 분리",
+      "depends_on": [
+        "G1-01"
+      ],
+      "source_paths": [
+        "v5/macos/CommandRunner.swift",
+        "v5/main.py"
+      ],
+      "definition_of_done": "원인코드/사용자 메시지 분리, 로그 비밀정보 없음",
+      "status": "IMPLEMENTED_PENDING_REVIEW"
+    },
+    {
+      "id": "G1-04",
+      "gate": "G1",
+      "priority": "P0",
+      "title": "WARP status 관측과 Riot 기능 확인 상태 독립 모델",
+      "depends_on": [
+        "G1-01",
+        "G1-02"
+      ],
+      "source_paths": [
+        "v5/schoolnet/warp.py"
+      ],
+      "definition_of_done": "단일 HEAD가 통계창 성공으로 표시되지 않음",
+      "status": "IMPLEMENTED_PENDING_REVIEW"
+    },
+    {
+      "id": "G2-01",
+      "gate": "G2",
+      "priority": "P0",
+      "title": "Supervisor의 상태기계·명령 직렬화 및 persistence",
+      "depends_on": [
+        "G1-04",
+        "G1-02"
+      ],
+      "source_paths": [
+        "v5/schoolnet/runtime.py"
+      ],
+      "definition_of_done": "요청 멱등/중복 방지/비정상 종료 처리",
+      "status": "IMPLEMENTED_NATIVE_FIXTURE_VERIFIED"
+    },
+    {
+      "id": "G2-02",
+      "gate": "G2",
+      "priority": "P0",
+      "title": "DNS lease owner+generation guard",
+      "depends_on": [
+        "G2-01"
+      ],
+      "source_paths": [
+        "v5/schoolnet/network_dns.py",
+        "v5/schoolnet/dns_guard.py"
+      ],
+      "definition_of_done": "외부 설정 무단 덮어쓰기 없이 복구",
+      "status": "IMPLEMENTED_NATIVE_FIXTURE_VERIFIED"
+    },
+    {
+      "id": "G2-03",
+      "gate": "G2",
+      "priority": "P0",
+      "title": "macOS root helper/service UI 수명 분리",
+      "depends_on": [
+        "G2-01",
+        "G2-02"
+      ],
+      "source_paths": [
+        "v5/schoolnet/macos_helper.py",
+        "v5/schoolnet/macos_service.py",
+        "v5/macos/App.swift"
+      ],
+      "definition_of_done": "UI 종료 유지 및 Stop 복구",
+      "status": "IMPLEMENTED_NATIVE_FIXTURE_VERIFIED"
+    },
+    {
+      "id": "G2-04",
+      "gate": "G2",
+      "priority": "P0",
+      "title": "Windows Service 소유 Job Object/guardian",
+      "depends_on": [
+        "G2-01",
+        "G2-02"
+      ],
+      "source_paths": [
+        "v5/windows/controller.py",
+        "v5/windows/process.py"
+      ],
+      "definition_of_done": "GUI 강제 종료·복원/장애 복구 확인",
+      "status": "IMPLEMENTED_NATIVE_FIXTURE_VERIFIED"
+    },
+    {
+      "id": "G2-05",
+      "gate": "G2",
+      "priority": "P1",
+      "title": "IPC 피어 인증·UAC/ACL·거부 규칙",
+      "depends_on": [
+        "G2-03",
+        "G2-04"
+      ],
+      "source_paths": [
+        "v5/schoolnet/macos_helper.py"
+      ],
+      "definition_of_done": "비소유 사용자의 변경 요청 거부",
+      "status": "IMPLEMENTED_NATIVE_FIXTURE_VERIFIED"
+    },
+    {
+      "id": "G3-01",
+      "gate": "G3",
+      "priority": "P0",
+      "title": "통계 단계별 비민감 연결 실패 메타데이터 기록",
+      "depends_on": [
+        "G0-02",
+        "G1-04"
+      ],
+      "source_paths": [
+        "v5/diagnostics/collect.py",
+        "v5/diagnostics/log_events.py"
+      ],
+      "definition_of_done": "원문 DNS/IP/계정/SSID 기록 없음",
+      "status": "IMPLEMENTED_NATIVE_FIXTURE_VERIFIED"
+    },
+    {
+      "id": "G3-02",
+      "gate": "G3",
+      "priority": "P0",
+      "title": "서비스/클라이언트 실패 원인별 구분 시험",
+      "depends_on": [
+        "G3-01"
+      ],
+      "source_paths": [
+        "v5/diagnostics/collect.py"
+      ],
+      "definition_of_done": "가설별 반증 자료 또는 미확인 상태 생성",
+      "status": "BLOCKED_ON_FIELD_EVIDENCE"
+    },
+    {
+      "id": "G4-01",
+      "gate": "G4",
+      "priority": "P1",
+      "title": "현재 FakeIP 경계, DoH/IPv6/cache 누락 fixture",
+      "depends_on": [
+        "G3-02"
+      ],
+      "source_paths": [
+        "v5/schoolnet/config.py",
+        "v5/selective_smoke.py"
+      ],
+      "definition_of_done": "무근거 신규 서버/IP 목록 없이 경계 표기",
+      "status": "PARTIAL_IPV6_VERIFIED_DOH_CACHE_FIELD_PENDING"
+    },
+    {
+      "id": "G4-02",
+      "gate": "G4",
+      "priority": "P1",
+      "title": "선택 경로의 기능별 회귀 보완",
+      "depends_on": [
+        "G4-01"
+      ],
+      "source_paths": [
+        "v5/schoolnet/config.py"
+      ],
+      "definition_of_done": "일반 경로 보존, 게임 직접, Riot service proxy",
+      "status": "BLOCKED_ON_FIELD_EVIDENCE"
+    },
+    {
+      "id": "G4-03",
+      "gate": "G4",
+      "priority": "P2",
+      "title": "NetworkExtension/WFP PoC feasibility memo",
+      "depends_on": [
+        "G3-02"
+      ],
+      "source_paths": [
+        "reference/schoolnet_warp_riot_network_research_2026-11-04.md"
+      ],
+      "definition_of_done": "MDM/signing/Vanguard/성능 조건 기준으로 채택·기각",
+      "status": "ARCHITECTURE_DECISION_RECORDED_POC_DEFERRED"
+    },
+    {
+      "id": "G5-01",
+      "gate": "G5",
+      "priority": "P1",
+      "title": "Sleep/Wake, NIC 변경, WARP Connecting backoff",
+      "depends_on": [
+        "G2-05",
+        "G4-02"
+      ],
+      "source_paths": [
+        "v5/schoolnet/warp.py"
+      ],
+      "definition_of_done": "경로 전환 폭주 없이 일관된 DEGRADED",
+      "status": "PARTIAL_IMPLEMENTED_MANUAL_VALIDATION_PENDING"
+    },
+    {
+      "id": "G5-02",
+      "gate": "G5",
+      "priority": "P1",
+      "title": "상태 UI 간소화 및 앱 종료 정책 명확화",
+      "depends_on": [
+        "G2-03",
+        "G2-04"
+      ],
+      "source_paths": [
+        "v5/macos/MinerUI.swift",
+        "v5/windows/qml/Main.qml"
+      ],
+      "definition_of_done": "SERVICE/ROUTE/WARP/RIOT/GAME 구분",
+      "status": "IMPLEMENTED_NATIVE_FIXTURE_VERIFIED"
+    },
+    {
+      "id": "G5-03",
+      "gate": "G5",
+      "priority": "P1",
+      "title": "2.0 manifest/installer/homebrew bridge·rollback",
+      "depends_on": [
+        "G2-03",
+        "G2-04"
+      ],
+      "source_paths": [
+        "v5/schoolnet/updates.py",
+        "Casks/miner.rb"
+      ],
+      "definition_of_done": "ALPHA 1.2.3에서 STRATA 2.0으로의 실제 Bridge 또는 ALPHA metadata 유지 경로와 rollback 검증",
+      "status": "PARTIAL_IMPLEMENTED_MANUAL_VALIDATION_PENDING"
+    },
+    {
+      "id": "G6-01",
+      "gate": "G6",
+      "priority": "P0",
+      "title": "Mac Apple Silicon Riot/LoL 실기 반복 시험",
+      "depends_on": [
+        "G3-02",
+        "G5-01",
+        "G5-02"
+      ],
+      "source_paths": [
+        "v5/docs/NATIVE_VALIDATION.md"
+      ],
+      "definition_of_done": "10회 전환 결과와 실패 시각 증거",
+      "status": "MANUAL_GATE_PENDING"
+    },
+    {
+      "id": "G6-02",
+      "gate": "G6",
+      "priority": "P0",
+      "title": "Windows 11 x64 Riot/Vanguard 실기 시험",
+      "depends_on": [
+        "G5-01",
+        "G5-03"
+      ],
+      "source_paths": [
+        "v5/docs/NATIVE_VALIDATION.md"
+      ],
+      "definition_of_done": "CI와 실기 검증 구분",
+      "status": "MANUAL_GATE_PENDING"
+    },
+    {
+      "id": "G6-03",
+      "gate": "G6",
+      "priority": "P1",
+      "title": "일반 앱 영향·성능 비교 시험",
+      "depends_on": [
+        "G6-01"
+      ],
+      "source_paths": [
+        "v5/docs/NATIVE_VALIDATION.md"
+      ],
+      "definition_of_done": "지표별 조건/반복/한계 명시",
+      "status": "MANUAL_GATE_PENDING"
+    },
+    {
+      "id": "G6-04",
+      "gate": "G6",
+      "priority": "P0",
+      "title": "installer signing, uninstall/rollback, release gate",
+      "depends_on": [
+        "G6-01",
+        "G6-02",
+        "G6-03"
+      ],
+      "source_paths": [
+        "v5/docs/SIGNING.md",
+        "v5/macos/build.py",
+        "v5/windows/build.py"
+      ],
+      "definition_of_done": "구버전 업그레이드와 서명/복구 결과",
+      "status": "PREVIEW_PUBLISHED_STABLE_MANUAL_GATES_PENDING"
+    },
+    {
+      "id": "G0-03",
+      "gate": "G0",
+      "priority": "P0",
+      "title": "실제 Git 저장소 기준 full source/test collection 확인",
+      "depends_on": [],
+      "source_paths": [
+        "README.md",
+        "v5/schoolnet/warp.py"
+      ],
+      "definition_of_done": "GitHub repo 및 missing 4 modules 확인; source snapshot 단독 실행 금지",
+      "status": "IMPLEMENTED_PENDING_REVIEW"
+    },
+    {
+      "id": "G0-04",
+      "gate": "G0",
+      "priority": "P0",
+      "title": "WARP 복귀 정책/시작 전 연결 소유권 상태 파악",
+      "depends_on": [],
+      "source_paths": [
+        "README.md",
+        "v5/schoolnet/warp.py"
+      ],
+      "definition_of_done": "Disconnected/DNS-only/Warp/WarpProxy 케이스 정의 및 현행 fixed-Warp restore 명시",
+      "status": "IMPLEMENTED_PENDING_REVIEW"
+    },
+    {
+      "id": "G2-06",
+      "gate": "G2",
+      "priority": "P0",
+      "title": "창 Close/Quit/UI kill/logout/reboot/daemon crash 분리",
+      "depends_on": [
+        "G2-01",
+        "G2-03",
+        "G2-04"
+      ],
+      "source_paths": [
+        "README.md",
+        "v5/schoolnet/warp.py"
+      ],
+      "definition_of_done": "각 수명 이벤트의 lease/engine owner/guardian 동작 시험",
+      "status": "PARTIAL_IMPLEMENTED_MANUAL_VALIDATION_PENDING"
+    },
+    {
+      "id": "G2-07",
+      "gate": "G2",
+      "priority": "P0",
+      "title": "WARP 외부 변경/다중 사용자 충돌 및 복귀",
+      "depends_on": [
+        "G0-04",
+        "G2-01"
+      ],
+      "source_paths": [
+        "README.md",
+        "v5/schoolnet/warp.py"
+      ],
+      "definition_of_done": "모드 설정 외부 변동 감지, 루프 방지, 소유권 충돌 시 안전 경고",
+      "status": "PARTIAL_IMPLEMENTED_MANUAL_VALIDATION_PENDING"
+    },
+    {
+      "id": "G5-04",
+      "gate": "G5",
+      "priority": "P1",
+      "title": "STRATA 브랜드 릴리스와 ALPHA updater bridge 호환 검증",
+      "depends_on": [
+        "G5-03"
+      ],
+      "source_paths": [
+        "README.md",
+        "v5/schoolnet/warp.py"
+      ],
+      "definition_of_done": "기존 앱에서 새 패키지 업그레이드·복구·rollback 실기 검증",
+      "status": "PARTIAL_IMPLEMENTED_MANUAL_VALIDATION_PENDING"
+    },
+    {
+      "id": "G5-05",
+      "gate": "G5",
+      "priority": "P1",
+      "title": "장기 서비스 health 로그 폭증 억제 및 보존 정책",
+      "depends_on": [
+        "G2-01"
+      ],
+      "source_paths": [
+        "v5/windows/controller.py",
+        "v5/schoolnet/runtime.py"
+      ],
+      "definition_of_done": "Windows last_warning 유지 오류 수정, log rotation·24h idle 증가율·민감정보 비포함 확인",
+      "status": "PARTIAL_IMPLEMENTED_MANUAL_VALIDATION_PENDING"
+    }
+  ],
+  "planning_revision": "v0.2",
+  "implementation_evidence": "../IMPLEMENTATION_STATUS_KO.md",
+  "validation_evidence": "../VALIDATION_RESULTS.json"
+}

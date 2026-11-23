@@ -1,0 +1,14 @@
+{
+  "anchor": "7889545ea4c41301b0f75995f541d9c8164e9d16",
+  "handoff_hashed_files_verified": 135,
+  "tracked_blob_count": 1228,
+  "preserved_sha256": {
+    "README.md": "c1ff491640c7fff9787372450f2b8f4a588858c72db8a0a3fd70c9f9abc38618",
+    "docs/assets/miner-readme-banner.png": "aaa7fe9c725390373ca1cda4dfb93a98b2c03ef9b838146a1573fbf268160819",
+    "docs/assets/miner-alpha-v1-release-banner.png": "3d3d3d68d6fa9167d4f8a1fe4e4a5691e431a2f018139dfaa66d67fde0a77296",
+    "Casks/miner.rb": "e18b87675d09386bc38ea27ba02a39ce165f9d74876758bae5861ac7bc4d6a6f",
+    "v5/schoolnet/config.py": "f7455f6e33769100fd386ba6ffbdd5cf14b1425886e3027862a13da2d8684a95",
+    "v5/schoolnet/network_dns.py": "303f59d92e15549f8cf32f5b27c30483a8ba356045e260d872f51423d70e905d",
+    "v5/schoolnet/dns_guard.py": "30e8643ea18527cf2544fe5a8e6caf1d73f02c44b431e7d7ef5236779d9306af"
+  }
+}

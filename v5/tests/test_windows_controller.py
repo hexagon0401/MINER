@@ -28,7 +28,7 @@ class WindowsLifecycleTests(unittest.TestCase):
     def test_riot_service_failure_never_emits_connected_and_recovers_dns(self):
         child=MagicMock();child.poll.return_value=None;events=[]
         with tempfile.TemporaryDirectory() as d,patch.object(controller,'is_admin',return_value=True),patch.object(controller.warp,'activate'),patch.object(controller.warp,'verify_client_service',side_effect=ValueError('Riot TLS failed')),patch.object(controller,'stop_engine') as stop_engine,patch.object(controller.subprocess,'Popen',return_value=child),patch.object(controller.subprocess,'CREATE_NEW_PROCESS_GROUP',512,create=True),patch('windows.process.Job'),patch('schoolnet.network_dns.probe_dns',return_value=True):
-            with self.assertRaisesRegex(ValueError,'Riot TLS failed'):controller.session(d,'engine',threading.Event(),lambda *a:events.append(a))
+            with self.assertRaisesRegex(controller.ServiceProbeError,'Riot service check failed'):controller.session(d,'engine',threading.Event(),lambda *a:events.append(a))
         self.assertNotIn(('running',5),events);self.assertIn(('service_verify',4),events);self.lease.close.assert_called_once();stop_engine.assert_called_once_with(child)
 
     def test_profile_preserves_edits_and_rejects_other_platform(self):
@@ -175,3 +175,13 @@ class WindowsLifecycleTests(unittest.TestCase):
             with patch.object(controller,'is_admin',return_value=True),patch.object(controller.warp,'activate'),patch.object(controller,'check_engine',return_value={'preflight_ok':True}),patch.object(controller.subprocess,'Popen',return_value=child),patch.object(controller.subprocess,'CREATE_NEW_PROCESS_GROUP',512,create=True),patch('windows.process.Job'),patch.object(controller,'stop_engine',side_effect=stopped),patch.object(controller.warp,'deactivate',side_effect=lambda:calls.append('warp disconnected')):
                 controller.session(d,'engine',stop,emit,False,kill)
             self.assertEqual(calls,['engine stopped','warp disconnected'])
+
+    def test_g1_probe_failure_emits_separate_evidence_then_safe_cleanup(self):
+        child=MagicMock();child.poll.return_value=None;observations=[]
+        with tempfile.TemporaryDirectory() as d,patch.object(controller,'is_admin',return_value=True),patch.object(controller.warp,'activate'),patch.object(controller.warp,'verify_client_service',side_effect=TimeoutError('Riot timeout')),patch.object(controller,'stop_engine') as stop_engine,patch.object(controller.subprocess,'Popen',return_value=child),patch.object(controller.subprocess,'CREATE_NEW_PROCESS_GROUP',512,create=True),patch('windows.process.Job'),patch('schoolnet.network_dns.probe_dns',return_value=True):
+            with self.assertRaises(controller.ServiceProbeError):controller.session(d,'engine',threading.Event(),lambda *a:None,observe=observations.append)
+        states=[(o['component'],o['status']) for o in observations]
+        self.assertIn(('engine','READY'),states);self.assertIn(('riot_service','TIMEOUT'),states)
+        self.assertIn(('engine','STOPPED'),states);self.assertIn(('route','RESTORED'),states)
+        self.assertEqual(len({o['request_id'] for o in observations}),1)
+        self.lease.close.assert_called_once();stop_engine.assert_called_once_with(child)

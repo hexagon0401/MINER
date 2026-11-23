@@ -1,0 +1,42 @@
+name: STRATA G0 G1 checks (no release)
+on:
+  push:
+    branches: ['codex/strata-2.0-g0-g1']
+permissions:
+  contents: read
+jobs:
+  g1:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-26, windows-2025]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 15
+    env:
+      PYTHONUTF8: '1'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Full source unit regressions (local fixtures)
+        working-directory: v5
+        run: python -m unittest discover -s tests -v
+      - name: Compile full macOS frontend and run pure G1 model smoke
+        if: runner.os == 'macOS'
+        working-directory: v5
+        shell: bash
+        run: |
+          set -o pipefail
+          xcrun swiftc -swift-version 5 -D STRATA_HEALTH_TESTS -parse-as-library -framework AppKit -framework SwiftUI macos/App.swift macos/CommandRunner.swift macos/MinerUI.swift macos/DeltaUI.swift macos/DeltaSmoke.swift macos/DeveloperAbout.swift macos/StrataHealthSmoke.swift -o "$RUNNER_TEMP/strata-g1" 2>&1 | tee "$RUNNER_TEMP/strata-g1.log"
+          "$RUNNER_TEMP/strata-g1" 2>&1 | tee -a "$RUNNER_TEMP/strata-g1.log"
+      - name: Compile diagnostics on failure
+        if: failure() && runner.os == 'macOS'
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import os
+          from pathlib import Path
+          p=Path(os.environ['RUNNER_TEMP'])/'strata-g1.log'
+          if p.exists():print('::error::'+p.read_text()[-5000:].replace('%','%25').replace('\n','%0A'))
+          PY

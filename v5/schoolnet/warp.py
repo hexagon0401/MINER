@@ -99,6 +99,15 @@ def verify_trace(port=40000, timeout=5.0):
             "tls_verified": True, "direct_fallback": False}
 
 
+def configuration_snapshot(settings,status):
+    """G0 evidence only. restore() still targets Warp, not this saved state."""
+    match=re.search(r"^\s*(?:\([^\n)]*\)\s*)?Mode:\s*(\w+)",settings,re.M)
+    mode=match[1] if match and match[1] in {'Warp','WarpProxy','WarpWithDnsOverHttps','DnsOverHttps','DnsOverTls','TunnelOnly'} else 'UNKNOWN'
+    disconnected=bool(re.search(r"^\s*(?:Status(?: update)?:\s*)?Disconnected(?:[.:\s].*)?$",status,re.M|re.I))
+    return {'mode':mode,'connected':True if connected(status) else False if disconnected else None,
+            'restore_policy':'FIXED_WARP_CONNECTED','exclusive_ownership':False}
+
+
 def activate(port=40000, warp_cli=None, wait_seconds=30, notify=None):
     emit = notify or (lambda *args: None)
     emit("cli_check", 0)
@@ -115,6 +124,7 @@ def activate(port=40000, warp_cli=None, wait_seconds=30, notify=None):
     emit("proxy_connect", 1)
     settings = command(cli, "settings")
     current_status = command(cli, "status")
+    previous=configuration_snapshot(settings,current_status)
     changed = not proxy_mode(settings, port)
     if not changed and connected(current_status):
         # Repeated clicks must not tear down healthy client TCP sessions.
@@ -122,7 +132,7 @@ def activate(port=40000, warp_cli=None, wait_seconds=30, notify=None):
         emit("tls_verify", 2)
         result = verify_trace(port)
         emit("warp_ready", 3)
-        return {**result, "mode": "WarpProxy", "reconfigured": False}
+        return {**result, "mode": "WarpProxy", "reconfigured": False,"previous_configuration":previous}
     try:
         if changed:
             command(cli, "disconnect")
@@ -140,7 +150,7 @@ def activate(port=40000, warp_cli=None, wait_seconds=30, notify=None):
                     emit("tls_verify", 2)
                     result = verify_trace(port)
                     emit("warp_ready", 3)
-                    return {**result, "mode": "WarpProxy", "reconfigured": changed}
+                    return {**result, "mode": "WarpProxy", "reconfigured": changed,"previous_configuration":previous}
                 except WarpCancelled:
                     raise
                 except (OSError, ValueError, http.client.HTTPException) as exc:
@@ -193,7 +203,8 @@ def verify_client_service(port=40000,timeout=5):
                 if not 100<=status<=599:raise ValueError('Invalid Riot HTTPS status')
         return {'client_service_tls':True,'host':host,'http_status':status,'via':'socks5h','tls_verified':True,'direct_fallback':False,'game_or_statistics_verified':False}
     except (OSError,ValueError,http.client.HTTPException) as exc:
-        raise ValueError('Riot 서비스 연결 확인 실패 / Riot service check failed ('+type(exc).__name__+'). 엔진 준비와 실제 서비스 연결은 다릅니다. Stop and retry; no direct fallback.') from exc
+        from .protocol_output import ServiceProbeError
+        raise ServiceProbeError(exc) from exc
     finally:timer.cancel()
 
 

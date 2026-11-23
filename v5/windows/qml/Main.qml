@@ -183,6 +183,9 @@ ApplicationWindow {
                     Repeater { model: 5; Rectangle { required property int index; Layout.fillWidth: true; height: 8; radius: 4; color: index < s.completed ? win.accent : s.contrast ? systemPalette.mid : "#c3cce2" } }
                     CopyText { objectName: "progressLabel"; text: s.completed+"/5"; color: win.muted; font.pixelSize: 14; font.weight: Font.DemiBold; Layout.leftMargin: 5 }
                 }
+                CopyText { Layout.fillWidth: true; font.pixelSize: 12; wrapMode: Text.WordWrap
+                    text: "ENGINE: " + (s.components.engine ? s.components.engine.status : "UNKNOWN") + " · ROUTE: " + (s.components.route ? s.components.route.status : "UNKNOWN") + " · RIOT: " + (s.components.riot_service ? s.components.riot_service.status : "NOT_RUN") + " (statistics unverified)"
+                }
                 TextArea { objectName: "errorDetails"; Layout.fillWidth: true; visible: s.detail.length>0; text: s.text.details+"\n"+s.detail; readOnly: true; selectByMouse: true; wrapMode: TextEdit.Wrap; font.pixelSize: 13 }
             }
         }

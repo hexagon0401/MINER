@@ -41,7 +41,12 @@ def status():
                             capture_output=True, text=True, timeout=5)
     match = re.search(r"^\s*pid = (\d+)\s*$", result.stdout, re.MULTILINE)
     from .network_dns import probe_dns
-    return {"ready":bool(result.returncode == 0 and match and probe_dns()),"running": bool(result.returncode == 0 and match),
+    scope={'healthy':None,'reason_code':'SCOPE_NOT_OBSERVED'}
+    try:
+        value=json.loads((BASE/'strata-scope.json').read_text())
+        if 0<=time.time()-value['at']<45 and value.get('reason_code') in ('SCOPE_UNCHANGED','DEFAULT_INTERFACE_CHANGED','DNS_LEASE_CHANGED','SCOPE_CHECK_UNAVAILABLE'):scope=value
+    except (OSError,ValueError,TypeError,KeyError):pass
+    return {"scope":scope,"ready":bool(result.returncode == 0 and match and probe_dns()),"running": bool(result.returncode == 0 and match),
             "pid": int(match.group(1)) if match else None,
             "log": str(BASE / "engine.log")}
 
@@ -137,6 +142,7 @@ def prepare(resources, profile_dir):
     if marker["version"] != __version__ or not runtime.exists() or not (base / "bin" / "sing-box").exists():
         install_runtime(base, resources, profile)
     root_profile = base / "profile"
+    (base/'strata-scope.json').unlink(missing_ok=True)
     root_profile.mkdir(exist_ok=True)
     write_json(root_profile / "profile.json", profile.to_dict())
     write_json(root_profile / "sing-box.json", build_config(profile))
@@ -158,6 +164,7 @@ def start_installed(profile,cancelled=lambda:False):
     base = owned_base()
     if status()["running"]: raise ValueError("MINER is already running")
     stop()
+    (base/'strata-scope.json').unlink(missing_ok=True)
     directory = base / "profile"
     directory.mkdir(mode=0o700, exist_ok=True)
     if directory.is_symlink(): raise ValueError("Managed profile must not be a symlink")
@@ -224,7 +231,7 @@ def manage(operation, resources=None, profile=None, owner=None, session=None):
         command = ["/bin/launchctl", "submit", "-l", LABEL,
                    "-o", str(base / "engine.log"), "-e", str(base / "engine.log"), "--",
                    str(base / "runtime" / "schoolnet-cli"), "run",
-                   "--directory", str(base / "profile"), "--engine", str(base / "bin" / "sing-box")]
+                   "--directory", str(base / "profile"), "--engine", str(base / "bin" / "sing-box"),"--managed-helper"]
         if cancelled():raise ValueError('Connection cancelled before engine startup')
         subprocess.run(command, check=True, capture_output=True, text=True, timeout=10)
         result=wait_ready(base,offset,cancelled)

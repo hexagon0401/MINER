@@ -57,7 +57,7 @@ def main():
     execute(sys.executable,'-m','PyInstaller','--noconfirm','--clean','--onedir','--windowed','--uac-admin',
         '--name','MINER','--icon',work/'MINER.ico','--distpath',BASE/'dist-windows',
         '--workpath',work/'pyinstaller','--specpath',work,
-        '--paths',BASE,'--hidden-import','windows.smoke',
+        '--paths',BASE,'--hidden-import','windows.smoke','--hidden-import','win32timezone',
         '--exclude-module','PySide6.QtWebEngineCore','--exclude-module','PySide6.QtWebEngineQuick',
         '--exclude-module','PySide6.QtWebEngineWidgets','--exclude-module','PySide6.QtQuick3D',
         '--exclude-module','PySide6.QtMultimedia','--exclude-module','PySide6.QtPdf',
@@ -115,8 +115,17 @@ def main():
     assert not (work/'installed 한글 path/MINER.exe').exists(),'Uninstall did not remove app'
     assert hashlib.sha256(sentinel.read_bytes()).hexdigest()==sentinel_digest,'Uninstall removed user data'
     sentinel.unlink()
+    # Exercise the installed SCM host and owner-authenticated IPC. No WARP or
+    # game session is started; this does not replace a Windows 11 lifecycle test.
+    service_install=Path(os.environ['ProgramFiles'])/'MINER'
+    execute(setup,'/VERYSILENT','/SUPPRESSMSGBOXES','/NORESTART',f'/DIR={service_install}')
+    from windows.service_smoke import run as service_smoke
+    scm=service_smoke(service_install/'MINER.exe')
+    from windows.service_lifetime_smoke import run as lifetime_smoke
+    scm['lifetime_fixture']=lifetime_smoke(service_install,work)
+    execute(service_install/'unins000.exe','/VERYSILENT','/SUPPRESSMSGBOXES','/NORESTART')
     import platform
-    report={'test_os':platform.platform(),'version':VERSION,'base':'MINER Beta 1.1','architecture':'x64',
+    report={'test_os':platform.platform(),'version':VERSION,'base':'MINER Beta 1.1','architecture':'x64','strata_service':scm,
       'authenticode_signed':False,'app_icon_sha256':app_icon['sha256'],'release_channel':app_icon['channel'],'ui':ui,'native_tun':native,'selective_network':packaged_selective,'source_selective_network':selective,'upgrade_from':'1.2.0','upgrade_preserves_user_data':True,'obsolete_runtime_removed':True,'failed_upgrade_rollback_verified':rollback_verified,'updater':updater,'installer_verified':True,'upgrade_verified':True,'unicode_path_verified':True,
       'ui_theme':'Pearl White','default_controls':'A rounded floating','alternative_controls':'B flush integrated',
       'supplied_asset_sha256':{name:hashlib.sha256((art/'pearl/mascot'/name).read_bytes()).hexdigest() for name in ('miner-transparent.png','MINER-wordmark-transparent.png')},'ui_engine':'Qt Quick RHI + Fluent controls and functional Pearl buttons','network_engine':'sing-box 1.12.0 Windows TUN',

@@ -1,0 +1,43 @@
+{
+  "release_url": "https://github.com/hexagon0401/MINER/releases/tag/miner-strata-v2.0.0-preview.1",
+  "published_at": "2026-11-23T09:28:43Z",
+  "source_commit": "3c95266a9778a76c1c7f73ae747efcb6b63fe42c",
+  "prerelease": true,
+  "native_ci_run": "https://github.com/hexagon0401/MINER/actions/runs/45146207265",
+  "native_ci_result": "PASS",
+  "local_pinned_engine_tests": {
+    "collected": 184,
+    "passed": 184,
+    "skipped": 0
+  },
+  "github_asset_digests_match": true,
+  "protected_files_sha256_match": true,
+  "windows_installer_bytes": 58231767,
+  "windows_native_fixture_tests": [
+    "SCM host",
+    "owner pipe",
+    "server PID",
+    "client exit survives",
+    "nonowner denied",
+    "service crash reaps Job",
+    "restart recovery",
+    "installed EXE",
+    "upgrade/rollback/uninstall",
+    "DNS guardian"
+  ],
+  "mac_aaaa_result": {
+    "arm64": "synthetic_v4_mapped",
+    "x86_64": "synthetic_v4_mapped",
+    "synthetic_ipv6_listener_tcp": "PASS"
+  },
+  "manual_gates": {
+    "mac_10_game_cycles": "PENDING_USER_MACBOOK",
+    "windows_11_vanguard": "UNVERIFIED",
+    "performance_comparison": "UNVERIFIED",
+    "stable_release_allowed": false
+  },
+  "signing": {
+    "macos": "ad-hoc; not notarized",
+    "windows": "unsigned"
+  }
+}

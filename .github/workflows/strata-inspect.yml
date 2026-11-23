@@ -1,0 +1,24 @@
+name: STRATA inspect retained CI failure
+on:
+  push:
+    branches: ['codex/strata-2.0-g0-g1']
+    paths: ['.github/workflows/strata-inspect.yml']
+permissions:
+  contents: read
+  actions: read
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: strata-release-windows
+          run-id: 45138698330
+          github-token: ${{ github.token }}
+          path: failure
+      - run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          for p in Path('failure').rglob('*error.log'):
+            print('::error::'+(str(p)+'\n'+p.read_text(errors='replace')[-4000:]).replace('%','%25').replace('\n','%0A'))
+          PY
