@@ -21,9 +21,10 @@ import zipfile
 
 ROOT=Path(__file__).resolve().parents[1]
 if not getattr(sys,"frozen",False) and str(ROOT) not in sys.path:sys.path.insert(0,str(ROOT))
-VERSION='1.0.1'
+VERSION='2.0.0-preview.1'
 PHASES=('before','connected','in_game','post_game','after_stop','error')
 HOSTS=('www.cloudflare.com','auth.riotgames.com','www.leagueoflegends.com')
+OUTCOMES=('unknown','loaded','timeout_30s','error')
 COMMAND_TIMEOUT=4
 
 
@@ -230,12 +231,14 @@ class Recorder:
     def __init__(self,port=40000,active=False,warp_cli=None):
         from diagnostics.log_events import LogWindows
         self.log_reader=LogWindows();self.privacy=Privacy();self.samples=[];self.port=port;self.active=active;self.cli=warp_cli;self.begin=time.monotonic()
-    def snapshot(self,phase,error_code=None):
+    def snapshot(self,phase,error_code=None,statistics_result='unknown',cycle=None):
+        if statistics_result not in OUTCOMES or cycle is not None and (type(cycle) is not int or not 1<=cycle<=10):raise ValueError('Invalid test annotation')
         from schoolnet.warp import resolve_cli
         system=platform.system();row={'at':now(),'elapsed_s':round(time.monotonic()-self.begin,2),'phase':phase,'system':system,'os_version':platform.release(),'architecture':platform.machine(),'app':files_state(system,self.log_reader)}
         try:row['warp']=warp_state(resolve_cli(self.cli))
         except (ValueError,OSError):row['warp']={'unavailable':True}
         row['network']=network_state(system,self.privacy);row['socks']=socket_check(self.port)
+        row['statistics']={'result':statistics_result,'evidence':'USER_REPORT' if statistics_result!='unknown' else 'NONE','verified_by_tool':False,'cycle':cycle}
         if error_code:row['error_code']=error_code
         if self.active:
             print('검사: WARP HTTPS (최대 7초)',flush=True)
@@ -250,7 +253,10 @@ class Recorder:
             row['logs_during_active_checks']=[{'location':loc['location'],'file':name,'error_window':info['error_window']} for loc in during.get('locations',[]) for name,info in loc.get('files',{}).items() if 'error_window' in info]
             row['probe_period_log_origin']='mixed_app_and_diagnostic_traffic_not_attributed'
         row['collected_until']=now()
-        row['findings']=findings(row);self.samples.append(row);return row
+        row['findings']=findings(row)
+        from diagnostics.strata_assessment import assess
+        row['strata_assessment']=assess(row)
+        self.samples.append(row);return row
     def save(self,output):
         output=Path(output);output.parent.mkdir(parents=True,exist_ok=True)
         report={'schema':1,'tool_version':VERSION,'read_only':True,'active_probes':self.active,'uploaded':False,'privacy':'No raw logs, addresses, SSID, accounts, tokens, packet captures or browsing history. Address/interface IDs are random-session HMACs.','samples':self.samples}
@@ -278,6 +284,8 @@ def main(argv=None):
     p.add_argument('--version',action='version',version=VERSION)
     p.add_argument('--output',type=Path)
     p.add_argument('--phase',choices=PHASES,default='error')
+    p.add_argument('--statistics-result',choices=OUTCOMES,default='unknown')
+    p.add_argument('--cycle',type=int,choices=range(1,11))
     p.add_argument('--interactive',action='store_true')
     p.add_argument('--active',action='store_true',help='Opt in to fixed DNS and TLS requests. Never changes routing or WARP mode.')
     p.add_argument('--warp-cli');p.add_argument('--port',type=int,default=40000)
@@ -309,7 +317,11 @@ def main(argv=None):
                     entered=input('오류 CODE만 입력 (없으면 Enter): ').strip()
                     code=entered if re.fullmatch(r'[A-Za-z0-9 _-]{1,40}',entered) else None
             print('Collecting / 수집 중: '+phase+' (각 명령에 시간 제한이 있습니다)',flush=True)
-            row=recorder.snapshot(phase,code);recorder.save(output)
+            outcome=args.statistics_result
+            if interactive and phase=='post_game':
+                value=input('통계창 결과: 1 표시됨 / 2 30초 이상 무한 로딩 / 3 오류 / Enter 미확인: ').strip()
+                outcome={'1':'loaded','2':'timeout_30s','3':'error'}.get(value,'unknown')
+            row=recorder.snapshot(phase,code,outcome,args.cycle);recorder.save(output)
             print('Saved / 저장: '+str(output)+'\n'+', '.join(row['findings']),flush=True)
             if not interactive:break
     except (KeyboardInterrupt,EOFError):pass
