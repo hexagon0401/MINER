@@ -117,6 +117,15 @@ def run(engine,directory,guardian_executable=None):
                             ordinary_https()
                     assert proxy.destinations==[('login.riotgames.com',443)],'Session replaced or hostname lost'
                     report['remote_dns_and_continuous_client_tcp']=True
+                    # Explicit AF_INET6 query; no external IPv6 connectivity is
+                    # needed for a synthetic address routed through this TUN.
+                    from schoolnet.config import FAKE_V6
+                    ipv6=socket.getaddrinfo('login.riotgames.com',443,socket.AF_INET6,socket.SOCK_STREAM)[0][4]
+                    assert ipaddress.ip_address(ipv6[0]) in ipaddress.ip_network(FAKE_V6)
+                    with socket.socket(socket.AF_INET6,socket.SOCK_STREAM) as session6:
+                        session6.settimeout(10);session6.connect(ipv6);session6.sendall(b'ipv6');assert recv_exact(session6,4)==b'ipv6'
+                    assert proxy.destinations[-1]==('login.riotgames.com',443)
+                    report['synthetic_ipv6_remote_dns_tcp']=True
                     # A game process also uses Riot HTTPS services. Its TCP must
                     # not fall into the old all-game-traffic direct exception.
                     if system=='Darwin':
