@@ -108,6 +108,12 @@ def host(backend_factory=Backend):
                 h=win32file.CreateFile(PIPE,0xC0000000,0,None,3,0,None);h.Close()
             except Exception:pass
         def SvcDoRun(self):
+            try:self.serve_loop()
+            except BaseException:
+                import traceback
+                (root()/'strata-service-fatal.log').write_text(traceback.format_exc()[-5000:])
+                raise
+        def serve_loop(self):
             ctypes.windll.kernel32.AllocConsole()
             owner=config()['owner'];record=Ownership(root()/'strata-owner.json',owner);old=record.read()
             self.actor=Supervisor(owner,backend_factory(),record.save,old['generation'])
@@ -119,7 +125,7 @@ def host(backend_factory=Backend):
             handle=win32pipe.CreateNamedPipe(PIPE,3|0x00080000,4|2|8,1,65536,65536,3000,security)
             try:
                 while not self.quit.is_set():
-                    connected=False
+                    connected=False;stage='accept'
                     try:
                         try:win32pipe.ConnectNamedPipe(handle,None)
                         except pywintypes.error as exc:
@@ -130,6 +136,7 @@ def host(backend_factory=Backend):
                                 time.sleep(.05);continue
                         connected=True
                         win32pipe.SetNamedPipeHandleState(handle,2|1,None,None)
+                        stage='receive'
                         deadline=time.monotonic()+3;data=None
                         while not self.quit.is_set() and time.monotonic()<deadline:
                             try:data=win32file.ReadFile(handle,16384)[1];break
@@ -137,25 +144,30 @@ def host(backend_factory=Backend):
                                 if exc.winerror!=232:raise
                                 time.sleep(.05)
                         if not data:continue
-                        win32pipe.ImpersonateNamedPipeClient(handle)
+                        stage='authenticate';win32pipe.ImpersonateNamedPipeClient(handle)
                         try:
                             token=win32security.OpenThreadToken(__import__('win32api').GetCurrentThread(),win32security.TOKEN_QUERY,True)
                             try:peer=win32security.ConvertSidToStringSid(win32security.GetTokenInformation(token,win32security.TokenUser)[0])
                             finally:token.Close()
                         finally:win32security.RevertToSelf()
+                        stage='dispatch'
                         try:response={'ok':True,'status':self.actor.request(json.loads(data),peer)}
-                        except (ValueError,TypeError,KeyError):response={'ok':False,'error':'REQUEST_REJECTED'}
+                        except Exception:response={'ok':False,'error':'REQUEST_REJECTED'}
+                        stage='respond'
                         win32file.WriteFile(handle,json.dumps(response).encode())
                         # DisconnectNamedPipe discards unread output. Wait for a
                         # client ACK after its read, with a bounded deadline;
                         # FlushFileBuffers would block forever for a stuck peer.
                         deadline=time.monotonic()+3
+                        stage='acknowledgement'
                         while not self.quit.is_set() and time.monotonic()<deadline:
                             try:win32file.ReadFile(handle,32);break
                             except pywintypes.error as exc:
                                 if exc.winerror!=232:raise
                                 time.sleep(.01)
-                    except (pywintypes.error,ValueError):pass
+                    except (pywintypes.error,ValueError) as exc:
+                        from schoolnet.runtime import write_json
+                        write_json(root()/'strata-ipc-error.json',{'stage':stage,'error_type':type(exc).__name__,'winerror':getattr(exc,'winerror',None)})
                     finally:
                         if connected:
                             try:win32pipe.DisconnectNamedPipe(handle)

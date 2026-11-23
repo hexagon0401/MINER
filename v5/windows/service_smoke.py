@@ -32,5 +32,11 @@ def run(executable):
                 'server_process_verified':True,'reattach_same_service':True,
                 'engine_started':False,'warp_changed':False,
                 'active_session_gui_crash_tested':False,'nonowner_live_peer_tested':False}
+    except Exception:
+        from windows.strata_service import root
+        for name in ('strata-ipc-error.json','strata-service-fatal.log'):
+            path=root()/name
+            if path.exists():print('::error::'+path.read_text(errors='replace')[-5000:].replace('%','%25').replace('\n','%0A'),flush=True)
+        raise
     finally:
         subprocess.run([str(executable),'--strata-maintenance','--remove-service'],check=True,timeout=45)
