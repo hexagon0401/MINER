@@ -22,6 +22,8 @@ class SessionSafetyTests(unittest.TestCase):
         with patch.object(s.platform,'system',return_value='Darwin'),patch.object(s.subprocess,'run',side_effect=subprocess.TimeoutExpired('ps',4)),self.assertRaises(subprocess.TimeoutExpired):s.require_clean_start()
 
     def test_windows_unicode_process_list_uses_exact_client_names(self):
-        result=subprocess.CompletedProcess([],0,'["한글 앱","LeagueClientUx","RiotClientServices"]')
-        with patch.object(s.platform,'system',return_value='Windows'),patch.object(s.subprocess,'CREATE_NO_WINDOW',0,create=True),patch.object(s.subprocess,'run',return_value=result):
+        with patch.object(s.platform,'system',return_value='Windows'),patch('windows.processes.names',return_value=['한글 앱.exe','LeagueClientUx.exe','RiotClientServices.exe']),patch.object(s.subprocess,'run') as shell:
             self.assertTrue(s.inspect()['league_client_open'])
+            shell.assert_not_called()
+    def test_native_windows_inspection_failure_does_not_guess_clean(self):
+        with patch.object(s.platform,'system',return_value='Windows'),patch('windows.processes.names',side_effect=OSError('snapshot unavailable')),self.assertRaises(OSError):s.require_clean_start()

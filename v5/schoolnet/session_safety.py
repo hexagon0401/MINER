@@ -1,5 +1,4 @@
 """Inspect exact game/client basenames before any routing mutation. Never kill apps."""
-import json
 from pathlib import Path
 import platform
 import subprocess
@@ -13,9 +12,8 @@ def inspect():
         result=subprocess.run(['/bin/ps','-A','-o','comm='],check=True,capture_output=True,text=True,timeout=4)
         names=[Path(line.strip()).name for line in result.stdout.splitlines()]
     elif system=='Windows':
-        script="[Console]::OutputEncoding=[Text.UTF8Encoding]::new($false); @(Get-Process -ErrorAction Stop | Select-Object -ExpandProperty ProcessName) | ConvertTo-Json -Compress"
-        result=subprocess.run(['powershell.exe','-NoLogo','-NoProfile','-NonInteractive','-Command',script],check=True,capture_output=True,text=True,encoding='utf-8',errors='replace',timeout=5,creationflags=subprocess.CREATE_NO_WINDOW)
-        values=json.loads(result.stdout);names=values if isinstance(values,list) else [values]
+        from windows.processes import names as process_names
+        names=process_names()
     else:return {'supported':False,'game_open':False,'league_client_open':False}
     normalized={name.casefold().removesuffix('.exe') for name in names if isinstance(name,str)}
     games={'leagueoflegends','league of legends'}
