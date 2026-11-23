@@ -53,3 +53,12 @@ G1은 관측 상관관계/신선도만 구현했다. command request 재전송�
 ## G2 진입 판정
 
 **진입하지 않음.** G1 코드와 native CI 결과 리뷰, 디자인 미완 항목 및 별도 Windows 서비스/Job/guardian 소유권 설계가 필요하다. Close/Quit/logout/reboot 정책을 바꾸지 않았다. 실제 현장 반복 시험과 자동 배포는 수행하지 않는다.
+
+## 최종 실행 결과
+
+- 로컬 전체 원본 소스 + 고정 sing-box 1.12.0: **169 tests PASS**, 수집 오류 없음.
+- 브랜치 CI: https://github.com/hexagon0401/MINER/actions/runs/45134822839 — Ubuntu / Windows Server 2025 / macOS 26 모두 PASS.
+- macOS: 전체 Swift UI 소스 컴파일 및 pure model smoke로 엔진 유지/프로브 FAIL, 요청 불일치 거부, TTL 만료, 진행 JSON 제거 검증 PASS. 네이티브 앱 화면 렌더링·실제 게임 시험을 실행한 것은 아님.
+- 보호 대상 SHA-256 및 프리뷰 PNG 링크 확인 PASS. ALPHA 이미지 크기/시안 비교 완료, 스타일 최종 정합은 디자인 미완 항목으로 명시.
+- G1 명령 observation 모델의 상태 전환은 요청·세대·시각의 유효성에 한정된다. 서비스 수명 FSM·명령 중복 실행 방지·IPC 권한 검증은 G2다.
+- main SHA 유지: 7889545ea4c41301b0f75995f541d9c8164e9d16. 배포·태그·cask 갱신·G2 진입 없음.

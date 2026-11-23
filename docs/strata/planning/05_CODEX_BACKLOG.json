@@ -2,7 +2,7 @@
   "product": "MINER STRATA",
   "target_version": "2.0.0",
   "created_kst": "2026-11-23",
-  "status": "planning_only",
+  "status": "g0_g1_implemented_pending_operator_review",
   "baseline": "ALPHA 1.2.3",
   "tasks": [
     {
@@ -17,7 +17,7 @@
         "Casks/miner.rb"
       ],
       "definition_of_done": "원본 SHA와 baseline 증거를 문서화",
-      "status": "TODO"
+      "status": "IMPLEMENTED_PENDING_REVIEW"
     },
     {
       "id": "G0-02",
@@ -29,7 +29,7 @@
         "v5/diagnostics/collect.py"
       ],
       "definition_of_done": "사용자 요청 단계/시간과 증거등급 기록",
-      "status": "TODO"
+      "status": "PROCEDURE_DEFINED_LIVE_REPRODUCTION_PENDING"
     },
     {
       "id": "G1-01",
@@ -44,7 +44,7 @@
         "v5/macos/MinerUI.swift"
       ],
       "definition_of_done": "실패 주입에서도 engine ready vs Riot probe fail 분리",
-      "status": "TODO"
+      "status": "IMPLEMENTED_PENDING_REVIEW"
     },
     {
       "id": "G1-02",
@@ -59,7 +59,7 @@
         "v5/windows/app.py"
       ],
       "definition_of_done": "G1 단계에서는 현재 안전 DNS/엔진 cleanup 유지, 별도 상태코드 및 테스트 확인. 지속형 DEGRADED는 G2에 귀속",
-      "status": "TODO"
+      "status": "IMPLEMENTED_PENDING_REVIEW"
     },
     {
       "id": "G1-03",
@@ -74,7 +74,7 @@
         "v5/main.py"
       ],
       "definition_of_done": "원인코드/사용자 메시지 분리, 로그 비밀정보 없음",
-      "status": "TODO"
+      "status": "IMPLEMENTED_PENDING_REVIEW"
     },
     {
       "id": "G1-04",
@@ -89,7 +89,7 @@
         "v5/schoolnet/warp.py"
       ],
       "definition_of_done": "단일 HEAD가 통계창 성공으로 표시되지 않음",
-      "status": "TODO"
+      "status": "IMPLEMENTED_PENDING_REVIEW"
     },
     {
       "id": "G2-01",
@@ -363,7 +363,7 @@
         "v5/schoolnet/warp.py"
       ],
       "definition_of_done": "GitHub repo 및 missing 4 modules 확인; source snapshot 단독 실행 금지",
-      "status": "TODO"
+      "status": "IMPLEMENTED_PENDING_REVIEW"
     },
     {
       "id": "G0-04",
@@ -376,7 +376,7 @@
         "v5/schoolnet/warp.py"
       ],
       "definition_of_done": "Disconnected/DNS-only/Warp/WarpProxy 케이스 정의 및 현행 fixed-Warp restore 명시",
-      "status": "TODO"
+      "status": "IMPLEMENTED_PENDING_REVIEW"
     },
     {
       "id": "G2-06",
@@ -442,5 +442,6 @@
       "status": "TODO"
     }
   ],
-  "planning_revision": "v0.2"
+  "planning_revision": "v0.2",
+  "implementation_evidence": "../G0_G1_IMPLEMENTATION_KO.md"
 }
