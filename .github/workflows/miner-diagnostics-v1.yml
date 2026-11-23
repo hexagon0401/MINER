@@ -31,7 +31,7 @@ jobs:
       - name: Privacy and restoration regression tests
         working-directory: v5
         run: |
-          python -m unittest discover -s tests -p test_diagnostics.py -v
+          python -m unittest discover -s tests -p "test_diagnostic*.py" -v
           python -m unittest discover -s tests -p test_warp.py -v
       - name: Package and execute standalone read-only recorder
         working-directory: v5
@@ -62,20 +62,32 @@ jobs:
       - name: Verify all native receipts
         run: |
           python3 - <<'PY'
-          import hashlib,json,os
+          import hashlib,json,os,sys
           from pathlib import Path
+          sys.path.insert(0,'v5')
+          from diagnostics.collect import VERSION
           for kind in ['macOS-AppleSilicon','macOS-Intel','Windows-x64']:
-              p=Path('diagnostics-assets')/f'MINER-Diagnostics-v1.0.0-{kind}.zip'
+              p=Path('diagnostics-assets')/f'MINER-Diagnostics-v{VERSION}-{kind}.zip'
               d=json.loads(p.with_suffix('.zip.verification.json').read_text())
               assert d['ok'] and d['packaged_recorder_executed'] and d['read_only_report_verified']
+              assert d['tool_version']==VERSION
               assert d['source_commit']==os.environ['GITHUB_SHA']
               assert d['sha256']==hashlib.sha256(p.read_bytes()).hexdigest()
           PY
+      - name: Read diagnostic version
+        id: version
+        run: |
+          python3 - <<'PYVERSION'
+          import os,sys
+          sys.path.insert(0,'v5')
+          from diagnostics.collect import VERSION
+          with open(os.environ['GITHUB_OUTPUT'],'a') as f:f.write('value='+VERSION+'\n')
+          PYVERSION
       - name: Publish separate diagnostics prerelease, preserving stable MINER and Homebrew
         env:
           GH_TOKEN: ${{ github.token }}
           GH_REPO: ${{ github.repository }}
         run: |
-          gh release create miner-diagnostics-v1.0.0 --target "$GITHUB_SHA" --draft --prerelease --title 'MINER Local Diagnostics v1.0.0' --notes-file v5/diagnostics/RELEASE_NOTES.md
-          gh release upload miner-diagnostics-v1.0.0 diagnostics-assets/*
-          gh release edit miner-diagnostics-v1.0.0 --draft=false --prerelease=true --latest=false
+          gh release create miner-diagnostics-v${{ steps.version.outputs.value }} --target "$GITHUB_SHA" --draft --prerelease --title 'MINER Local Diagnostics v${{ steps.version.outputs.value }}' --notes-file v5/diagnostics/RELEASE_NOTES.md
+          gh release upload miner-diagnostics-v${{ steps.version.outputs.value }} diagnostics-assets/*
+          gh release edit miner-diagnostics-v${{ steps.version.outputs.value }} --draft=false --prerelease=true --latest=false

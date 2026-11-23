@@ -184,7 +184,7 @@ macOS 네이티브 명령 취소·시간 제한, 게임 이름의 시험 프로�
 
 ### 연결 오류 로컬 진단
 
-MINER 1.2.2와 WARP 2026.8.2100.0의 연결 끊김·모드 복귀 문제를 확인하는 [독립 진단 패키지](https://github.com/hexagon0401/MINER/releases/tag/miner-diagnostics-v1.0.0)를 제공합니다. 기존 앱을 교체하지 않으며 Mac Apple Silicon·Intel, Windows용으로 나눕니다. 같은 진단 창에서 연결 전·연결 후·게임 중·통계창·중지 후를 기록하고 바탕화면 ZIP을 확인해 전달해 주세요. 기본 검사는 설정을 바꾸거나 자동 업로드하지 않습니다. [실행·수집 항목](v5/diagnostics/README_KO.md) · [원인 구분과 다음 설계](v5/docs/LOCAL_DIAGNOSTICS_DESIGN.md).
+MINER 1.2.2와 WARP 2026.8.2100.0의 연결 끊김·모드 복귀 문제를 확인하는 [독립 진단 패키지](https://github.com/hexagon0401/MINER/releases/tag/miner-diagnostics-v1.0.1)를 제공합니다. 기존 앱을 교체하지 않으며 Mac Apple Silicon·Intel, Windows용으로 나눕니다. 같은 진단 창에서 연결 전·연결 후·게임 중·통계창·중지 후를 기록하고 바탕화면 ZIP을 확인해 전달해 주세요. 기본 검사는 설정을 바꾸거나 자동 업로드하지 않습니다. [실행·수집 항목](v5/diagnostics/README_KO.md) · [원인 구분과 다음 설계](v5/docs/LOCAL_DIAGNOSTICS_DESIGN.md).
 
 ### 앱에서 업데이트
 

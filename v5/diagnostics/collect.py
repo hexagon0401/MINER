@@ -21,7 +21,7 @@ import zipfile
 
 ROOT=Path(__file__).resolve().parents[1]
 if not getattr(sys,"frozen",False) and str(ROOT) not in sys.path:sys.path.insert(0,str(ROOT))
-VERSION='1.0.0'
+VERSION='1.0.1'
 PHASES=('before','connected','in_game','post_game','after_stop','error')
 HOSTS=('www.cloudflare.com','auth.riotgames.com','www.leagueoflegends.com')
 COMMAND_TIMEOUT=4
@@ -119,7 +119,7 @@ def app_paths(system):
     return [Path(os.environ.get('LOCALAPPDATA',str(Path.home()))) / 'MINER/Beta1']
 
 
-def files_state(system):
+def files_state(system,log_reader=None):
     result={'locations':[]}
     if system=='Darwin':
         try:
@@ -152,6 +152,7 @@ def files_state(system):
                     with path.open('rb') as f:f.seek(max(0,stat.st_size-131072));tail=f.read(131072).decode('utf-8','replace')
                     item['events']={key:len(re.findall(pattern,tail,re.I)) for key,pattern in {'timeout':'timed? ?out|timeout','reset':'connection reset','refused':'connection refused','dns':'\\bdns\\b','restore':'restor|recover','permission':'permission|not permitted','socks':'socks|proxy','forced_stop':'forced to stop|forced stop','cancel':'cancel'}.items()}
                     item['van_codes']=sorted(set(re.findall(r'\bVAN\s*-?\s*\d{1,6}\b',tail,re.I)))[:20]
+                    if log_reader is not None:item['error_window']=log_reader.read(path)
                 row['files'][relative]=item
             except PermissionError:row['files'][relative]={'error':'permission_denied'}
             except (OSError,ValueError):row['files'][relative]={'error':'unreadable'}
@@ -226,24 +227,35 @@ def findings(snapshot):
 
 
 class Recorder:
-    def __init__(self,port=40000,active=False,warp_cli=None):self.privacy=Privacy();self.samples=[];self.port=port;self.active=active;self.cli=warp_cli;self.begin=time.monotonic()
+    def __init__(self,port=40000,active=False,warp_cli=None):
+        from diagnostics.log_events import LogWindows
+        self.log_reader=LogWindows();self.privacy=Privacy();self.samples=[];self.port=port;self.active=active;self.cli=warp_cli;self.begin=time.monotonic()
     def snapshot(self,phase,error_code=None):
         from schoolnet.warp import resolve_cli
-        system=platform.system();row={'at':now(),'elapsed_s':round(time.monotonic()-self.begin,2),'phase':phase,'system':system,'os_version':platform.release(),'architecture':platform.machine(),'app':files_state(system)}
+        system=platform.system();row={'at':now(),'elapsed_s':round(time.monotonic()-self.begin,2),'phase':phase,'system':system,'os_version':platform.release(),'architecture':platform.machine(),'app':files_state(system,self.log_reader)}
         try:row['warp']=warp_state(resolve_cli(self.cli))
         except (ValueError,OSError):row['warp']={'unavailable':True}
         row['network']=network_state(system,self.privacy);row['socks']=socket_check(self.port)
         if error_code:row['error_code']=error_code
         if self.active:
+            print('검사: WARP HTTPS (최대 7초)',flush=True)
             row['active_probes']={'warp':child_probe('warp',HOSTS[0],self.port)}
             for host in HOSTS:
+                print('검사: '+host+' DNS / OS TLS / SOCKS TLS (각 최대 7초)',flush=True)
                 row['active_probes'][host]={'dns':child_probe('dns',host,self.port),'os_https':child_probe('https',host,self.port),'proxy_https':child_probe('proxy_https',host,self.port)}
+            # Checks themselves can create engine errors. Advance the log cursor
+            # separately so they are not labelled as new client-only errors in
+            # the next phase. Concurrent app traffic remains explicitly mixed.
+            during=files_state(system,self.log_reader)
+            row['logs_during_active_checks']=[{'location':loc['location'],'file':name,'error_window':info['error_window']} for loc in during.get('locations',[]) for name,info in loc.get('files',{}).items() if 'error_window' in info]
+            row['probe_period_log_origin']='mixed_app_and_diagnostic_traffic_not_attributed'
+        row['collected_until']=now()
         row['findings']=findings(row);self.samples.append(row);return row
     def save(self,output):
         output=Path(output);output.parent.mkdir(parents=True,exist_ok=True)
         report={'schema':1,'tool_version':VERSION,'read_only':True,'active_probes':self.active,'uploaded':False,'privacy':'No raw logs, addresses, SSID, accounts, tokens, packet captures or browsing history. Address/interface IDs are random-session HMACs.','samples':self.samples}
         encoded=json.dumps(report,ensure_ascii=False,indent=2).encode()
-        overview=['MINER local diagnostics '+VERSION,'Read-only; no network settings changed; no automatic upload.','Known reference game IP is a route check only, not your actual game server.','WARP Local Proxy mode is expected while MINER runs. MASQUE UDP transport is a separate setting.','Findings are hypotheses / observed state, not proof of game or anti-cheat compatibility.','']
+        overview=['MINER local diagnostics '+VERSION,'Active DNS/TLS checks: '+('ON' if self.active else 'OFF'),'Read-only; no network settings changed; no automatic upload.','Known reference game IP is a route check only, not your actual game server.','WARP Local Proxy mode is expected while MINER runs. MASQUE UDP transport is a separate setting.','Findings are hypotheses / observed state, not proof of game or anti-cheat compatibility.','']
         for row in self.samples:overview.append(row['at']+' '+row['phase']+': '+', '.join(row['findings']))
         overview.append('\nCompare before / connected / in_game / post_game / after_stop in this SAME session. Review report.json before sharing.')
         # Atomic replacement: an interrupted save leaves the last valid report intact.
@@ -278,9 +290,12 @@ def main(argv=None):
         except Exception as exc:print(json.dumps({'ok':False,'error':type(exc).__name__}));return 1
     interactive=args.interactive or (getattr(sys,'frozen',False) and len(sys.argv)==1)
     output=args.output or Path.home()/'Desktop'/('MINER-Diagnostics-'+datetime.now().strftime('%Y%m%d-%H%M%S')+'-'+secrets.token_hex(3)+'.zip')
+    if interactive and not args.active:
+        try:args.active=input('외부 DNS·TLS 검사 허용? 고정 Cloudflare/Riot/LoL 요청만 사용합니다. [y/N]: ').strip().lower()=='y'
+        except (KeyboardInterrupt,EOFError):return 0
     recorder=Recorder(args.port,args.active,args.warp_cli)
     print('MINER Diagnostics: read-only / 읽기 전용. No automatic upload / 자동 업로드 없음.',flush=True)
-    print('Default: local checks only. --active enables fixed DNS/TLS requests. / 기본값은 로컬 검사만 수행합니다.',flush=True)
+    print('DNS/TLS 외부 검사 / active probes: '+('ON' if args.active else 'OFF'),flush=True)
     try:
         while True:
             phase=args.phase;code=args.error_code
