@@ -10,7 +10,7 @@ permissions:
   contents: read
 concurrency:
   group: miner-strata-preview
-  cancel-in-progress: false
+  cancel-in-progress: true
 jobs:
   windows-scm:
     runs-on: windows-2025
@@ -30,6 +30,7 @@ jobs:
           import os,sys,subprocess,json,traceback
           sys.excepthook=lambda *exc: print('::error::'+''.join(traceback.format_exception(*exc))[-5000:].replace('%','%25').replace('\n','%0A'))
           from pathlib import Path
+          sys.path.insert(0,str(Path.cwd()))
           root=Path(os.environ['ProgramFiles'])/'MINER-SCM-CI';root.mkdir()
           work=Path(os.environ['RUNNER_TEMP'])/'strata-scm-fast';work.mkdir()
           entry=work/'service-entry.py'
