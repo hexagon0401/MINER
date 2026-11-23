@@ -30,7 +30,7 @@ def main():
             subprocess.run(['/usr/bin/codesign','--force','--sign','-',str(binary)],check=True,timeout=30)
             subprocess.run(['/usr/bin/codesign','--verify','--strict',str(binary)],check=True,timeout=30)
         # WARP absent / no installed MINER is a useful native scenario, not a skip.
-        report=work/'smoke.zip'
+        report=work/'한글 path'/'smoke.zip'
         subprocess.run([str(binary),'--phase','before','--output',str(report)],check=True,timeout=80)
         with zipfile.ZipFile(report) as z:
             data=json.loads(z.read('report.json'));assert data['read_only'] and not data['active_probes'] and not data['uploaded'];assert len(data['samples'])==1

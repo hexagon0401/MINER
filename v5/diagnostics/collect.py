@@ -191,7 +191,9 @@ def probe(kind,host,port):
                 tls.sendall(('HEAD / HTTP/1.1\r\nHost: '+host+'\r\nConnection: close\r\n\r\n').encode('ascii'))
                 response=http.client.HTTPResponse(tls);response.begin()
                 return {'tls_verified':True,'http_status':response.status,'via':'socks5h','direct_fallback':False}
-    opener=urllib.request.build_opener(urllib.request.ProxyHandler({}),urllib.request.HTTPSHandler(context=context))
+    class NoRedirect(urllib.request.HTTPRedirectHandler):
+        def redirect_request(self,*args,**kwargs):return None
+    opener=urllib.request.build_opener(urllib.request.ProxyHandler({}),NoRedirect(),urllib.request.HTTPSHandler(context=context))
     try:
         with opener.open('https://'+host+'/',timeout=4) as response:return {'tls_verified':True,'http_status':response.status}
     except urllib.error.HTTPError as exc:return {'tls_verified':True,'http_status':exc.code}
@@ -256,6 +258,10 @@ class Recorder:
 
 
 def main(argv=None):
+    # Frozen Windows apps ignore PYTHONUTF8; redirected CI and legacy consoles
+    # can default to cp1252 and fail before the first Korean instruction.
+    for stream in (sys.stdout,sys.stderr):
+        if hasattr(stream,'reconfigure'):stream.reconfigure(encoding='utf-8',errors='replace')
     p=argparse.ArgumentParser(description='MINER local read-only diagnostic recorder / 로컬 진단')
     p.add_argument('--version',action='version',version=VERSION)
     p.add_argument('--output',type=Path)
