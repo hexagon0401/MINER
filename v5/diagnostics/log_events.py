@@ -1,6 +1,7 @@
 """Allowlisted error shapes, never raw log text, hostnames, tokens or IP values."""
 from collections import Counter
 import ipaddress
+import json
 import os
 import re
 
@@ -25,6 +26,21 @@ FAMILIES=('riotgames.com','riotgames.net','riotcdn.net','pvp.net','leagueoflegen
 def classify(text):
     shapes=Counter();unknown=0;classified=0;lines=text.splitlines()
     for line in lines:
+        if line.startswith('{'):
+            try:
+                event=json.loads(line)
+                if event.get('event')=='engine_error_categories':
+                    summary=event['summary']
+                    for item in summary.get('patterns',[])[:24]:
+                        component=item['component'];cause=item['cause'];family=item['domain_family'];endpoint=item['endpoint_class'];count=item['count']
+                        if component not in ('warp_outbound','dns','tun','unclassified') or cause not in CAUSES or family not in (*FAMILIES,'unclassified') or not set(endpoint.split('+')).issubset({'local_proxy_40000','miner_dns','synthetic','loopback','private','public','unclassified'}) or type(count) is not int or not 0<=count<=8192:continue
+                        shapes[(component,cause,family,endpoint)]+=count
+                    count=summary.get('unclassified_warning_error_lines',0)
+                    if type(count) is int and 0<=count<=8192:unknown+=count
+                    count=summary.get('classified_error_lines',0)
+                    if type(count) is int and 0<=count<=8192:classified+=count
+                    continue
+            except (ValueError,TypeError,KeyError,AttributeError):pass
         if not re.search(r'\b(?:ERROR|WARN)\b|(?:Error|Exception):',line,re.I):continue
         causes=[key for key,pattern in CAUSES.items() if re.search(pattern,line,re.I)]
         if not causes:

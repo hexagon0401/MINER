@@ -157,7 +157,12 @@ def run(directory, engine="sing-box", warp_cli=None, managed_helper=False):
             # leave a detached TUN engine behind on macOS.
             options={} if native_platform()=='macos' else {'start_new_session':True}
             print('Engine starting; selective routes only.',flush=True)
-            child=subprocess.Popen([result['engine'],'run','-c',str(directory/'sing-box.json')],cwd=directory,**options)
+            child=subprocess.Popen([result['engine'],'run','-c',str(directory/'sing-box.json')],cwd=directory,
+                **({'stdout':subprocess.PIPE,'stderr':subprocess.STDOUT} if managed_helper else {}),**options)
+            engine_log=None
+            if managed_helper:
+                from .engine_log import EngineLog
+                engine_log=EngineLog(child.stdout,directory/'engine-runtime.log')
             previous={};stop_deadline=None
             def stop(signum,frame):
                 nonlocal stop_deadline
@@ -188,6 +193,11 @@ def run(directory, engine="sing-box", warp_cli=None, managed_helper=False):
                             health=maintain_proxy(profile.proxy_port,warp_cli)
                             if health.get('warning'):print(health['warning'],flush=True)
                             last_health=time.monotonic()
+                        elif managed_helper and stop_deadline is None and time.monotonic()-last_health>=15:
+                            from .network_scope import check
+                            write_json(directory.parent/'strata-scope.json',{'at':time.time(),**check(lease.snapshot)})
+                            (directory.parent/'strata-scope.json').chmod(0o644)  # Codes/booleans only; desktop reads this cached observation.
+                            last_health=time.monotonic()
             finally:
                 try:lease.close()
                 finally:
@@ -196,5 +206,6 @@ def run(directory, engine="sing-box", warp_cli=None, managed_helper=False):
                         try:child.wait(timeout=10)
                         except subprocess.TimeoutExpired:child.kill();child.wait(timeout=5)
                     for signum,handler in previous.items():signal.signal(signum,handler)
+                    if engine_log:engine_log.finish()
             print('Engine exited; original DNS recovered.',flush=True)
             return child.returncode if child.returncode>=0 else 128-child.returncode

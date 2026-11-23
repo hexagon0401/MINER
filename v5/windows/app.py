@@ -214,6 +214,9 @@ class Bridge(QObject):
     @Slot()
     def checkUpdate(self):
         if self.testing or self.update_busy:return
+        from schoolnet import __preview__
+        if __preview__:
+            self.update_message='STRATA 시험판: 새 프리뷰는 GitHub에서 설치하세요. / STRATA preview: install new previews from GitHub.';self.changed.emit();return
         self.update_message=WORDS[self.language]['update_checking'];self.run_update()
 
     @Slot(bool)

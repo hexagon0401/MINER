@@ -59,7 +59,7 @@ def session(directory, engine, stop, emit, restore_only=False, emergency=None, o
     profile=None if restore_only else prepare(directory)
     marker=directory/'session.json'
     with instance_lock(directory):
-        child=job=guardian=relay=lease=None
+        child=job=guardian=relay=lease=engine_log=None
         failure=None;cleanup=[];disconnected=False
         write_json(marker,{'version':2,'unfinished':True})
         try:
@@ -78,7 +78,10 @@ def session(directory, engine, stop, emit, restore_only=False, emergency=None, o
                     job=Job()
                     with (directory/'engine.log').open('w',encoding='utf-8') as log:
                         child=subprocess.Popen([str(Path(engine).resolve()),'run','-c',str(directory/'sing-box.json')],cwd=directory,
-                            stdout=log,stderr=subprocess.STDOUT,creationflags=subprocess.CREATE_NEW_PROCESS_GROUP)
+                            stdout=subprocess.PIPE if persistent else log,stderr=subprocess.STDOUT,creationflags=subprocess.CREATE_NEW_PROCESS_GROUP)
+                        if persistent:
+                            from schoolnet.engine_log import EngineLog
+                            engine_log=EngineLog(child.stdout,directory/'engine-runtime.log')
                         job.assign(child)
                         deadline=time.monotonic()+20
                         while not stop.is_set() and child.poll() is None and not probe_dns():
@@ -102,7 +105,14 @@ def session(directory, engine, stop, emit, restore_only=False, emergency=None, o
                         last_health=time.monotonic();last_warning=None
                         while child.poll() is None and not stop.wait(.25):
                             if time.monotonic()-last_health>=15:
-                                health=warp.maintain_proxy(profile.proxy_port)
+                                try:health=warp.maintain_proxy(profile.proxy_port)
+                                except ValueError:
+                                    if not persistent:raise
+                                    health={'healthy':False,'warning':'EXTERNAL_WARP_CHANGE: engine preserved; use Stop before reconnecting.'}
+                                if persistent:
+                                    from schoolnet.network_scope import check
+                                    scope=check(lease.snapshot)
+                                    if scope['healthy'] is not True:health={'healthy':False,'warning':scope['reason_code']+': stop and reconnect on the current network; no settings changed automatically.'}
                                 warning=health.get('warning')
                                 if warning and warning!=last_warning:print(warning,file=log,flush=True)
                                 if not stop.is_set():emit('connection_warning' if health.get('healthy') is False else 'running',5)
@@ -120,6 +130,9 @@ def session(directory, engine, stop, emit, restore_only=False, emergency=None, o
             except Exception as exc:cleanup.append(str(exc))
             try:stop_engine(child)
             except Exception as exc:cleanup.append(str(exc))
+            if engine_log:
+                try:engine_log.finish()
+                except Exception as exc:cleanup.append(str(exc))
             if job:job.close()
             if relay:relay.__exit__(None,None,None)
             if guardian:

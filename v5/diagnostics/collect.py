@@ -117,7 +117,7 @@ def network_state(system,privacy):
 
 def app_paths(system):
     if system=='Darwin':return [Path.home()/'Library/Application Support/SchoolNet v5 Alpha',Path('/Library/Application Support/SchoolNet v5 Alpha')]
-    return [Path(os.environ.get('LOCALAPPDATA',str(Path.home()))) / 'MINER/Beta1']
+    return [Path(os.environ.get('LOCALAPPDATA',str(Path.home()))) / 'MINER/Beta1',Path(os.environ.get('ProgramData',r'C:\ProgramData'))/'MINER-Privileged-Recovery/strata-profile']
 
 
 def files_state(system,log_reader=None):
@@ -141,7 +141,7 @@ def files_state(system,log_reader=None):
                 except OSError:pass
     for index,base in enumerate(app_paths(system)):
         row={'location':index,'exists':base.exists(),'files':{}}
-        for relative in ('profile.json','profile/profile.json','sing-box.json','profile/sing-box.json','network-dns-v1.json','profile/network-dns-v1.json','session.json','engine.log','startup-error.log','helper.log','Updates/install.log','fakeip-cache.db','profile/fakeip-cache.db'):
+        for relative in ('profile.json','profile/profile.json','sing-box.json','profile/sing-box.json','network-dns-v1.json','profile/network-dns-v1.json','session.json','engine.log','engine-runtime.log','profile/engine-runtime.log','startup-error.log','helper.log','Updates/install.log','fakeip-cache.db','profile/fakeip-cache.db'):
             path=base/relative
             try:
                 if path.is_symlink() or not path.is_file():continue

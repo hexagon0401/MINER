@@ -102,11 +102,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         let stop=tray.addItem(withTitle:"연결 종료 / Stop",action:#selector(stop),keyEquivalent:"");stop.target=self
         let quit=tray.addItem(withTitle:"종료 / Quit",action:#selector(NSApplication.terminate(_:)),keyEquivalent:"");quit.target=NSApp
         statusItem?.menu=tray
-        append("MINER ALPHA v1.2.3: 게임 중에도 MINER와 WARP Local Proxy 연결을 유지하세요.")
+        append("MINER STRATA 2.0.0 Preview 1: 게임 중에도 연결을 유지하세요. 실제 통계창 복귀는 시험이 필요합니다.")
         refresh()
         DispatchQueue.main.asyncAfter(deadline:.now()+4) { if self.model.autoUpdates { self.checkUpdate() } }
         updateTimer=Timer.scheduledTimer(withTimeInterval:21600,repeats:true) { _ in if self.model.autoUpdates { self.checkUpdate() } }
         healthTimer=Timer.scheduledTimer(withTimeInterval:15,repeats:true) { _ in self.model.observationClock=Date();self.checkSessionHealth() }
+        NSWorkspace.shared.notificationCenter.addObserver(forName:NSWorkspace.didWakeNotification,object:nil,queue:.main) { [weak self] _ in self?.checkSessionHealth() }
     }
 
     @objc func showMainWindow() { window.makeKeyAndOrderFront(nil);NSApp.activate(ignoringOtherApps:true) }
@@ -367,6 +368,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                 let info=try JSONSerialization.jsonObject(with:Data(status.utf8)) as? [String:Any] ?? [:]
                 guard info["running"] as? Bool == true else { throw NSError(domain:"MINER.engineGone",code:1,userInfo:[NSLocalizedDescriptionKey:"네트워크 엔진이 종료되었습니다. 일반 DNS를 복구한 뒤 다시 연결하세요."]) }
                 guard info["ready"] as? Bool == true else { throw NSError(domain:"MINER.dnsNotReady",code:1,userInfo:[NSLocalizedDescriptionKey:"DNS 엔진 응답을 확인하지 못했습니다. 중지 후 다시 연결하세요. / DNS engine is not responding; stop and reconnect."]) }
+                if let scope=info["scope"] as? [String:Any],scope["healthy"] as? Bool == false {
+                    throw NSError(domain:"MINER.scopeChanged",code:1,userInfo:[NSLocalizedDescriptionKey:self.model.tr("네트워크 또는 DNS 설정이 변경됐습니다. 중지 후 다시 연결하세요. 설정을 자동으로 덮어쓰지 않습니다.","Network or DNS changed. Stop and reconnect; settings were not overwritten.")])
+                }
                 let health=try self.execute(["warp","maintain","--proxy-port",String(self.currentProxyPort)])
                 let state=try JSONSerialization.jsonObject(with:Data(health.utf8)) as? [String:Any] ?? [:]
                 if state["healthy"] as? Bool != true {
@@ -406,6 +410,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     @objc func manualCheckUpdate() { showSettings();checkUpdate() }
     @objc func checkUpdate() {
         guard !model.updateBusy && !busy else { return }
+        if Bundle.main.object(forInfoDictionaryKey:"MINERPreview") as? Bool == true {
+            model.updateAvailable=false
+            model.updateMessage=model.tr("STRATA 시험판입니다. 새 프리뷰는 GitHub의 STRATA 릴리스에서 수동으로 설치하세요. 정식 ALPHA와 Homebrew는 자동 변경하지 않습니다.","STRATA preview: install new previews from GitHub. Stable ALPHA and Homebrew remain unchanged.")
+            return
+        }
         model.updateBusy = true; model.updateMessage = model.tr("최신 정식 버전을 확인하고 있습니다.","Checking the latest official release.")
         DispatchQueue.global(qos:.utility).async {
             do {
