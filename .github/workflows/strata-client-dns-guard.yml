@@ -1,0 +1,137 @@
+name: STRATA Preview 4 client DNS guard
+on:
+  push:
+    branches: ['codex/strata-client-dns-guard']
+    paths: ['v5/**', '.github/workflows/strata-client-dns-guard.yml', 'packaging/strata-preview4/**']
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: miner-strata-client-dns-guard
+  cancel-in-progress: true
+jobs:
+  windows-preflight:
+    runs-on: windows-2025
+    timeout-minutes: 10
+    env:
+      PYTHONUTF8: '1'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Shared startup and Windows lifecycle regressions
+        working-directory: v5
+        shell: python
+        run: |
+          import os,subprocess,sys
+          from pathlib import Path
+          def checked(args,**kwargs):
+              result=subprocess.run(args,stdout=subprocess.PIPE,stderr=subprocess.STDOUT,text=True,**kwargs)
+              print(result.stdout,flush=True)
+              if result.returncode:
+                  print('::error::'+result.stdout[-6500:].replace('%','%25').replace('\n','%0A').replace('\r','%0D'),flush=True)
+                  raise SystemExit(result.returncode)
+          checked([sys.executable,'install_engine.py'],timeout=90)
+          env={**os.environ,'SCHOOLNET_TEST_ENGINE':str(Path('local/bin/sing-box.exe').resolve())}
+          for pattern in ['test_session_safety.py','test_windows_controller.py','test_config.py','test_dns_service_binding.py','test_diagnostic*.py']:
+              checked([sys.executable,'-m','unittest','discover','-s','tests','-p',pattern,'-v'],timeout=90,env=env)
+  macos:
+    needs: windows-preflight
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runner: macos-26
+            arch: arm64
+          - runner: macos-15-intel
+            arch: x86_64
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 60
+    env:
+      MINER_RELEASE_CHANNEL: beta
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: automation
+      - uses: actions/checkout@v4
+        with:
+          path: source
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install native dependencies and engine
+        working-directory: source/v5
+        run: |
+          python3 -m pip install pyinstaller==6.22.3 certifi==2026.10.23 dmgbuild==1.6.7
+          python3 install_engine.py
+      - name: Import Developer ID if configured
+        id: signing
+        working-directory: source/v5
+        env:
+          APPLE_CERTIFICATE_P12_BASE64: ${{ secrets.APPLE_CERTIFICATE_P12_BASE64 }}
+          APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          NOTARY_CONFIGURED: ${{ secrets.APPLE_NOTARY_KEY_P8_BASE64 != '' || secrets.APPLE_NOTARY_KEY_ID != '' || secrets.APPLE_NOTARY_ISSUER_ID != '' }}
+        run: python3 macos/signing_credentials.py
+      - name: Compile startup path and observation regressions
+        working-directory: source/v5
+        run: |
+          set -o pipefail
+          xcrun swiftc -swift-version 5 -D STRATA_HEALTH_TESTS -parse-as-library -framework AppKit -framework SwiftUI macos/App.swift macos/AppLifecycle.swift macos/CommandRunner.swift macos/MinerUI.swift macos/DeltaUI.swift macos/DeltaSmoke.swift macos/DeveloperAbout.swift macos/StrataHealthSmoke.swift -o "$RUNNER_TEMP/startup-path-check" 2>&1 | tee "$RUNNER_TEMP/strata-p4-release-swift.log"
+          "$RUNNER_TEMP/startup-path-check"
+      - name: Test and package native DMG
+        working-directory: source/v5
+        env:
+          CODE_SIGN_IDENTITY: ${{ steps.signing.outputs.identity }}
+          SIGNING_ENABLED: ${{ steps.signing.outputs.enabled }}
+          APPLE_NOTARY_KEY_P8_BASE64: ${{ secrets.APPLE_NOTARY_KEY_P8_BASE64 }}
+          APPLE_NOTARY_KEY_ID: ${{ secrets.APPLE_NOTARY_KEY_ID }}
+          APPLE_NOTARY_ISSUER_ID: ${{ secrets.APPLE_NOTARY_ISSUER_ID }}
+        run: |
+          set -o pipefail
+          export SCHOOLNET_TEST_ENGINE="$PWD/local/bin/sing-box"
+          python3 -c 'import subprocess,sys; subprocess.run([sys.executable,"-m","unittest","discover","-s","tests","-v"],check=True,timeout=180)' 2>&1 | tee "$RUNNER_TEMP/strata-p4-release-tests-${{ matrix.arch }}.log"
+          if [ "$SIGNING_ENABLED" = true ]; then mode=developer-id; else mode=adhoc; fi
+          python3 macos/build.py --dmg-background macos/design/dmg-background.png --arch '${{ matrix.arch }}' --signing "$mode" 2>&1 | tee "$RUNNER_TEMP/strata-p4-release-build-${{ matrix.arch }}.log"
+      - name: Package read-only diagnostics
+        working-directory: source/v5
+        run: python3 diagnostics/build.py
+      - name: Remove temporary signing keychain
+        if: always() && steps.signing.outputs.keychain != ''
+        working-directory: source/v5
+        env:
+          SIGNING_KEYCHAIN: ${{ steps.signing.outputs.keychain }}
+        run: python3 macos/signing_credentials.py --cleanup "$SIGNING_KEYCHAIN"
+      - name: Annotate failure diagnostics
+        if: failure()
+        run: python3 automation/packaging/icons/annotate_failure.py
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: strata-p4-release-macos-${{ matrix.arch }}
+          path: |
+            source/v5/dist/*
+            source/v5/dist-diagnostics/*
+            ${{ runner.temp }}/strata-p4-release-*.log
+            ${{ runner.temp }}/miner-ui-${{ matrix.arch }}*
+  publish:
+    needs: [macos, windows-preflight]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      actions: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: strata-p4-release-*
+          path: platform-assets
+      - run: python3 packaging/strata-preview4/assemble.py platform-assets release-assets
+      - env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          gh release create miner-strata-v2.0.0-preview.4 --target "$GITHUB_SHA" --draft --prerelease --title 'MINER STRATA 2.0.0 Preview 4 — client DNS guard' --notes-file packaging/strata-preview4/RELEASE_NOTES.md
+          gh release upload miner-strata-v2.0.0-preview.4 release-assets/* docs/strata/PREVIEW4_MACBOOK_TEST_KO.md docs/strata/STRATA_TEST_RESULTS.csv
+          gh release edit miner-strata-v2.0.0-preview.4 --draft=false --prerelease=true --latest=false

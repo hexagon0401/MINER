@@ -54,6 +54,10 @@ def main():
                 assert str(bundle) not in json.dumps(row),'Raw executable path leaked'
                 identity_fixture=True
             finally:child.terminate();child.wait(timeout=5)
+        client_flow_fixture=False
+        if system=='Darwin':
+            from diagnostics.client_flow_smoke import run as client_flow_smoke
+            client_flow_fixture=client_flow_smoke(binary,work)
         # Ensure a frozen child can be invoked without recursively entering the UI.
         subprocess.run([str(binary),'--version'],check=True,timeout=15)
         kind='macOS-AppleSilicon' if system=='Darwin' and arch=='arm64' else 'macOS-Intel' if system=='Darwin' else 'Windows-x64'
@@ -65,7 +69,7 @@ def main():
                 z.writestr(info,'#!/bin/bash\ncd -- "$(dirname -- "$0")" || exit 1\nexec ./MINER-Diagnostics --interactive\n')
         digest=hashlib.sha256(package.read_bytes()).hexdigest()
         package.with_suffix('.zip.sha256').write_text(digest+'  '+package.name+'\n')
-        package.with_suffix('.zip.verification.json').write_text(json.dumps({'ok':True,'tool_version':VERSION,'system':system,'architecture':arch,'source_commit':os.environ.get('GITHUB_SHA'),'sha256':digest,'packaged_recorder_executed':True,'read_only_report_verified':True,'native_long_path_identity_fixture':identity_fixture,'warp_live_tested':False,'game_live_tested':False,'signing':'adhoc' if system=='Darwin' else 'unsigned','notarized':False},indent=2)+'\n')
+        package.with_suffix('.zip.verification.json').write_text(json.dumps({'ok':True,'tool_version':VERSION,'system':system,'architecture':arch,'source_commit':os.environ.get('GITHUB_SHA'),'sha256':digest,'packaged_recorder_executed':True,'read_only_report_verified':True,'native_long_path_identity_fixture':identity_fixture,'native_client_socket_fixture':client_flow_fixture,'warp_live_tested':False,'game_live_tested':False,'signing':'adhoc' if system=='Darwin' else 'unsigned','notarized':False},indent=2)+'\n')
         print(package)
 
 if __name__=='__main__':main()

@@ -1,0 +1,62 @@
+{
+  "release_url": "https://github.com/hexagon0401/MINER/releases/tag/miner-strata-v2.0.0-preview.4",
+  "source_commit": "9e5847e20840ab89f5c4372eedd8b745f791da58",
+  "native_ci": "https://github.com/hexagon0401/MINER/actions/runs/45304756286",
+  "native_ci_result": "PASS",
+  "local_pinned_engine_tests": 211,
+  "dns_service_binding_wire_regression": "PASS: two platform profiles; selected NODATA, ordinary hints preserved, fake A/AAAA preserved",
+  "windows_native_tests": "PASS on windows-2025: startup, controller, config, DNS wire, diagnostic regressions; each command exit checked",
+  "github_dmg_digests_match": true,
+  "apple_silicon_download_sha256_verified": true,
+  "macos": [
+    {
+      "architecture": "x86_64",
+      "source_commit": "9e5847e20840ab89f5c4372eedd8b745f791da58",
+      "sha256": "b6315e5759cb940816ac1c268400a04473d4b95d0d30a02d0b99d27b519fff39",
+      "signing": "adhoc",
+      "session_preflight": {
+        "ok": true,
+        "packaged_cli": true,
+        "inert_process_fixtures": true,
+        "live_client_allowed": true,
+        "active_game_blocked": true,
+        "long_paths_with_spaces": true,
+        "client_not_terminated": true,
+        "routing_or_warp_commands_requested": false,
+        "real_lol_tested": false
+      }
+    },
+    {
+      "architecture": "arm64",
+      "source_commit": "9e5847e20840ab89f5c4372eedd8b745f791da58",
+      "sha256": "b9c0f026278fc52387d541a2253f16f89c072745e12ab62e6c63f62b478bdf9b",
+      "signing": "adhoc",
+      "session_preflight": {
+        "ok": true,
+        "packaged_cli": true,
+        "inert_process_fixtures": true,
+        "live_client_allowed": true,
+        "active_game_blocked": true,
+        "long_paths_with_spaces": true,
+        "client_not_terminated": true,
+        "routing_or_warp_commands_requested": false,
+        "real_lol_tested": false
+      }
+    }
+  ],
+  "diagnostics_release": "https://github.com/hexagon0401/MINER/releases/tag/miner-diagnostics-v2.0.2",
+  "diagnostics_ci": "https://github.com/hexagon0401/MINER/actions/runs/45303383999",
+  "earlier_app_ci_failures": [
+    "45304102988: Windows Mac-path fixture failure, later cancelled; no release",
+    "45304507638: strict Windows diagnostic path fixtures failed; no release"
+  ],
+  "corrections": [
+    "Path.as_posix comparisons for bundle fixtures",
+    "Every native Windows regression command exit checked; future Diagnostics 2.0.2 workflow also corrected"
+  ],
+  "actual_client_used_service_binding_hints": "NOT_OBSERVED",
+  "actual_friend_presence_or_ready_check_success": "NOT_VERIFIED",
+  "real_game_tested": false,
+  "windows_installer_rebuilt": false,
+  "main_alpha_homebrew_unchanged": true
+}

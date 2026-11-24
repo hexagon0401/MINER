@@ -13,7 +13,7 @@ CAUSES={
     'tls_certificate':r'certificate verify|certificate verification|unknown authority|certificate has expired',
     'tls_handshake':r'tls.*handshake|handshake.*fail',
     'dns_failure':r'no such host|server misbehaving|NXDOMAIN|SERVFAIL|dns.*(?:failed|failure|refused)',
-    'socks_server_failure':r'socks.*(?:general failure|server failure|host unreachable|network unreachable|connection not allowed|unsupported)',
+    'socks_server_failure':r'socks.*(?:general failure|server failure|host unreachable|network unreachable|connection not allowed|unsupported|connect failed)',
     'remote_closed':r'\bEOF\b|closed by.*(?:remote|peer)|unexpected end',
     'network_unreachable':r'network is unreachable|no route to host',
     'broken_pipe':r'broken pipe',

@@ -1,0 +1,105 @@
+name: MINER Diagnostics 2.0.2 client real-time diagnostics
+on:
+  push:
+    branches: ['codex/strata-client-realtime']
+    paths: ['v5/diagnostics/**', 'v5/tests/test_diagnostic*.py', 'v5/tests/test_strata_assessment.py', 'packaging/diagnostics202/**', '.github/workflows/strata-diagnostics202.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: miner-diagnostics-202
+  cancel-in-progress: true
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runner: macos-26
+            platform: macOS-AppleSilicon
+          - runner: macos-15-intel
+            platform: macOS-Intel
+          - runner: windows-2025
+            platform: Windows-x64
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 15
+    env:
+      PYTHONUTF8: '1'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install pyinstaller==6.22.3 certifi==2026.10.23
+      - name: Privacy and restoration regression tests
+        working-directory: v5
+        shell: python
+        run: |
+          import subprocess,sys
+          for pattern in ['test_diagnostic*.py','test_strata_assessment.py','test_warp.py']:
+              result=subprocess.run([sys.executable,'-m','unittest','discover','-s','tests','-p',pattern,'-v'],stdout=subprocess.PIPE,stderr=subprocess.STDOUT,text=True,timeout=120)
+              print(result.stdout,flush=True)
+              if result.returncode:
+                  print('::error::'+result.stdout[-6500:].replace('%','%25').replace('\n','%0A').replace('\r','%0D'),flush=True)
+                  raise SystemExit(result.returncode)
+      - name: Package and execute standalone read-only recorder
+        working-directory: v5
+        shell: bash
+        run: |
+          set -o pipefail
+          python diagnostics/build.py 2>&1 | tee "$RUNNER_TEMP/diagnostics-release-build.log"
+      - name: Bounded failure diagnostics
+        if: failure()
+        run: python packaging/icons/annotate_failure.py
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: diagnostics-v202-${{ matrix.platform }}
+          path: v5/dist-diagnostics/*
+  publish:
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: diagnostics-v202-*
+          merge-multiple: true
+          path: diagnostics-assets
+      - name: Verify all native receipts
+        run: |
+          python3 - <<'PY'
+          import hashlib,json,os,sys
+          from pathlib import Path
+          sys.path.insert(0,'v5')
+          from diagnostics.collect import VERSION
+          for kind in ['macOS-AppleSilicon','macOS-Intel','Windows-x64']:
+              p=Path('diagnostics-assets')/f'MINER-Diagnostics-v{VERSION}-{kind}.zip'
+              d=json.loads(p.with_suffix('.zip.verification.json').read_text())
+              assert d['ok'] and d['packaged_recorder_executed'] and d['read_only_report_verified']
+              assert d['tool_version']==VERSION
+              if kind.startswith('macOS'):
+                  assert d['native_long_path_identity_fixture'] is True
+                  assert d['native_client_socket_fixture'] is True
+              assert d['source_commit']==os.environ['GITHUB_SHA']
+              assert d['sha256']==hashlib.sha256(p.read_bytes()).hexdigest()
+          PY
+      - name: Read diagnostic version
+        id: version
+        run: |
+          python3 - <<'PYVERSION'
+          import os,sys
+          sys.path.insert(0,'v5')
+          from diagnostics.collect import VERSION
+          with open(os.environ['GITHUB_OUTPUT'],'a') as f:f.write('value='+VERSION+'\n')
+          PYVERSION
+      - name: Publish separate diagnostics prerelease, preserving stable MINER and Homebrew
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          gh release create miner-diagnostics-v${{ steps.version.outputs.value }} --target "$GITHUB_SHA" --draft --prerelease --title 'MINER Local Diagnostics v${{ steps.version.outputs.value }}' --notes-file packaging/diagnostics202/RELEASE_NOTES.md
+          gh release upload miner-diagnostics-v${{ steps.version.outputs.value }} diagnostics-assets/*
+          gh release edit miner-diagnostics-v${{ steps.version.outputs.value }} --draft=false --prerelease=true --latest=false
