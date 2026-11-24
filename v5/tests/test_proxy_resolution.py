@@ -54,9 +54,13 @@ class ProxyResolutionTests(unittest.TestCase):
                                         socks_connect(client,'auth.riotgames.com',443)
                                         for payload in [b'login',b'friends',b'ready-check',b'post-game']:
                                             client.sendall(payload);self.assertEqual(recv_exact(client,len(payload)),payload)
+                                        for host,service_port in [('chat.riotgames.com',5223),('platform.riotgames.com',2099)]:
+                                            with socket.create_connection(('127.0.0.1',port),timeout=3) as service:
+                                                service.settimeout(8);socks_connect(service,host,service_port)
+                                                service.sendall(b'port-preserved');self.assertEqual(recv_exact(service,14),b'port-preserved')
                             finally:child.terminate();child.wait(timeout=5)
                 self.assertEqual(fixture.server.rejected_hostnames,['auth.riotgames.com'])
-                self.assertEqual(fixture.server.destinations,[(ORIGIN,443)])
+                self.assertEqual(fixture.server.destinations,[(ORIGIN,443),(ORIGIN,5223),(ORIGIN,2099)])
                 self.assertIn(('auth.riotgames.com',1),fixture.server.dns_questions)
             finally:fixture.close()
 
