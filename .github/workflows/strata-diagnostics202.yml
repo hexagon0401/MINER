@@ -33,10 +33,15 @@ jobs:
       - run: python -m pip install pyinstaller==6.22.3 certifi==2026.10.23
       - name: Privacy and restoration regression tests
         working-directory: v5
+        shell: python
         run: |
-          python -m unittest discover -s tests -p "test_diagnostic*.py" -v
-          python -m unittest discover -s tests -p test_strata_assessment.py -v
-          python -m unittest discover -s tests -p test_warp.py -v
+          import subprocess,sys
+          for pattern in ['test_diagnostic*.py','test_strata_assessment.py','test_warp.py']:
+              result=subprocess.run([sys.executable,'-m','unittest','discover','-s','tests','-p',pattern,'-v'],stdout=subprocess.PIPE,stderr=subprocess.STDOUT,text=True,timeout=120)
+              print(result.stdout,flush=True)
+              if result.returncode:
+                  print('::error::'+result.stdout[-6500:].replace('%','%25').replace('\n','%0A').replace('\r','%0D'),flush=True)
+                  raise SystemExit(result.returncode)
       - name: Package and execute standalone read-only recorder
         working-directory: v5
         shell: bash
