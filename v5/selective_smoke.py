@@ -106,6 +106,18 @@ def run(engine,directory,guardian_executable=None):
                         guardian=spawn(directory,child.pid,executable=guardian_executable)
                     lease.activate()
                     ordinary_https();report['ordinary_os_dns_and_tls']=True
+                    if system=='Darwin':
+                        import ssl
+                        from unittest.mock import patch
+                        from schoolnet.client_path import verify as verify_client_path
+                        context=ssl.create_default_context(cafile=str(fixture.cert))
+                        proxy.origin_tls=True
+                        try:
+                            with patch('schoolnet.client_path.ssl.create_default_context',return_value=context):report['os_client_path']=verify_client_path()
+                        finally:proxy.origin_tls=False
+                        assert report['os_client_path']['os_dns_synthetic'] and report['os_client_path']['tls_verified']
+                        assert proxy.destinations==[(ORIGIN,443)]
+                        proxy.destinations.clear()
                     fake=socket.gethostbyname('login.riotgames.com')
                     assert ipaddress.ip_address(fake) in ipaddress.ip_network(FAKE_V4),'OS DNS did not return synthetic Riot address'
                     with socket.create_connection((fake,443),timeout=10) as session:
@@ -131,7 +143,7 @@ def run(engine,directory,guardian_executable=None):
                     mapped_synthetic=bool(mapped and mapped in ipaddress.ip_network(FAKE_V4))
                     report['os_resolver_aaaa_address_class']='synthetic_v6' if native_synthetic else 'synthetic_v4_mapped' if mapped_synthetic else 'non_synthetic_v6' if resolved else 'no_result'
                     report['os_resolver_aaaa_synthetic']=native_synthetic or mapped_synthetic
-                    if system=='Windows':assert report['os_resolver_aaaa_synthetic'],'Windows OS AAAA selective DNS regression'
+                    if system=='Windows' or snapshot.get('dns_mode'):assert report['os_resolver_aaaa_synthetic'],'OS AAAA selective DNS regression'
                     report['os_resolver_aaaa_boundary']='NONE_OBSERVED' if report['os_resolver_aaaa_synthetic'] else 'OS_SCOPE_CACHE_OR_IPV6_POLICY_REQUIRES_FIELD_TEST'
                     ipv6=(synthetic_aaaa('login.riotgames.com'),443)
                     assert ipaddress.ip_address(ipv6[0]) in ipaddress.ip_network(FAKE_V6),'Selective listener AAAA must be synthetic'

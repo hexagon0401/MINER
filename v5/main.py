@@ -155,7 +155,12 @@ def main(argv=None):
                 # Validate correlation metadata before any probe traffic.
                 from schoolnet.protocol_output import probe_event
                 probe_event(args.request_id,args.generation)
-                try:result=verify_client_service(args.proxy_port)
+                try:
+                    result=verify_client_service(args.proxy_port)
+                    if sys.platform=='darwin':
+                        from schoolnet.client_path import verify
+                        try:result['os_client_path']=verify()
+                        except ValueError as exc:raise ServiceProbeError(exc) from exc
                 except ServiceProbeError as exc:
                     emit_probe(args.request_id,args.generation,exc)
                     print(str(exc),file=sys.stderr);return 1

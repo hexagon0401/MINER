@@ -9,6 +9,8 @@ import re
 ROLES = {'leagueclient': 'league_backend', 'leagueclientux': 'league_ui',
          'leagueclientuxrender': 'league_ui', 'riotclientservices': 'riot_launcher',
          'riotclientux': 'riot_launcher', 'riotclientuxrender': 'riot_launcher'}
+ROLES.update({name:'riot_launcher' for name in ['riot client','riot client helper','riot client helper (renderer)','riot client helper (gpu)','riot client helper (plugin)']})
+ROLES.update({name:'league_ui' for name in ['leagueclientux helper','leagueclientux helper (renderer)','leagueclientux helper (gpu)']})
 STATES = {'ESTABLISHED', 'SYN_SENT', 'SYN_RECEIVED', 'CLOSE_WAIT', 'FIN_WAIT_1',
           'FIN_WAIT_2', 'CLOSING', 'LAST_ACK', 'TIME_WAIT', 'CLOSED', 'UNKNOWN'}
 PORTS = {443: 'https_candidate', 5223: 'chat_tls_candidate',

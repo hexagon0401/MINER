@@ -26,6 +26,11 @@ class DoH(http.server.BaseHTTPRequestHandler):
         body=query[:2]+b'\x81\x80\0\1'+struct.pack('!H',1 if answer else 0)+b'\0\0\0\0'+query[12:end]+answer
         self.send_response(200);self.send_header('Content-Type','application/dns-message');self.send_header('Content-Length',str(len(body)));self.send_header('Connection','close');self.end_headers();self.wfile.write(body)
 
+class Origin(http.server.BaseHTTPRequestHandler):
+    def log_message(self,*args):pass
+    def do_HEAD(self):
+        self.send_response(404);self.send_header('Content-Length','0');self.send_header('Connection','close');self.end_headers()
+
 class Proxy(socketserver.BaseRequestHandler):
     def handle(self):
         self.request.settimeout(10)
@@ -47,6 +52,9 @@ class Proxy(socketserver.BaseRequestHandler):
                 return
             if host!=ORIGIN:raise ValueError('Fixture received unresolved/synthetic origin')
             self.server.destinations.append((host,port))
+            if self.server.origin_tls:
+                with self.server.tls.wrap_socket(self.request,server_side=True) as tls:Origin(tls,self.client_address,self.server)
+                return
             while True:
                 data=self.request.recv(1024)
                 if not data:return
@@ -60,11 +68,12 @@ class Fixture:
     def __init__(self,directory):
         directory=Path(directory);directory.mkdir(parents=True,exist_ok=True)
         config=directory/'tls.cnf';cert=directory/'ca.pem';key=directory/'key.pem'
-        config.write_text('[req]\ndistinguished_name=dn\nx509_extensions=v3\nprompt=no\n[dn]\nCN=MINER CI only\n[v3]\nsubjectAltName=DNS:cloudflare-dns.com\nbasicConstraints=critical,CA:TRUE\nkeyUsage=critical,digitalSignature,keyEncipherment,keyCertSign\n')
+        config.write_text('[req]\ndistinguished_name=dn\nx509_extensions=v3\nprompt=no\n[dn]\nCN=MINER CI only\n[v3]\nsubjectAltName=DNS:cloudflare-dns.com,DNS:auth.riotgames.com\nbasicConstraints=critical,CA:TRUE\nkeyUsage=critical,digitalSignature,keyEncipherment,keyCertSign\n')
         openssl=shutil.which('openssl') or r'C:\Program Files\Git\usr\bin\openssl.exe'
         subprocess.run([openssl,'req','-x509','-newkey','rsa:2048','-nodes','-keyout',str(key),'-out',str(cert),'-days','1','-config',str(config)],check=True,stdout=subprocess.DEVNULL,stderr=subprocess.PIPE,timeout=30)
         self.cert=cert;self.server=Server(('127.0.0.1',0),Proxy)
         self.server.destinations=[];self.server.rejected_hostnames=[];self.server.dns_questions=[];self.server.errors=[]
+        self.server.origin_tls=False
         self.server.tls=ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER);self.server.tls.load_cert_chain(cert,key)
         threading.Thread(target=self.server.serve_forever,daemon=True).start()
     @property

@@ -7,6 +7,8 @@ def transport_detail(cause):
     """Allowlisted failure information; never stringify a raw transport error."""
     import ssl
     from .probe import SocksConnectError
+    from .client_path import ClientPathError
+    if isinstance(cause,ClientPathError):return {'failure_stage':'CLIENT_OS_PATH','failure_code':cause.code}
     if isinstance(cause,ServiceProbeError):return dict(cause.transport)
     if isinstance(cause,SocksConnectError):
         return {'failure_stage':'SOCKS_CONNECT','failure_code':'SOCKS_REPLY_'+str(cause.reply_code)}
@@ -18,10 +20,12 @@ def transport_detail(cause):
 
 class ServiceProbeError(ValueError):
     def __init__(self,cause):
-        self.reason_code='RIOT_PROBE_TIMEOUT' if isinstance(cause,TimeoutError) else 'RIOT_PROBE_FAILED'
         self.transport=transport_detail(cause)
+        self.reason_code='RIOT_PROBE_TIMEOUT' if isinstance(cause,TimeoutError) or self.transport['failure_code']=='CLIENT_PATH_TIMEOUT' else 'RIOT_PROBE_FAILED'
+        if self.transport['failure_code']=='OS_DNS_OUTSIDE_SELECTED_SPACE':self.reason_code='CLIENT_OS_DNS_BYPASS'
         detail=self.transport['failure_code']
-        super().__init__('Riot 서비스 확인 실패 ['+detail+']. 분리 경로 상태와 별도로 재검사하세요. / Riot service check failed; routing health is separate; no direct fallback.')
+        prefix='OS의 Riot 선택 경로 확인 실패' if self.transport['failure_stage']=='CLIENT_OS_PATH' else 'Riot 서비스 확인 실패'
+        super().__init__(prefix+' ['+detail+']. 분리 경로 상태와 별도로 재검사하세요. / Riot service check failed; routing health is separate; no direct fallback.')
 
 def probe_event(request_id,generation,*,error=None):
     reason=error.reason_code if error else 'RIOT_TLS_RESPONSE'

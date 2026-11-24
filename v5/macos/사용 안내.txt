@@ -1,4 +1,4 @@
-MINER STRATA 2.0.0 Preview 6 — macOS
+MINER STRATA 2.0.0 Preview 7 — macOS
 
 설치와 첫 연결
 1. DMG에서 MINER.app을 Applications로 드래그해 설치하거나 기존 앱을 교체하세요.
@@ -78,3 +78,6 @@ macOS가 실행을 막으면 공식 릴리스 출처를 확인한 후 시스템 
 
 [STRATA Preview 6 프록시 DNS 분리]
 WARP에 Riot 호스트 이름을 그대로 넘기지 않고 WARP 경유 HTTPS DNS로 실제 IP를 해석한 뒤 연결합니다. TLS 호스트 이름·인증서 검증은 유지합니다. 도구 → WARP 연결 확인으로 재검사하세요. 실패 시 SOCKS 응답 번호나 인증서 오류를 구분해 진단에 기록하며, 일반 DNS·직접 연결로 자동 전환하지 않습니다. 실제 로그인·친구 목록·수락창 성공은 별도 확인이 필요합니다.
+
+[STRATA Preview 7 macOS 도메인 resolver]
+활성 인터페이스의 DNS 설정을 유지하는 기존 방식에 더해 Riot 도메인 보조 resolver를 소유권 기록과 함께 설치합니다. 기존 resolver를 덮어쓰지 않습니다. 중지와 충돌 복구 시 소유 파일과 임시 DNS를 복구합니다. Riot 검사 PASS에는 OS 가상 IP 조회와 그 경로의 TLS 검사도 포함됩니다. 실제 클라이언트 업데이트·로그인 성공을 보증하지 않습니다. 진단 2.0.4는 OS가 실제 주소를 반환하는 선택 경로 공백도 표시합니다.

@@ -21,7 +21,7 @@ import zipfile
 
 ROOT=Path(__file__).resolve().parents[1]
 if not getattr(sys,"frozen",False) and str(ROOT) not in sys.path:sys.path.insert(0,str(ROOT))
-VERSION='2.0.3'
+VERSION='2.0.4'
 PHASES=('before','connected','in_game','post_game','after_stop','error')
 HOSTS=('www.cloudflare.com','auth.riotgames.com','www.leagueoflegends.com')
 OUTCOMES=('unknown','loaded','timeout_30s','error')

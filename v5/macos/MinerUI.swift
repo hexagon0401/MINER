@@ -44,6 +44,7 @@ final class MinerModel: ObservableObject {
     func tr(_ ko: String, _ en: String) -> String { language == "ko" ? ko : en }
     var mining: Bool { busy && ["cli_check", "proxy_connect", "tls_verify", "routing", "service_verify"].contains(phase) }
     var title: String {
+        if phase == "connection_warning" && probeReason == "CLIENT_OS_DNS_BYPASS" { return tr("Riot DNS 경로 확인 필요","Check Riot DNS routing") }
         if phase == "opening_installed" { return tr("Applications의 설치본 여는 중…","Opening installed MINER…") }
         if phase == "stopping" { return tr("중지 및 WARP 복귀 중…", "Stopping and restoring WARP…") }
         if language == "ko", let table = copy["systemStatus"] as? [String: [String: String]], let text = table[phase]?["title"] { return text }

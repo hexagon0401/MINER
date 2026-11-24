@@ -11,6 +11,10 @@ def check(snapshot):
             route=command(['/sbin/route','-n','get','default'],timeout=2)
             found=re.search(r'^\s*interface:\s*(\S+)',route,re.M)
             if not found or found[1]!=snapshot['interface']:return {'healthy':False,'reason_code':'DEFAULT_INTERFACE_CHANGED'}
+            if snapshot.get('dns_mode'):
+                from .scoped_dns import active
+                healthy=active(snapshot)
+                if not healthy:return {'healthy':False,'reason_code':'SCOPED_RESOLVER_CHANGED'}
             raw=command(['/usr/sbin/networksetup','-getdnsservers',snapshot['service']],timeout=2)
             values=[value for value in raw.splitlines() if value in (DNS_V4,DNS_V6)]
             if len(values)!=2 or len(raw.splitlines())!=2:return {'healthy':False,'reason_code':'DNS_LEASE_CHANGED'}

@@ -44,7 +44,10 @@ def normalized(values):
 
 
 class Backend:
-    def __init__(self, system=None):self.system=system or platform.system()
+    def __init__(self, system=None, resolver_root=None):
+        self.system=system or platform.system()
+        from .scoped_dns import ROOT
+        self.resolver_root=Path(resolver_root) if resolver_root is not None else ROOT
 
     def capture(self):
         if self.system=='Darwin':
@@ -71,7 +74,8 @@ class Backend:
             effective=manual or addresses(candidates)
             effective=[value+('%'+interface) if ':' in value and ipaddress.ip_address(value.split('%')[0]).is_link_local and '%' not in value else value for value in effective]
             if not effective:raise ValueError('No original system DNS servers; no settings changed')
-            return {'schema':1,'system':'Darwin','interface':interface,'service':service,'manual':manual,'servers':effective}
+            from .scoped_dns import plan
+            return {'schema':1,'system':'Darwin','interface':interface,'service':service,'manual':manual,'servers':effective,**plan(self.resolver_root)}
         if self.system!='Windows':raise ValueError('Scoped DNS requires macOS or Windows')
         raw=powershell(r"""
         $r=Get-NetRoute -DestinationPrefix '0.0.0.0/0' -ErrorAction SilentlyContinue | Sort-Object @{Expression={$_.RouteMetric+$_.InterfaceMetric}} | Select-Object -First 1;
@@ -133,6 +137,8 @@ class Backend:
         if snapshot.get('schema')!=1 or snapshot.get('system')!=self.system:raise ValueError('Invalid DNS recovery journal')
         if not snapshot.get('servers') or addresses(snapshot['servers'])!=snapshot['servers']:raise ValueError('Invalid original DNS addresses')
         if self.system=='Darwin':
+            from .scoped_dns import validate
+            validate(snapshot)
             name=snapshot.get('service','')
             if not isinstance(name,str) or not 1<=len(name)<=255 or any(c in name for c in '\r\n\x00'):raise ValueError('Invalid service name')
             if addresses(snapshot.get('manual',[]))!=snapshot.get('manual',[]):raise ValueError('Invalid manual DNS addresses')
@@ -150,7 +156,11 @@ class Backend:
 
     def apply(self,snapshot):
         self.validate(snapshot)
-        if self.system=='Darwin':command(['/usr/sbin/networksetup','-setdnsservers',snapshot['service'],DNS_V4,DNS_V6])
+        if self.system=='Darwin' and snapshot.get('dns_mode'):
+            from .scoped_dns import install
+            install(snapshot,self.resolver_root)
+            command(['/usr/sbin/networksetup','-setdnsservers',snapshot['service'],DNS_V4,DNS_V6])
+        elif self.system=='Darwin':command(['/usr/sbin/networksetup','-setdnsservers',snapshot['service'],DNS_V4,DNS_V6])
         else:
             script=self.win_adapter(snapshot)
             for family,server in [('IPv4',DNS_V4),('IPv6',DNS_V6)]:
@@ -160,6 +170,12 @@ class Backend:
 
     def restore(self,snapshot):
         self.retired=False
+        self.validate(snapshot)
+        scoped_error=None
+        if self.system=='Darwin' and snapshot.get('dns_mode'):
+            from .scoped_dns import remove
+            try:remove(snapshot,self.resolver_root)
+            except Exception as exc:scoped_error=exc
         current=self.current(snapshot)
         if self.system=='Darwin':
             if current and set(normalized(current)).issubset(set(normalized([DNS_V4,DNS_V6]))):
@@ -183,6 +199,7 @@ class Backend:
         current=self.current(snapshot)
         values=current if self.system=='Darwin' else [v for item in current for v in item['ServerAddresses']]
         if set(normalized(values))&set(normalized([DNS_V4,DNS_V6])):raise ValueError('Temporary DNS still active; recovery journal preserved')
+        if scoped_error:raise scoped_error
 
     def flush(self):
         if self.system=='Darwin':

@@ -1,3 +1,7 @@
+# 2.0.4: OS 선택 DNS 공백 식별
+
+분리 구성 요소가 켜졌어도 고정 Riot 주소의 OS 조회가 실제 주소를 반환하면 별도 관측으로 표시합니다. WARP 상류 도달과 OS 선택 경로를 같은 성공으로 간주하지 않습니다. macOS Riot Client/Helper 프로세스 이름도 소켓 집계에 포함합니다. 실제 업데이트 요청·게임 성공은 검증하지 않습니다.
+
 # 2.0.3: 프록시 주소 해석 실패 구분
 
 능동 검사 선택 시 auth.riotgames.com의 원시 호스트 이름 SOCKS 경로와 WARP 경유 HTTPS DNS로 구한 실제 IP 경로를 별도 기록합니다. SOCKS 거부 번호·TLS 인증서 오류를 원문 없이 구분합니다. 원시 경로 실패와 실제 IP 경로 성공은 서로 다른 검사입니다. 어느 쪽도 실제 로그인·친구 목록·알림 성공 검사는 아닙니다. 수집·업로드·변경 정책은 아래와 같습니다.
@@ -8,7 +12,7 @@
 
 # MINER 로컬 진단 도구 2.0.1
 
-**진단 도구를 업데이트해도 MINER 앱이 업데이트되거나 연결되지는 않습니다.** Mac 앱은 [STRATA Preview 6 DMG](https://github.com/hexagon0401/MINER/releases/tag/miner-strata-v2.0.0-preview.6)에서 별도로 설치합니다. 현재 MINER와 Riot/LoL을 종료한 뒤 시스템 `/Applications/MINER.app`을 교체하고, `open -n "/Applications/MINER.app"`으로 설치본을 열 수 있습니다. 게임 중에는 경로를 전환하지 마세요.
+**진단 도구를 업데이트해도 MINER 앱이 업데이트되거나 연결되지는 않습니다.** Mac 앱은 [STRATA Preview 7 DMG](https://github.com/hexagon0401/MINER/releases/tag/miner-strata-v2.0.0-preview.7)에서 별도로 설치합니다. 현재 MINER와 Riot/LoL을 종료한 뒤 시스템 `/Applications/MINER.app`을 교체하고, `open -n "/Applications/MINER.app"`으로 설치본을 열 수 있습니다. 게임 중에는 경로를 전환하지 마세요.
 
 2.0.1은 `/Applications` 설치본 버전과 실행 경로의 bundle 버전·위치 종류를 구분합니다. 경로·사용자 이름은 내보내지 않습니다. 실행 중에 앱 파일을 바꿨다면 bundle 메타데이터가 메모리에 로드된 코드의 버전을 증명하지는 않습니다. `SELECTIVE_COMPONENTS_OBSERVED`도 관측된 구성 요소이며 게임·통계 성공을 뜻하지 않습니다. 전체 WARP 연결 중 프록시 미선택을 프록시 고장으로 판정하지 않습니다.
 

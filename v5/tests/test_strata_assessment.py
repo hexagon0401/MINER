@@ -4,6 +4,13 @@ from diagnostics.strata_assessment import assess
 
 
 class AssessmentTests(unittest.TestCase):
+    def test_configured_components_do_not_hide_os_dns_selection_gap(self):
+        row={'network':{'process_command':{'ok':True},'processes':{'engine':1},'default':{'interface':'physical'},'synthetic':{'interface':'tun','interface_class':'tunnel'},'dns':[{'kind':'miner_dns'}]},'warp':{'mode':'WarpProxy'},'socks':{'socks5_no_auth':True},'active_probes':{'auth.riotgames.com':{'dns':{'ok':True,'synthetic':False},'os_https':{'tls_verified':True,'http_status':403},'resolved_proxy_https':{'tls_verified':True,'http_status':404}}}}
+        result=assess(row)
+        self.assertEqual(result['hypotheses'][0]['status'],'NEEDS_INVESTIGATION')
+        self.assertEqual(result['hypotheses'][0]['evidence'],'OS_QUERY_RETURNED_NON_SYNTHETIC_SELECTED_HOST')
+        row['network']['processes']['engine']=0
+        self.assertEqual(assess(row)['hypotheses'][0]['status'],'UNCONFIRMED')
     def test_post_game_failure_is_not_invented_endpoint_or_success(self):
         result=assess({'phase':'post_game','socks':{'socks5_no_auth':True},'statistics':{'result':'timeout_30s'}})
         self.assertFalse(result['statistics_success_verified'])

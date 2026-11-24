@@ -30,6 +30,10 @@ def assess(sample):
     probes=sample.get('active_probes',{})
     observed_gap=any(value.get('proxy_https',{}).get('tls_verified') and not value.get('os_https',{}).get('tls_verified') for key,value in probes.items() if key!='warp')
     session=session_state(sample)
+    os_dns_gap=(session['state']=='SELECTIVE_COMPONENTS_OBSERVED' and any(
+        key in ('auth.riotgames.com','www.leagueoflegends.com') and value.get('dns',{}).get('ok') is True and value['dns'].get('synthetic') is False
+        for key,value in probes.items()))
+    observed_gap=observed_gap or os_dns_gap
     expected=sample.get('warp',{}).get('mode')=='WarpProxy' or session['engine_observation']=='PRESENT'
     unavailable=sample.get('socks',{}).get('listening') is False or proxy is False
     not_selected=sample.get('warp',{}).get('mode') not in (None,'unknown','WarpProxy') and session['engine_observation']=='NOT_OBSERVED'
@@ -38,7 +42,7 @@ def assess(sample):
         'statistics_success_verified':False,
         'session':session,
         'hypotheses':[
-            {'id':'H1','hypothesis':'DNS/classification gap','status':'NEEDS_INVESTIGATION' if observed_gap else 'UNCONFIRMED','evidence':'FIXED_ENDPOINT_PATH_DIFFERENCE' if observed_gap else 'NONE'},
+            {'id':'H1','hypothesis':'DNS/classification gap','status':'NEEDS_INVESTIGATION' if observed_gap else 'UNCONFIRMED','evidence':'OS_QUERY_RETURNED_NON_SYNTHETIC_SELECTED_HOST' if os_dns_gap else 'FIXED_ENDPOINT_PATH_DIFFERENCE' if observed_gap else 'NONE'},
             {'id':'H2','hypothesis':'Stale client session/cache','status':'UNCONFIRMED','evidence':'NO_CLIENT_SESSION_INSPECTION'},
             {'id':'H3','hypothesis':'Local proxy unavailable when required','status':'NOT_APPLICABLE' if not_selected else 'OBSERVED' if expected and unavailable else 'NOT_OBSERVED' if proxy is True else 'UNCONFIRMED','evidence':'LOCAL_PROXY_NOT_SELECTED' if not_selected else 'LOCAL_SOCKS_GREETING_ONLY'},
             {'id':'H4','hypothesis':'Transport error during post-game transition','status':'NEEDS_INVESTIGATION' if sample.get('phase')=='post_game' and patterns else 'UNCONFIRMED','evidence':'SANITIZED_LOG_WINDOW_NOT_REQUEST_ATTRIBUTION' if patterns else 'NONE'},

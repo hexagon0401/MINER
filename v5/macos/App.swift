@@ -350,7 +350,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             do { _ = try self.execute(["warp","service-check","--proxy-port",String(self.currentProxyPort),"--progress"]) }
             catch {
                 if (error as NSError).domain == "MINER.cancelled" { throw error }
-                DispatchQueue.main.sync { self.model.error=self.model.tr("분리 경로 준비됨 · Riot 서비스 확인 실패. 실제 통계 기능은 미검증입니다.","Routing ready · Riot check failed. Statistics remain unverified.") }
+                DispatchQueue.main.sync {
+                    self.model.error = self.model.probeReason == "CLIENT_OS_DNS_BYPASS" ? self.model.tr("OS의 Riot 검사 주소가 MINER 선택 DNS를 사용하지 않습니다. 진단에서 DNS 경로를 확인하세요.","The OS Riot test address bypasses MINER DNS. Check DNS routing in diagnostics.") : self.model.tr("분리 경로 준비됨 · Riot 서비스 확인 실패. 실제 통계 기능은 미검증입니다.","Routing ready · Riot check failed. Statistics remain unverified.")
+                }
                 self.appendProbeFailure(error)
             }
             return engineResult
