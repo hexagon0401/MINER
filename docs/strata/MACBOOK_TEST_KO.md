@@ -50,3 +50,13 @@ cd "진단 ZIP을 푼 폴더"
 ## 원복
 
 STRATA에서 중지·복귀 완료 → Quit → 보관한 ALPHA 1.2.3 앱으로 교체합니다. 기존 지원 폴더와 DNS 복구 기록을 지우지 마세요. ALPHA가 helper 버전 불일치를 알리면 정지 상태에서 다시 승인해 설치합니다. 실제 ALPHA→STRATA→ALPHA 게임 복귀 경로는 미검증입니다. Homebrew cask와 정식 자동 업데이트 채널은 이번 프리뷰로 바뀌지 않습니다.
+
+## 진단 도구와 앱 버전 확인
+
+Diagnostics 2.0.1을 받는 것과 MINER 앱을 업데이트하는 것은 별개입니다. Mac용 앱은 Preview 2 DMG에서 설치합니다. 시스템 설치본과 실행 중인 복사본이 다를 수 있으므로, 앱을 교체한 뒤에는 기존 MINER를 종료하고 다음 명령으로 새 설치본을 여세요.
+
+```bash
+open -n "/Applications/MINER.app"
+```
+
+설정의 About에서 STRATA Preview 2를 확인한 다음, Riot/LoL을 닫은 상태로 MINER를 시작합니다. 게임/통계 시험 전에 진단의 연결 후 샘플에서 SELECTIVE_COMPONENTS_OBSERVED가 기록되는지 확인하세요. 구성 요소 관측은 실제 로그인·통계 성공을 뜻하지 않습니다. 엔진이 관측되지 않거나 전체 WARP 모드라면 게임 도중 바꾸지 말고 게임 종료 후 시작 오류부터 확인합니다.

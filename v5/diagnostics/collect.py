@@ -21,7 +21,7 @@ import zipfile
 
 ROOT=Path(__file__).resolve().parents[1]
 if not getattr(sys,"frozen",False) and str(ROOT) not in sys.path:sys.path.insert(0,str(ROOT))
-VERSION='2.0.0-preview.1'
+VERSION='2.0.1'
 PHASES=('before','connected','in_game','post_game','after_stop','error')
 HOSTS=('www.cloudflare.com','auth.riotgames.com','www.leagueoflegends.com')
 OUTCOMES=('unknown','loaded','timeout_30s','error')
@@ -89,13 +89,18 @@ def network_state(system,privacy):
         result['dns']=[privacy.address(v) for v in sorted(set(addresses)) if privacy.address(v)]
         meta,text=command(['/usr/sbin/scutil','--proxy']);result['proxy_command']=meta
         result['system_proxy']={key:bool(re.search(r'\b'+key+r'\s*:\s*1\b',text)) for key in ('HTTPEnable','HTTPSEnable','SOCKSEnable','ProxyAutoConfigEnable')}
-        meta,text=command(['/bin/ps','-A','-o','pcpu=,rss=,comm=']);result['process_command']=meta
-        entries=[]
+        meta,text=command(['/bin/ps','-ww','-A','-o','pid=,pcpu=,rss=,comm=']);result['process_command']=meta
+        entries=[];identities=[]
+        from diagnostics.app_identity import running_identity
         for line in text.splitlines():
-            fields=line.strip().split(None,2)
-            if len(fields)!=3:continue
-            try:entries.append({'name':Path(fields[2]).name,'cpu':float(fields[0]),'rss_bytes':int(fields[1])*1024})
+            fields=line.strip().split(None,3)
+            if len(fields)!=4:continue
+            try:
+                name=Path(fields[3]).name
+                entries.append({'name':name,'cpu':float(fields[1]),'rss_bytes':int(fields[2])*1024})
+                if name=='MINER' and len(identities)<8:identities.append(running_identity(int(fields[0]),fields[3]))
             except ValueError:continue
+        result['running_miner_apps']=identities
         names=[item['name'] for item in entries]
     elif system=='Windows':
         script="""$ErrorActionPreference='Stop'; $routes=@(); foreach($ip in @('8.8.8.8','104.160.131.3','198.18.0.1')){ $r=Find-NetRoute -RemoteIPAddress $ip | Where-Object {$_.DestinationPrefix} | Select-Object -First 1; $a=Get-NetAdapter -IncludeHidden | Where-Object {$_.ifIndex -eq $r.InterfaceIndex} | Select-Object -First 1; $routes+=@{target=$ip;index=$r.InterfaceIndex;description=$a.InterfaceDescription} }; $d=@(Get-DnsClientServerAddress | Where-Object {$_.ServerAddresses.Count -gt 0} | Select-Object InterfaceIndex,ServerAddresses); $p=Get-ItemProperty 'HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\Internet Settings'; @{routes=$routes;dns=$d;proxyEnabled=[bool]$p.ProxyEnable;pac=[bool]$p.AutoConfigURL;processes=@(Get-Process MINER,sing-box,warp-svc,'Cloudflare WARP',LeagueClient,LeagueClientUx,'League of Legends',vgc -ErrorAction SilentlyContinue | Select-Object ProcessName,CPU,WorkingSet64);vgc=(Get-Service vgc -ErrorAction SilentlyContinue | Select-Object -ExpandProperty Status)} | ConvertTo-Json -Depth 6 -Compress"""
@@ -123,10 +128,12 @@ def app_paths(system):
 def files_state(system,log_reader=None):
     result={'locations':[]}
     if system=='Darwin':
-        try:
-            p=Path('/Applications/MINER.app/Contents/Info.plist');data=plistlib.loads(p.read_bytes());value=str(data.get('CFBundleShortVersionString',''))
-            result['version']=value if re.fullmatch(r'[\w.+-]{1,60}',value) else 'unknown'
-        except (OSError,ValueError):result['version']='unavailable'
+        from diagnostics.app_identity import bundle_metadata,startup_events
+        installed=bundle_metadata(Path('/Applications/MINER.app'))
+        result['version']=installed['version'];result['installed_app']=installed
+        result['version_source']='system_applications_plist_not_running_process'
+        result['startup_events']=startup_events()
+        result['startup_events_source']='recent_file_tail_not_current_process_verified'
         result['vanguard_applicable']=False
     else:
         result['vanguard_applicable']=system=='Windows'
@@ -211,7 +218,7 @@ def child_probe(kind,host,port):
 def findings(snapshot):
     result=[];w=snapshot['warp'];n=snapshot['network'];phase=snapshot['phase']
     if w.get('mode')=='WarpProxy' and phase=='after_stop':result.append('proxy_mode_remains_after_stop')
-    if w.get('mode')=='Warp' and phase in ('connected','in_game','post_game'):result.append('full_tunnel_during_selective_session')
+    if w.get('mode')=='Warp' and w.get('connected') is True:result.append('warp_full_tunnel_connected')
     if w.get('mode')=='WarpProxy' and w.get('connected') is False:result.append('warp_disconnected')
     if w.get('mode')=='WarpProxy' and not snapshot['socks'].get('socks5_no_auth'):result.append('local_socks_unavailable')
     a=n.get('default',{});b=n.get('game_ip',{})
@@ -238,6 +245,7 @@ class Recorder:
         try:row['warp']=warp_state(resolve_cli(self.cli))
         except (ValueError,OSError):row['warp']={'unavailable':True}
         row['network']=network_state(system,self.privacy);row['socks']=socket_check(self.port)
+        if system=='Darwin':row['os_product_version']=platform.mac_ver()[0] or 'unknown'
         row['statistics']={'result':statistics_result,'evidence':'USER_REPORT' if statistics_result!='unknown' else 'NONE','verified_by_tool':False,'cycle':cycle}
         if error_code:row['error_code']=error_code
         if self.active:
@@ -256,13 +264,20 @@ class Recorder:
         row['findings']=findings(row)
         from diagnostics.strata_assessment import assess
         row['strata_assessment']=assess(row)
+        if phase in ('connected','in_game','post_game') and row['strata_assessment']['session']['state']=='SELECTIVE_NOT_OBSERVED':
+            print('분리 연결이 관측되지 않았습니다. 진단 도구 버전과 앱 버전은 다릅니다. 게임 종료 후 MINER 연결 상태와 실행 중인 앱 버전을 확인하세요. / Selective session not observed; recorder version is not app version.',flush=True)
         self.samples.append(row);return row
     def save(self,output):
         output=Path(output);output.parent.mkdir(parents=True,exist_ok=True)
         report={'schema':1,'tool_version':VERSION,'read_only':True,'active_probes':self.active,'uploaded':False,'privacy':'No raw logs, addresses, SSID, accounts, tokens, packet captures or browsing history. Address/interface IDs are random-session HMACs.','samples':self.samples}
         encoded=json.dumps(report,ensure_ascii=False,indent=2).encode()
         overview=['MINER local diagnostics '+VERSION,'Active DNS/TLS checks: '+('ON' if self.active else 'OFF'),'Read-only; no network settings changed; no automatic upload.','Known reference game IP is a route check only, not your actual game server.','WARP Local Proxy mode is expected while MINER runs. MASQUE UDP transport is a separate setting.','Findings are hypotheses / observed state, not proof of game or anti-cheat compatibility.','']
-        for row in self.samples:overview.append(row['at']+' '+row['phase']+': '+', '.join(row['findings']))
+        for row in self.samples:
+            overview.append(row['at']+' '+row['phase']+': '+', '.join(row['findings']))
+            overview.append('  Installed target version: '+str(row.get('app',{}).get('version','unknown'))+' (not proof of running image version)')
+            for item in row.get('network',{}).get('running_miner_apps',[]):
+                overview.append('  Running bundle metadata: '+str(item.get('version','unknown'))+' build '+str(item.get('build','unknown'))+' location='+item.get('location_kind','unresolved'))
+            overview.append('  Selective session observation: '+row.get('strata_assessment',{}).get('session',{}).get('state','NOT_VERIFIED'))
         overview.append('\nCompare before / connected / in_game / post_game / after_stop in this SAME session. Review report.json before sharing.')
         # Atomic replacement: an interrupted save leaves the last valid report intact.
         fd,name=tempfile.mkstemp(prefix='.miner-report-',dir=output.parent)
