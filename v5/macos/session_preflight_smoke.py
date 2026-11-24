@@ -39,10 +39,13 @@ def run(cli, output):
         assert children[0].poll() is None, 'Client fixture was terminated'
         start('LeagueofLegends')
         game = subprocess.run([str(cli), 'session-preflight'], capture_output=True, text=True, timeout=10)
-        assert game.returncode == 1 and 'MINER_SESSION_BLOCKED' in game.stderr
+        assert game.returncode == 0, game.stderr
+        game_state = json.loads(game.stdout)
+        assert game_state['game_open'] and game_state['transition_notice'] == 'GAME_RECONNECT_MAY_BE_REQUIRED'
         assert all(child.poll() is None for child in children), 'Preflight terminated another process'
         report = {'ok': True, 'packaged_cli': True, 'inert_process_fixtures': True,
-                  'live_client_allowed': True, 'active_game_blocked': True,
+                  'live_client_allowed': True, 'active_game_allowed': True,
+                  'reconnect_notice_reported': True,
                   'long_paths_with_spaces': True, 'client_not_terminated': True,
                   'routing_or_warp_commands_requested': False, 'real_lol_tested': False}
         (output / 'verification.json').write_text(json.dumps(report, indent=2) + '\n')

@@ -1,4 +1,4 @@
-"""Block starting during a match; allow an open client without killing apps."""
+"""Observe a session before a user-requested transition. Never kill game/apps."""
 from pathlib import Path
 import platform
 import subprocess
@@ -22,10 +22,8 @@ def inspect():
 
 
 def require_clean_start():
-    # Retain the shared entry point used by both desktops. An open launcher or
-    # lobby is informational, not a reason to reject a connection. Established
-    # sockets and the client's private DNS cache are not migrated or cleared.
+    # Retain the shared entry point used by both desktops. The user permits
+    # transitions during a match, accepting that the game may need to reconnect.
+    # Existing sockets are not migrated and no reconnect success is implied.
     state=inspect()
-    if state['game_open']:
-        raise ValueError(BLOCKED+': 게임 실행 중에는 연결 경로를 바꾸지 않습니다. 게임 종료 후 시작하세요. / Finish the game before starting MINER; no settings changed.')
-    return state
+    return {**state,'transition_notice':'GAME_RECONNECT_MAY_BE_REQUIRED' if state['game_open'] else None}

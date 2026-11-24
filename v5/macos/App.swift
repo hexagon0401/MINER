@@ -253,11 +253,19 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         currentProxyPort=port
         return ["warp", operation, "--proxy-port", String(port), "--progress"]
     }
+    func sessionPreflight() throws {
+        let text = try execute(["session-preflight"])
+        if let info = try JSONSerialization.jsonObject(with:Data(text.utf8)) as? [String:Any], info["game_open"] as? Bool == true {
+            DispatchQueue.main.async {
+                self.append(self.model.tr("게임 중 연결 경로를 변경합니다. 기존 연결은 자동 이전되지 않으며 게임 재접속이 필요할 수 있습니다.","Changing connection paths during a game. Existing sockets are not migrated; the game may need to reconnect."))
+            }
+        }
+    }
     @objc func connectWarp() {
         guard !busy && !model.updateInstalling && !running else { return }
         engineStoppedConfirmed=false; model.phase = "cli_check"; model.completed = 0; model.error = ""
         operation({
-            _ = try self.execute(["session-preflight"])
+            try self.sessionPreflight()
             DispatchQueue.main.sync { self.managedWarp=true }
             return try self.execute(self.warpArguments("connect"))
         }, completion: { self.model.phase = "warp_ready"; self.model.warp = true; self.model.completed = 3 })
@@ -324,7 +332,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         }
         engineStoppedConfirmed=false; model.phase = "cli_check"; model.completed = 0; model.error = ""
         operation({
-            _ = try self.execute(["session-preflight"])
+            try self.sessionPreflight()
             DispatchQueue.main.sync { self.managedWarp=true }
             try self.ensureProfile()
             _ = try self.execute(self.warpArguments("connect"))
