@@ -26,11 +26,18 @@ jobs:
         run: |
           import os,subprocess,sys
           from pathlib import Path
-          subprocess.run([sys.executable,'install_engine.py'],check=True,timeout=90)
+          def checked(args,**kwargs):
+              result=subprocess.run(args,stdout=subprocess.PIPE,stderr=subprocess.STDOUT,text=True,**kwargs)
+              print(result.stdout,flush=True)
+              if result.returncode:
+                  print('::error::'+result.stdout[-6500:].replace('%','%25').replace('\n','%0A').replace('\r','%0D'),flush=True)
+                  raise SystemExit(result.returncode)
+          checked([sys.executable,'install_engine.py'],timeout=90)
           env={**os.environ,'SCHOOLNET_TEST_ENGINE':str(Path('local/bin/sing-box.exe').resolve())}
           for pattern in ['test_session_safety.py','test_windows_controller.py','test_config.py','test_dns_service_binding.py','test_diagnostic*.py']:
-              subprocess.run([sys.executable,'-m','unittest','discover','-s','tests','-p',pattern,'-v'],check=True,timeout=90,env=env)
+              checked([sys.executable,'-m','unittest','discover','-s','tests','-p',pattern,'-v'],timeout=90,env=env)
   macos:
+    needs: windows-preflight
     strategy:
       fail-fast: false
       matrix:
