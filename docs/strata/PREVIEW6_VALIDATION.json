@@ -1,0 +1,81 @@
+{
+  "release_url": "https://github.com/hexagon0401/MINER/releases/tag/miner-strata-v2.0.0-preview.6",
+  "native_ci": "https://github.com/hexagon0401/MINER/actions/runs/45317662332",
+  "native_ci_result": "PASS on attempt 2",
+  "local_pinned_engine_tests": 215,
+  "macos": [
+    {
+      "architecture": "x86_64",
+      "source_commit": "bb1e2cb5ebd8967f174a7e2b17f2a1ebd0f11edc",
+      "sha256": "b1526ff299556791099afc240d206f82447a4b2b4353756bc14d3d63cfd0a23e",
+      "signing": "adhoc",
+      "selective_network": {
+        "loopback_proxy_fixture": true,
+        "warp_live_tested": false,
+        "game_live_tested": false,
+        "real_ip_routes_bypass_tun": true,
+        "ordinary_os_dns_and_tls": true,
+        "remote_dns_and_continuous_client_tcp": true,
+        "proxy_doh_real_ip_no_hostname_recursion": true,
+        "os_resolver_aaaa_address_class": "synthetic_v4_mapped",
+        "os_resolver_aaaa_synthetic": true,
+        "os_resolver_aaaa_boundary": "NONE_OBSERVED",
+        "synthetic_ipv6_remote_dns_tcp": true,
+        "game_service_tcp_proxied": true,
+        "original_dns_recovered_before_engine_stop": true,
+        "engine_crash_dns_recovered": true,
+        "ordinary_https_after_recovery": true,
+        "ok": true,
+        "system": "Darwin",
+        "windows_guardian_tested": false,
+        "dhcp_or_manual_mode_preserved": true,
+        "source_commit": "bb1e2cb5ebd8967f174a7e2b17f2a1ebd0f11edc",
+        "packaged_guardian_verified": false
+      }
+    },
+    {
+      "architecture": "arm64",
+      "source_commit": "bb1e2cb5ebd8967f174a7e2b17f2a1ebd0f11edc",
+      "sha256": "dfbf43a8df6d584f6a1c5e5a5e241af8c24eab1c0c46ea8ea050ef3b0396a31d",
+      "signing": "adhoc",
+      "selective_network": {
+        "loopback_proxy_fixture": true,
+        "warp_live_tested": false,
+        "game_live_tested": false,
+        "real_ip_routes_bypass_tun": true,
+        "ordinary_os_dns_and_tls": true,
+        "remote_dns_and_continuous_client_tcp": true,
+        "proxy_doh_real_ip_no_hostname_recursion": true,
+        "os_resolver_aaaa_address_class": "synthetic_v4_mapped",
+        "os_resolver_aaaa_synthetic": true,
+        "os_resolver_aaaa_boundary": "NONE_OBSERVED",
+        "synthetic_ipv6_remote_dns_tcp": true,
+        "game_service_tcp_proxied": true,
+        "original_dns_recovered_before_engine_stop": true,
+        "engine_crash_dns_recovered": true,
+        "ordinary_https_after_recovery": true,
+        "ok": true,
+        "system": "Darwin",
+        "windows_guardian_tested": false,
+        "dhcp_or_manual_mode_preserved": true,
+        "source_commit": "bb1e2cb5ebd8967f174a7e2b17f2a1ebd0f11edc",
+        "packaged_guardian_verified": false
+      }
+    }
+  ],
+  "github_dmg_asset_digests_match": true,
+  "apple_silicon_download_sha256_verified": true,
+  "first_intel_attempt": "Synthetic AAAA UDP query timed out after unit tests; same source rerun passed without relaxing assertions or timeouts",
+  "fixture_regressions": [
+    "Hostname-refusing SOCKS proxy rejects old path",
+    "Verified proxy DoH yields public IPv4 origin",
+    "TCP origin ports 443/5223/2099 preserved",
+    "Wrong DNS TLS identity fails closed without hostname or direct fallback",
+    "Health DNS rejects private/synthetic addresses",
+    "Ordinary browser HTTPS remains usable with proxy unavailable"
+  ],
+  "actual_cloudflare_warp_internals_verified": false,
+  "real_lol_login_friends_ready_check_statistics_verified": false,
+  "windows_shared_regressions": "PASS on windows-2025; Windows EXE not rebuilt",
+  "main_alpha_homebrew_unchanged": true
+}
