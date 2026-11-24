@@ -291,7 +291,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             _ = try self.execute(self.warpArguments("status"))
             return try self.execute(["warp","service-check","--proxy-port",String(self.currentProxyPort)])
         }, completion: {
-            if self.running && self.model.effectiveProbeStatus == "PASS" { self.model.error=""; self.model.phase="running" }
+            if self.running && self.model.phase == "connection_warning" && self.model.effectiveProbeStatus == "PASS" { self.model.error=""; self.model.phase="running" }
         })
     }
     @objc func disconnectWarp() {
