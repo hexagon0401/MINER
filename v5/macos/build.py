@@ -139,6 +139,8 @@ def build(expected_arch, signing="adhoc", identity=None, notary_profile=None, dm
     execute(cli, "--version")
     execute(cli, "--help")
     execute(cli, "desktop", "status")
+    from macos.session_preflight_smoke import run as session_preflight_smoke
+    session_preflight_report = session_preflight_smoke(cli, work)
     helper_report = None
     if os.environ.get("GITHUB_ACTIONS") == "true":
         from macos.helper_smoke import run as helper_smoke
@@ -216,6 +218,7 @@ def build(expected_arch, signing="adhoc", identity=None, notary_profile=None, dm
         "dmg_to_disk_signature_verified": True, "sha256": digest,
         "finder_background_layout_verified": dmg_background is not None,
         "app_name": app.name, "native_ui_smoke": ui_report,
+        "session_preflight": session_preflight_report,
         "startup_guard_native":startup_guard,"commands":command_report,"updater":updater_report,"developer": developer, "helper_smoke": helper_report, "selective_network":selective_report, "source_commit": os.environ.get("GITHUB_SHA"), "release_channel": icon["channel"], "app_icon_sha256": hashlib.sha256((ui_assets / "AppIcon.png").read_bytes()).hexdigest(),
     }, indent=2), encoding="utf-8")
     print(f"Verified DMG: {dmg}")
