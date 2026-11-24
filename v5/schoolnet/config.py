@@ -111,6 +111,12 @@ def build_config(profile: Profile) -> dict:
     dns_rules = [
         {"domain": ["miner-health.invalid"], "action": "predefined", "rcode": "NOERROR",
          "answer": ["miner-health.invalid. 1 IN A 127.0.0.1"]},
+        # Service-binding records can contain real IP hints or alternate targets.
+        # They cannot describe a FakeIP route. NODATA makes clients use ordinary
+        # A/AAAA selection instead; do not expose real Riot hints outside TUN.
+        # Keep ordinary sites' service-binding responses intact.
+        {"domain_suffix": RIOT_DOMAINS, "query_type": ["HTTPS", "SVCB"],
+         "action": "predefined", "rcode": "NOERROR"},
         {"domain_suffix": RIOT_DOMAINS, "query_type": ["A", "AAAA"], "action": "route", "server": "riot-addresses"},
     ]
     route = {"rules": rules, "final": "direct", "default_domain_resolver": "direct-dns"}
