@@ -1,4 +1,8 @@
-# MINER 로컬 진단 패키지 — STRATA Preview 1
+# MINER 로컬 진단 도구 2.0.1
+
+**진단 도구를 업데이트해도 MINER 앱이 업데이트되거나 연결되지는 않습니다.** Mac 앱은 [STRATA Preview 2 DMG](https://github.com/hexagon0401/MINER/releases/tag/miner-strata-v2.0.0-preview.2)에서 별도로 설치합니다. 현재 MINER와 Riot/LoL을 종료한 뒤 시스템 `/Applications/MINER.app`을 교체하고, `open -n "/Applications/MINER.app"`으로 설치본을 열 수 있습니다. 게임 중에는 경로를 전환하지 마세요.
+
+2.0.1은 `/Applications` 설치본 버전과 실행 경로의 bundle 버전·위치 종류를 구분합니다. 경로·사용자 이름은 내보내지 않습니다. 실행 중에 앱 파일을 바꿨다면 bundle 메타데이터가 메모리에 로드된 코드의 버전을 증명하지는 않습니다. `SELECTIVE_COMPONENTS_OBSERVED`도 관측된 구성 요소이며 게임·통계 성공을 뜻하지 않습니다. 전체 WARP 연결 중 프록시 미선택을 프록시 고장으로 판정하지 않습니다.
 
 확인 대상: **macOS·Windows / 개인용 WARP / MINER STRATA 2.0.0 Preview 1**. 기존 ALPHA도 같은 형식으로 비교할 수 있습니다. 이 도구는 MINER나 WARP를 설치·업데이트·복구하거나 게임을 실행하지 않습니다.
 
