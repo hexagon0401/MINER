@@ -21,10 +21,11 @@ import zipfile
 
 ROOT=Path(__file__).resolve().parents[1]
 if not getattr(sys,"frozen",False) and str(ROOT) not in sys.path:sys.path.insert(0,str(ROOT))
-VERSION='2.0.1'
+VERSION='2.0.2'
 PHASES=('before','connected','in_game','post_game','after_stop','error')
 HOSTS=('www.cloudflare.com','auth.riotgames.com','www.leagueoflegends.com')
 OUTCOMES=('unknown','loaded','timeout_30s','error')
+CLIENT_EVENTS=('none','ready_check_missing','presence_mismatch','party_failure')
 COMMAND_TIMEOUT=4
 
 
@@ -37,7 +38,7 @@ def command(args,timeout=COMMAND_TIMEOUT):
     try:
         result=subprocess.run(list(map(str,args)),stdin=subprocess.DEVNULL,capture_output=True,text=True,encoding='utf-8',errors='replace',timeout=timeout,
                               **({'creationflags':subprocess.CREATE_NO_WINDOW} if os.name=='nt' else {}))
-        return {'ok':result.returncode==0,'exit':result.returncode,'ms':round((time.monotonic()-begin)*1000)},result.stdout[:131072]
+        return {'ok':result.returncode==0,'exit':result.returncode,'ms':round((time.monotonic()-begin)*1000),'truncated':len(result.stdout)>131072},result.stdout[:131072]
     except subprocess.TimeoutExpired:return {'ok':False,'error':'timeout','ms':round((time.monotonic()-begin)*1000)},''
     except OSError as exc:return {'ok':False,'error':type(exc).__name__},''
 
@@ -238,13 +239,17 @@ class Recorder:
     def __init__(self,port=40000,active=False,warp_cli=None):
         from diagnostics.log_events import LogWindows
         self.log_reader=LogWindows();self.privacy=Privacy();self.samples=[];self.port=port;self.active=active;self.cli=warp_cli;self.begin=time.monotonic()
-    def snapshot(self,phase,error_code=None,statistics_result='unknown',cycle=None):
+    def snapshot(self,phase,error_code=None,statistics_result='unknown',cycle=None,client_event='none'):
         if statistics_result not in OUTCOMES or cycle is not None and (type(cycle) is not int or not 1<=cycle<=10):raise ValueError('Invalid test annotation')
+        if client_event not in CLIENT_EVENTS:raise ValueError('Invalid client event')
         from schoolnet.warp import resolve_cli
         system=platform.system();row={'at':now(),'elapsed_s':round(time.monotonic()-self.begin,2),'phase':phase,'system':system,'os_version':platform.release(),'architecture':platform.machine(),'app':files_state(system,self.log_reader)}
         try:row['warp']=warp_state(resolve_cli(self.cli))
         except (ValueError,OSError):row['warp']={'unavailable':True}
         row['network']=network_state(system,self.privacy);row['socks']=socket_check(self.port)
+        from diagnostics.client_flows import collect as client_flows
+        row['client_transport']=client_flows(system,command)
+        row['client_event']={'kind':client_event,'evidence':'USER_REPORT' if client_event!='none' else 'NONE','delivery_verified_by_tool':False}
         if system=='Darwin':row['os_product_version']=platform.mac_ver()[0] or 'unknown'
         row['statistics']={'result':statistics_result,'evidence':'USER_REPORT' if statistics_result!='unknown' else 'NONE','verified_by_tool':False,'cycle':cycle}
         if error_code:row['error_code']=error_code
@@ -278,6 +283,10 @@ class Recorder:
             for item in row.get('network',{}).get('running_miner_apps',[]):
                 overview.append('  Running bundle metadata: '+str(item.get('version','unknown'))+' build '+str(item.get('build','unknown'))+' location='+item.get('location_kind','unresolved'))
             overview.append('  Selective session observation: '+row.get('strata_assessment',{}).get('session',{}).get('state','NOT_VERIFIED'))
+            overview.append('  Client symptom (user report): '+row.get('client_event',{}).get('kind','none'))
+            transport=row.get('client_transport',{})
+            overview.append('  Client socket query: '+('OK' if transport.get('query_ok') else 'UNKNOWN')+'; TCP state is not chat/notification success.')
+            for flow in transport.get('flows',[]):overview.append('    '+json.dumps(flow,sort_keys=True))
         overview.append('\nCompare before / connected / in_game / post_game / after_stop in this SAME session. Review report.json before sharing.')
         # Atomic replacement: an interrupted save leaves the last valid report intact.
         fd,name=tempfile.mkstemp(prefix='.miner-report-',dir=output.parent)
@@ -300,6 +309,7 @@ def main(argv=None):
     p.add_argument('--output',type=Path)
     p.add_argument('--phase',choices=PHASES,default='error')
     p.add_argument('--statistics-result',choices=OUTCOMES,default='unknown')
+    p.add_argument('--client-event',choices=CLIENT_EVENTS,default='none')
     p.add_argument('--cycle',type=int,choices=range(1,11))
     p.add_argument('--interactive',action='store_true')
     p.add_argument('--active',action='store_true',help='Opt in to fixed DNS and TLS requests. Never changes routing or WARP mode.')
@@ -321,7 +331,7 @@ def main(argv=None):
     print('DNS/TLS 외부 검사 / active probes: '+('ON' if args.active else 'OFF'),flush=True)
     try:
         while True:
-            phase=args.phase;code=args.error_code
+            phase=args.phase;code=args.error_code;client_event=args.client_event
             if interactive:
                 print('\n1 연결 전(before)  2 MINER 연결(connected)  3 게임 중(in_game)  4 통계창(post_game)  5 중지 후(after_stop)  6 오류(error)  0 저장·종료',flush=True)
                 value=input('현재 단계 / phase [0-6]: ').strip()
@@ -329,6 +339,8 @@ def main(argv=None):
                 if value not in ('1','2','3','4','5','6'):continue
                 phase=PHASES[int(value)-1]
                 if phase=='error':
+                    symptom=input('클라이언트 증상: 1 수락창 누락 / 2 온라인·오프라인 불일치 / 3 파티 오류 / Enter 기타: ').strip()
+                    client_event={'1':'ready_check_missing','2':'presence_mismatch','3':'party_failure'}.get(symptom,'none')
                     entered=input('오류 CODE만 입력 (없으면 Enter): ').strip()
                     code=entered if re.fullmatch(r'[A-Za-z0-9 _-]{1,40}',entered) else None
             print('Collecting / 수집 중: '+phase+' (각 명령에 시간 제한이 있습니다)',flush=True)
@@ -336,7 +348,7 @@ def main(argv=None):
             if interactive and phase=='post_game':
                 value=input('통계창 결과: 1 표시됨 / 2 30초 이상 무한 로딩 / 3 오류 / Enter 미확인: ').strip()
                 outcome={'1':'loaded','2':'timeout_30s','3':'error'}.get(value,'unknown')
-            row=recorder.snapshot(phase,code,outcome,args.cycle);recorder.save(output)
+            row=recorder.snapshot(phase,code,outcome,args.cycle,client_event);recorder.save(output)
             print('Saved / 저장: '+str(output)+'\n'+', '.join(row['findings']),flush=True)
             if not interactive:break
     except (KeyboardInterrupt,EOFError):pass
