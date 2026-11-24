@@ -40,15 +40,15 @@ def process_path(pid):
 def running_identity(pid,comm,installed=Path('/Applications/MINER.app')):
     executable=process_path(pid)
     if executable is None and isinstance(comm,str) and comm.startswith('/') and comm.endswith('.app/Contents/MacOS/MINER'):executable=Path(comm)
-    if executable is None or not str(executable).endswith('.app/Contents/MacOS/MINER'):
+    if executable is None or not executable.as_posix().endswith('.app/Contents/MacOS/MINER'):
         return {'identity_available':False,'location_kind':'unresolved','version':'unavailable'}
     bundle=executable.parents[2]
     try:matches=bundle.samefile(installed)
     except OSError:matches=False
-    path=str(bundle)
+    path=bundle.as_posix()
     kind=('system_applications' if matches else 'translocated' if '/AppTranslocation/' in path else
           'mounted_volume' if path.startswith('/Volumes/') else
-          'user_applications' if path.startswith(str(Path.home()/'Applications')+'/') else
+          'user_applications' if path.startswith((Path.home()/'Applications').as_posix()+'/') else
           'other_system_applications_copy' if path.startswith('/Applications/') else 'other_copy')
     return {'identity_available':True,'location_kind':kind,'matches_system_install':matches,
             'version_source':'running_executable_bundle_plist','loaded_image_version_verified':False,**bundle_metadata(bundle)}
