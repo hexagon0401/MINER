@@ -7,6 +7,14 @@ import zipfile
 from diagnostics import collect as d
 
 class DiagnosticsTests(unittest.TestCase):
+    def test_dns_probe_normalizes_mapped_synthetic_and_reports_mixed_answers(self):
+        import socket
+        def row(ip):return (socket.AF_INET6,socket.SOCK_STREAM,6,'',(ip,443,0,0))
+        with patch.object(d.socket,'getaddrinfo',return_value=[row('::ffff:198.18.0.28')]):result=d.probe('dns','auth.riotgames.com',40000)
+        self.assertTrue(result['all_synthetic']);self.assertEqual(result['synthetic_ipv4_mapped_count'],1)
+        with patch.object(d.socket,'getaddrinfo',return_value=[row('::ffff:198.18.0.28'),row('2606:4700::1111')]):result=d.probe('dns','auth.riotgames.com',40000)
+        self.assertTrue(result['synthetic']);self.assertFalse(result['all_synthetic']);self.assertEqual(result['real_address_count'],1)
+        self.assertNotIn('2606:4700::1111',json.dumps(result))
     def test_addresses_are_session_scoped_and_private_values_do_not_escape(self):
         a,b=d.Privacy(),d.Privacy()
         self.assertEqual(a.address('172.30.255.2')['kind'],'miner_dns')

@@ -192,7 +192,14 @@ def probe(kind,host,port):
     if host not in HOSTS:raise ValueError('Unsupported diagnostic host')
     if kind=='dns':
         values=socket.getaddrinfo(host,443,type=socket.SOCK_STREAM)
-        return {'answers':len(values),'synthetic':any(ipaddress.ip_address(item[4][0]) in ipaddress.ip_network('198.18.0.0/15') or ipaddress.ip_address(item[4][0]) in ipaddress.ip_network('fdfe:dcba:9876:1000::/64') for item in values)}
+        kinds=[]
+        for item in values:
+            address=ipaddress.ip_address(item[4][0].split('%')[0]);mapped=address.ipv4_mapped if address.version==6 else None
+            if mapped:address=mapped
+            synthetic=address in ipaddress.ip_network('198.18.0.0/15') if address.version==4 else address in ipaddress.ip_network('fdfe:dcba:9876:1000::/64')
+            kinds.append('synthetic_ipv4_mapped' if synthetic and mapped else 'synthetic' if synthetic else 'real_address')
+        return {'answers':len(values),'synthetic':any(k!='real_address' for k in kinds),'all_synthetic':bool(kinds) and all(k!='real_address' for k in kinds),
+                'synthetic_ipv4_mapped_count':kinds.count('synthetic_ipv4_mapped'),'real_address_count':kinds.count('real_address')}
     import ssl,urllib.request,urllib.error,http.client
     context=ssl.create_default_context()
     if getattr(sys,'frozen',False):context.load_verify_locations(str(Path(sys._MEIPASS)/'cacert.pem'))

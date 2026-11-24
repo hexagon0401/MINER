@@ -31,7 +31,7 @@ def assess(sample):
     observed_gap=any(value.get('proxy_https',{}).get('tls_verified') and not value.get('os_https',{}).get('tls_verified') for key,value in probes.items() if key!='warp')
     session=session_state(sample)
     os_dns_gap=(session['state']=='SELECTIVE_COMPONENTS_OBSERVED' and any(
-        key in ('auth.riotgames.com','www.leagueoflegends.com') and value.get('dns',{}).get('ok') is True and value['dns'].get('synthetic') is False
+        key in ('auth.riotgames.com','www.leagueoflegends.com') and value.get('dns',{}).get('ok') is True and value['dns'].get('all_synthetic',value['dns'].get('synthetic')) is False
         for key,value in probes.items()))
     observed_gap=observed_gap or os_dns_gap
     expected=sample.get('warp',{}).get('mode')=='WarpProxy' or session['engine_observation']=='PRESENT'
