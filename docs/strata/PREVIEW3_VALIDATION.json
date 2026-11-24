@@ -1,0 +1,48 @@
+{
+  "release_url": "https://github.com/hexagon0401/MINER/releases/tag/miner-strata-v2.0.0-preview.3",
+  "native_ci": "https://github.com/hexagon0401/MINER/actions/runs/45298015813",
+  "native_ci_result": "PASS",
+  "local_pinned_engine_tests": 202,
+  "github_dmg_asset_digests_match": true,
+  "apple_silicon_download_sha256_verified": true,
+  "macos": [
+    {
+      "architecture": "arm64",
+      "source_commit": "ecb52047f846c72b60928b24e7bd0eaff6ea0ce2",
+      "sha256": "049c0908c342abe0a9ecf47b8c55f3e860e91d27e5be9684f57b73238bd2500f",
+      "session_preflight": {
+        "ok": true,
+        "packaged_cli": true,
+        "inert_process_fixtures": true,
+        "live_client_allowed": true,
+        "active_game_blocked": true,
+        "long_paths_with_spaces": true,
+        "client_not_terminated": true,
+        "routing_or_warp_commands_requested": false,
+        "real_lol_tested": false
+      },
+      "signing": "adhoc"
+    },
+    {
+      "architecture": "x86_64",
+      "source_commit": "ecb52047f846c72b60928b24e7bd0eaff6ea0ce2",
+      "sha256": "6200df8f675637d1d65dd38e14b02c6f17bed7075d5c658124501c6692c9376a",
+      "session_preflight": {
+        "ok": true,
+        "packaged_cli": true,
+        "inert_process_fixtures": true,
+        "live_client_allowed": true,
+        "active_game_blocked": true,
+        "long_paths_with_spaces": true,
+        "client_not_terminated": true,
+        "routing_or_warp_commands_requested": false,
+        "real_lol_tested": false
+      },
+      "signing": "adhoc"
+    }
+  ],
+  "windows_shared_guard_and_lifecycle_tests": "PASS on windows-2025; no new Windows installer",
+  "real_game_tested": false,
+  "existing_socket_migration_implemented": false,
+  "main_alpha_homebrew_unchanged": true
+}

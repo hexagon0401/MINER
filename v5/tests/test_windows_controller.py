@@ -19,7 +19,7 @@ class WindowsLifecycleTests(unittest.TestCase):
         check=patch.object(controller,'check_engine');check.start();self.addCleanup(check.stop)
         guard=patch('schoolnet.dns_guard.spawn',return_value=None);guard.start();self.addCleanup(guard.stop)
 
-    def test_warm_client_rejection_precedes_all_warp_changes(self):
+    def test_active_match_rejection_precedes_all_warp_changes(self):
         with tempfile.TemporaryDirectory() as d:
             with patch.object(controller,'is_admin',return_value=True),patch.object(controller,'require_clean_start',side_effect=ValueError('MINER_SESSION_BLOCKED')),patch.object(controller.warp,'activate') as activate,patch.object(controller.warp,'restore') as restore:
                 with self.assertRaisesRegex(ValueError,'MINER_SESSION_BLOCKED'):controller.session(d,'engine',threading.Event(),lambda *a:None)
