@@ -11,7 +11,6 @@ import os
 from pathlib import Path
 import platform
 import socket
-import socketserver
 import struct
 import subprocess
 import sys
@@ -23,27 +22,7 @@ from schoolnet.config import Profile,build_config,FAKE_V4,DNS_V4,DNS_V6
 from schoolnet.dns_forwarder import Forwarder,recv_exact
 from schoolnet.network_dns import Backend,Lease,command,powershell,probe_dns,normalized
 from schoolnet.runtime import write_json
-
-class Proxy(socketserver.BaseRequestHandler):
-    def handle(self):
-        self.request.settimeout(10)
-        if recv_exact(self.request,3)!=b'\x05\x01\x00':raise ValueError('Unexpected SOCKS greeting')
-        self.request.sendall(b'\x05\x00')
-        header=recv_exact(self.request,4)
-        if header!=b'\x05\x01\x00\x03':raise ValueError('Riot destination must use remote DNS')
-        host=recv_exact(self.request,recv_exact(self.request,1)[0]).decode()
-        port=struct.unpack('!H',recv_exact(self.request,2))[0]
-        self.server.destinations.append((host,port))
-        self.request.sendall(b'\x05\x00\x00\x01\x7f\x00\x00\x01\x00\x00')
-        while True:
-            try:data=self.request.recv(1024)
-            except socket.timeout:return
-            if not data:return
-            self.request.sendall(data)
-
-class Server(socketserver.ThreadingTCPServer):
-    daemon_threads=True
-
+from resolution_fixture import Fixture,ORIGIN
 
 def synthetic_aaaa(host):
     """Query the actual selective DNS listener, independent of OS scope/cache."""
@@ -104,13 +83,12 @@ def run(engine,directory,guardian_executable=None):
     physical=route_interface('8.8.8.8')
     backend=Backend();lease=Lease(directory,backend);original=lease.prepare()
     snapshot=lease.snapshot;child=guardian=None
-    proxy=Server(('127.0.0.1',0),Proxy);proxy.destinations=[]
-    threading.Thread(target=proxy.serve_forever,daemon=True).start()
+    fixture=Fixture(directory/'proxy-dns-fixture');proxy=fixture.server
     report={'loopback_proxy_fixture':True,'warp_live_tested':False,'game_live_tested':False}
     try:
         with Forwarder(original) as relay:
             profile=Profile(platform='macos' if system=='Darwin' else 'windows',proxy_port=proxy.server_address[1],dns_forward_port=relay.port)
-            config=build_config(profile);path=directory/'selective.json';write_json(path,config)
+            config=fixture.configure(build_config(profile));path=directory/'selective.json';write_json(path,config)
             with (directory/'selective-smoke.log').open('w') as log:
                 child=subprocess.Popen([str(engine),'run','-c',str(path)],cwd=directory,stdout=log,stderr=log)
                 try:
@@ -138,8 +116,10 @@ def run(engine,directory,guardian_executable=None):
                             # Normal applications work while the same client TCP
                             # stays open; no disconnect/mode switch at phase boundaries.
                             ordinary_https()
-                    assert proxy.destinations==[('login.riotgames.com',443)],'Session replaced or hostname lost'
+                    assert proxy.destinations==[(ORIGIN,443)],'Session replaced or hostname lost'
                     report['remote_dns_and_continuous_client_tcp']=True
+                    report['proxy_doh_real_ip_no_hostname_recursion']=True
+                    assert not proxy.rejected_hostnames,'Origin hostname reached the recursive proxy resolver'
                     # Explicit AF_INET6 query; no external IPv6 connectivity is
                     # needed for a synthetic address routed through this TUN.
                     from schoolnet.config import FAKE_V6
@@ -157,7 +137,7 @@ def run(engine,directory,guardian_executable=None):
                     assert ipaddress.ip_address(ipv6[0]) in ipaddress.ip_network(FAKE_V6),'Selective listener AAAA must be synthetic'
                     with socket.socket(socket.AF_INET6,socket.SOCK_STREAM) as session6:
                         session6.settimeout(10);session6.connect(ipv6);session6.sendall(b'ipv6');assert recv_exact(session6,4)==b'ipv6'
-                    assert proxy.destinations[-1]==('login.riotgames.com',443)
+                    assert proxy.destinations[-1]==(ORIGIN,443)
                     report['synthetic_ipv6_remote_dns_tcp']=True
                     # A game process also uses Riot HTTPS services. Its TCP must
                     # not fall into the old all-game-traffic direct exception.
@@ -183,7 +163,8 @@ int main(int n,char **v){
                         stats=socket.gethostbyname('stats.riotgames.com')
                         result=subprocess.run([str(probe),stats],capture_output=True,text=True,timeout=10,check=True)
                         assert result.stdout.strip()=='post-game'
-                        assert proxy.destinations[-1]==('stats.riotgames.com',443)
+                        assert proxy.destinations[-1]==(ORIGIN,443)
+                        assert any(q[0]=='stats.riotgames.com' for q in proxy.dns_questions)
                         report['game_service_tcp_proxied']=True
 
                     lease.close();assert same_dns(backend,snapshot),'DNS settings not restored exactly'
@@ -209,7 +190,7 @@ int main(int n,char **v){
                     if child.poll() is None:child.terminate();child.wait(timeout=15)
                     if guardian:guardian.wait(timeout=20)
     finally:
-        proxy.shutdown();proxy.server_close()
+        fixture.close()
     assert route_interface('8.8.8.8')==physical
     report.update(ok=True,system=system,windows_guardian_tested=system=='Windows',dhcp_or_manual_mode_preserved=True,
         source_commit=os.environ.get('GITHUB_SHA'),packaged_guardian_verified=bool(guardian_executable))

@@ -21,7 +21,7 @@ import zipfile
 
 ROOT=Path(__file__).resolve().parents[1]
 if not getattr(sys,"frozen",False) and str(ROOT) not in sys.path:sys.path.insert(0,str(ROOT))
-VERSION='2.0.2'
+VERSION='2.0.3'
 PHASES=('before','connected','in_game','post_game','after_stop','error')
 HOSTS=('www.cloudflare.com','auth.riotgames.com','www.leagueoflegends.com')
 OUTCOMES=('unknown','loaded','timeout_30s','error')
@@ -182,6 +182,10 @@ def socket_check(port):
 
 
 def probe(kind,host,port):
+    if kind=='riot_service':
+        if host!='auth.riotgames.com':raise ValueError('Unsupported Riot service probe host')
+        from schoolnet.warp import verify_client_service
+        return verify_client_service(port)
     if kind=='warp':
         from schoolnet.warp import verify_trace
         return verify_trace(port,timeout=4)
@@ -211,7 +215,7 @@ def probe(kind,host,port):
 
 def child_probe(kind,host,port):
     args=[sys.executable] if getattr(sys,'frozen',False) else [sys.executable,str(Path(__file__).resolve())]
-    meta,text=command([*args,'--probe',kind,'--host',host,'--port',str(port)],timeout=7)
+    meta,text=command([*args,'--probe',kind,'--host',host,'--port',str(port)],timeout=12 if kind=='riot_service' else 7)
     try:return {**meta,**json.loads(text)} if text else meta
     except ValueError:return {**meta,'parse_error':True}
 
@@ -259,6 +263,7 @@ class Recorder:
             for host in HOSTS:
                 print('검사: '+host+' DNS / OS TLS / SOCKS TLS (각 최대 7초)',flush=True)
                 row['active_probes'][host]={'dns':child_probe('dns',host,self.port),'os_https':child_probe('https',host,self.port),'proxy_https':child_probe('proxy_https',host,self.port)}
+                if host=='auth.riotgames.com':row['active_probes'][host]['resolved_proxy_https']=child_probe('riot_service',host,self.port)
             # Checks themselves can create engine errors. Advance the log cursor
             # separately so they are not labelled as new client-only errors in
             # the next phase. Concurrent app traffic remains explicitly mixed.
@@ -315,12 +320,14 @@ def main(argv=None):
     p.add_argument('--active',action='store_true',help='Opt in to fixed DNS and TLS requests. Never changes routing or WARP mode.')
     p.add_argument('--warp-cli');p.add_argument('--port',type=int,default=40000)
     p.add_argument('--error-code',type=lambda s:s if re.fullmatch(r'[A-Za-z0-9 _-]{1,40}',s) else p.error('Use an error CODE only; no account details'))
-    p.add_argument('--probe',choices=('dns','https','proxy_https','warp'),help=argparse.SUPPRESS);p.add_argument('--host',choices=HOSTS,default=HOSTS[0],help=argparse.SUPPRESS)
+    p.add_argument('--probe',choices=('dns','https','proxy_https','warp','riot_service'),help=argparse.SUPPRESS);p.add_argument('--host',choices=HOSTS,default=HOSTS[0],help=argparse.SUPPRESS)
     args=p.parse_args(argv)
     if not 1024<=args.port<=65535:p.error('Port must be 1024..65535')
     if args.probe:
         try:print(json.dumps(probe(args.probe,args.host,args.port)));return 0
-        except Exception as exc:print(json.dumps({'ok':False,'error':type(exc).__name__}));return 1
+        except Exception as exc:
+            from schoolnet.protocol_output import transport_detail
+            print(json.dumps({'ok':False,'error':type(exc).__name__,**transport_detail(exc)}));return 1
     interactive=args.interactive or (getattr(sys,'frozen',False) and len(sys.argv)==1)
     output=args.output or Path.home()/'Desktop'/('MINER-Diagnostics-'+datetime.now().strftime('%Y%m%d-%H%M%S')+'-'+secrets.token_hex(3)+'.zip')
     if interactive and not args.active:

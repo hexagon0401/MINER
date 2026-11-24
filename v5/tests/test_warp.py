@@ -209,16 +209,16 @@ class ProxyHealthAndServiceTests(unittest.TestCase):
             self.assertFalse(warp.maintain_proxy()['healthy'])
         self.assertEqual(call.call_count,2)
 
-    def test_riot_check_uses_remote_dns_and_validates_tls_even_for_auth_http_error(self):
+    def test_riot_check_uses_proxy_doh_ip_and_validates_original_tls_host(self):
         tls=MagicMock();tls.makefile.return_value=io.BytesIO(b'HTTP/1.1 403 Forbidden\r\nContent-Length: 0\r\n\r\n')
         context=MagicMock();context.wrap_socket.return_value.__enter__.return_value=tls
         sock=MagicMock()
-        with patch('socket.create_connection',return_value=sock),patch.object(warp,'socks_connect') as connect,patch('ssl.create_default_context',return_value=context):
+        with patch('socket.create_connection',return_value=sock),patch.object(warp,'resolve_origin',return_value='8.8.4.4'),patch.object(warp,'socks_connect') as connect,patch('ssl.create_default_context',return_value=context):
             result=warp.verify_client_service()
         self.assertTrue(result['tls_verified']);self.assertFalse(result['game_or_statistics_verified']);self.assertEqual(result['http_status'],403)
-        connect.assert_called_once_with(sock.__enter__.return_value,'auth.riotgames.com',443)
+        connect.assert_called_once_with(sock.__enter__.return_value,'8.8.4.4',443)
         context.wrap_socket.assert_called_once_with(sock.__enter__.return_value,server_hostname='auth.riotgames.com')
 
     def test_riot_failure_does_not_fall_back_to_direct(self):
         with patch('socket.create_connection',side_effect=ConnectionRefusedError) as connect,self.assertRaisesRegex(ValueError,'no direct fallback'):warp.verify_client_service()
-        connect.assert_called_once_with(('127.0.0.1',40000),timeout=5)
+        self.assertEqual(connect.call_args.args[0],('127.0.0.1',40000));self.assertLessEqual(connect.call_args.kwargs['timeout'],8)

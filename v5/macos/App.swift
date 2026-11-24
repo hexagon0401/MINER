@@ -287,10 +287,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         refresh()
     }
     @objc func checkWarp() {
-        operation {
+        operation({
             _ = try self.execute(self.warpArguments("status"))
             return try self.execute(["warp","service-check","--proxy-port",String(self.currentProxyPort)])
-        }
+        }, completion: {
+            if self.running && self.model.effectiveProbeStatus == "PASS" { self.model.error=""; self.model.phase="running" }
+        })
     }
     @objc func disconnectWarp() {
         let alert = NSAlert()

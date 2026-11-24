@@ -14,6 +14,7 @@ import time
 import threading
 
 from .probe import socks_connect, proxy_ready
+from .proxy_dns import resolve_origin
 
 
 class WarpCancelled(Exception):
@@ -178,7 +179,7 @@ def inspect(port=40000, warp_cli=None):
     return {**verify_trace(port), "mode": "WarpProxy"}
 
 
-def verify_client_service(port=40000,timeout=5):
+def verify_client_service(port=40000,timeout=8):
     """Confirm a fixed Riot TLS endpoint through SOCKS, never login or game success."""
     host='auth.riotgames.com'
     deadline=time.monotonic()+timeout;active=[None]
@@ -188,8 +189,11 @@ def verify_client_service(port=40000,timeout=5):
         except OSError:pass
     timer=threading.Timer(timeout,abort);timer.daemon=True;timer.start()
     try:
-        with socket.create_connection(('127.0.0.1',port),timeout=timeout) as sock:
-            active[0]=sock;socks_connect(sock,host,443)
+        origin=resolve_origin(host,port,deadline,active)
+        remaining=deadline-time.monotonic()
+        if remaining<=0:raise TimeoutError('Riot proxy DNS check timed out')
+        with socket.create_connection(('127.0.0.1',port),timeout=remaining) as sock:
+            active[0]=sock;socks_connect(sock,origin,443)
             context=ssl.create_default_context()
             if getattr(sys,'frozen',False):context.load_verify_locations(cafile=str(Path(sys._MEIPASS)/'cacert.pem'))
             remaining=deadline-time.monotonic()
@@ -201,7 +205,7 @@ def verify_client_service(port=40000,timeout=5):
                 tls.settimeout(remaining);tls.sendall(b'HEAD / HTTP/1.1\r\nHost: auth.riotgames.com\r\nConnection: close\r\n\r\n')
                 response=http.client.HTTPResponse(tls);response.begin();status=response.status
                 if not 100<=status<=599:raise ValueError('Invalid Riot HTTPS status')
-        return {'client_service_tls':True,'host':host,'http_status':status,'via':'socks5h','tls_verified':True,'direct_fallback':False,'game_or_statistics_verified':False}
+        return {'client_service_tls':True,'host':host,'http_status':status,'via':'socks5_ip_with_proxy_doh','dns_via':'warp_doh','tls_verified':True,'direct_fallback':False,'game_or_statistics_verified':False}
     except (OSError,ValueError,http.client.HTTPException) as exc:
         from .protocol_output import ServiceProbeError
         raise ServiceProbeError(exc) from exc

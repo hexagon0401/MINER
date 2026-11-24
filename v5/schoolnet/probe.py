@@ -7,6 +7,14 @@ import struct
 import time
 
 
+class SocksConnectError(OSError):
+    """A numeric SOCKS reply, without destination or raw peer data."""
+    def __init__(self, reply):
+        if type(reply) is not int or not 1<=reply<=255:raise ValueError('Invalid SOCKS reply code')
+        self.reply_code = reply
+        super().__init__(f"SOCKS CONNECT failed (reply={reply})")
+
+
 def recv_exact(sock, count):
     data = bytearray()
     while len(data) < count:
@@ -40,8 +48,10 @@ def socks_connect(sock, host, port):
         encoded = b"\x03" + bytes([len(encoded_host)]) + encoded_host
     sock.sendall(b"\x05\x01\x00" + encoded + struct.pack("!H", port))
     version, reply, reserved, kind = recv_exact(sock, 4)
-    if version != 5 or reserved != 0 or reply != 0:
-        raise OSError(f"SOCKS CONNECT failed (reply={reply})")
+    if version != 5 or reserved != 0:
+        raise OSError("Invalid SOCKS CONNECT response header")
+    if reply != 0:
+        raise SocksConnectError(reply)
     if kind == 1:
         size = 4
     elif kind == 4:

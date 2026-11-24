@@ -104,6 +104,7 @@ def build_config(profile: Profile) -> dict:
     # The kernel sends only Riot synthetic addresses here. Do not depend on
     # renderer process names or expensive per-connection client attribution.
     rules += [
+        {"inbound":["schoolnet-tun"],"network":"tcp","action":"resolve","server":"riot-real-dns","strategy":"prefer_ipv4"},
         {"inbound":["schoolnet-tun"],"network":"tcp","action":"route","outbound":"warp"},
         {"inbound":["schoolnet-tun"],"network":"udp","process_name":GAMES[p.platform],"action":"route","outbound":"direct"},
         {"inbound":["schoolnet-tun"],"network":"udp","action":"reject","method":"default","no_drop":True},
@@ -129,6 +130,10 @@ def build_config(profile: Profile) -> dict:
         "log": {"level": "warn", "timestamp": True},
         "dns": {
             "servers": [{"type": "fakeip", "tag": "riot-addresses", "inet4_range": FAKE_V4, "inet6_range": FAKE_V6},
+                        # Literal bootstrap avoids the OS/FakeIP resolver. This
+                        # encrypted DNS connection itself travels through WARP.
+                        {"type": "https", "tag": "riot-real-dns", "server": "1.1.1.1", "server_port": 443,
+                         "path": "/dns-query", "tls": {"enabled": True, "server_name": "cloudflare-dns.com"}, "detour": "warp"},
                         {"type": "udp", "tag": "direct-dns", "server": "127.0.0.1", "server_port": p.dns_forward_port,
                          "inet4_bind_address": "127.0.0.1"}],
             "rules": dns_rules, "final": "direct-dns", "independent_cache": True, "cache_capacity": 4096,

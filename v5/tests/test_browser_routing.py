@@ -61,7 +61,8 @@ class BrowserRoutingTests(unittest.TestCase):
                 config['inbounds']=[{'type':'socks','tag':'browser-test','listen':'127.0.0.1','listen_port':proxy_port},
                     {'type':'direct','tag':'dns-test','listen':'127.0.0.1','listen_port':dns_port,'network':'udp','override_address':'127.0.0.1','override_port':53}]
                 config['route'].pop('auto_detect_interface',None)
-                config['dns']['servers'][1]={'type':'udp','tag':'direct-dns','server':'127.0.0.1','server_port':resolver.server_address[1]}
+                direct=next(s for s in config['dns']['servers'] if s['tag']=='direct-dns')
+                direct.update(type='udp',server='127.0.0.1',server_port=resolver.server_address[1])
                 path=Path(temporary)/'config.json';path.write_text(json.dumps(config))
                 log_path=Path(temporary)/'engine.log'
                 with log_path.open('w') as log:
