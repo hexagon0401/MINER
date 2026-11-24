@@ -1,0 +1,58 @@
+{
+  "release_url": "https://github.com/hexagon0401/MINER/releases/tag/miner-diagnostics-v2.0.5",
+  "native_ci": "https://github.com/hexagon0401/MINER/actions/runs/45393039981",
+  "native_ci_result": "PASS",
+  "local_source_regressions": 229,
+  "receipts": [
+    {
+      "ok": true,
+      "tool_version": "2.0.5",
+      "system": "Windows",
+      "architecture": "AMD64",
+      "source_commit": "a5f21207578bf68f3fb8f8edf60b89abf133a4db",
+      "sha256": "7090767f80e6da44cf6e03558245034453029c655687874f886060e85185df7f",
+      "packaged_recorder_executed": true,
+      "read_only_report_verified": true,
+      "native_long_path_identity_fixture": false,
+      "native_client_socket_fixture": false,
+      "warp_live_tested": false,
+      "game_live_tested": false,
+      "signing": "unsigned",
+      "notarized": false
+    },
+    {
+      "ok": true,
+      "tool_version": "2.0.5",
+      "system": "Darwin",
+      "architecture": "x86_64",
+      "source_commit": "a5f21207578bf68f3fb8f8edf60b89abf133a4db",
+      "sha256": "14b688b4984f31c7de1b910241556024a08ce1710c7ba5ed7ab96d58c0570346",
+      "packaged_recorder_executed": true,
+      "read_only_report_verified": true,
+      "native_long_path_identity_fixture": true,
+      "native_client_socket_fixture": true,
+      "warp_live_tested": false,
+      "game_live_tested": false,
+      "signing": "adhoc",
+      "notarized": false
+    },
+    {
+      "ok": true,
+      "tool_version": "2.0.5",
+      "system": "Darwin",
+      "architecture": "arm64",
+      "source_commit": "a5f21207578bf68f3fb8f8edf60b89abf133a4db",
+      "sha256": "61898760da6dd566de7477bd4d6f3c17171e4c664273032ed5cc58bb37cf6787",
+      "packaged_recorder_executed": true,
+      "read_only_report_verified": true,
+      "native_long_path_identity_fixture": true,
+      "native_client_socket_fixture": true,
+      "warp_live_tested": false,
+      "game_live_tested": false,
+      "signing": "adhoc",
+      "notarized": false
+    }
+  ],
+  "mapped_ipv4_and_mixed_answers_tested": true,
+  "real_update_failure_cause_verified": false
+}

@@ -20,3 +20,8 @@
 기존 MINER에서 정상 중지·복구 완료 후 종료하고 새 앱을 시스템 `/Applications`에 교체합니다. Preview 7을 확인하고 시작하세요. 새 도우미 설치 때 한 번 관리자 승인이 필요할 수 있습니다. Riot 클라이언트를 매번 종료하라는 차단은 없지만, 이미 열린 연결·앱 내부 캐시를 강제로 이동·삭제하지는 않습니다. 연결 후 도구 → WARP 연결 확인 및 Riot 클라이언트의 다시 시도를 사용하세요.
 
 기존 도메인 resolver 설정과 충돌하면 삭제하거나 덮어쓰지 말고 오류를 확인하세요. 이전 앱으로 돌아갈 때도 먼저 Preview 7에서 중지·복구를 완료해야 합니다. Developer ID 설정이 없으면 ad-hoc 서명·미공증입니다.
+
+
+## 최신 진단
+
+IPv4-mapped IPv6와 혼합 DNS 응답 분류를 보완한 [별도 Diagnostics 2.0.5](https://github.com/hexagon0401/MINER/releases/tag/miner-diagnostics-v2.0.5)를 권장합니다. 앱 DMG 및 기존 자산을 교체하지 않습니다.

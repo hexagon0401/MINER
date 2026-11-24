@@ -1,0 +1,88 @@
+{
+  "release_url": "https://github.com/hexagon0401/MINER/releases/tag/miner-strata-v2.0.0-preview.7",
+  "native_ci": "https://github.com/hexagon0401/MINER/actions/runs/45391851958",
+  "native_ci_result": "PASS",
+  "local_app_tests": 228,
+  "macos": [
+    {
+      "architecture": "x86_64",
+      "source_commit": "8007c5f4c8bc599188580cf8e17db6afd51cd8d1",
+      "sha256": "60e33c02c0daa4a90914d56a32712b672d470aebc64ebf8a99b079d832fd22ff",
+      "signing": "adhoc",
+      "selective_network": {
+        "loopback_proxy_fixture": true,
+        "warp_live_tested": false,
+        "game_live_tested": false,
+        "real_ip_routes_bypass_tun": true,
+        "ordinary_os_dns_and_tls": true,
+        "os_client_path": {
+          "os_dns_synthetic": true,
+          "tls_verified": true,
+          "http_status": 404,
+          "via": "os_fakeip_tun_proxy_doh",
+          "client_process_traffic_verified": false,
+          "login_update_or_game_verified": false
+        },
+        "remote_dns_and_continuous_client_tcp": true,
+        "proxy_doh_real_ip_no_hostname_recursion": true,
+        "os_resolver_aaaa_address_class": "synthetic_v4_mapped",
+        "os_resolver_aaaa_synthetic": true,
+        "os_resolver_aaaa_boundary": "NONE_OBSERVED",
+        "synthetic_ipv6_remote_dns_tcp": true,
+        "game_service_tcp_proxied": true,
+        "original_dns_recovered_before_engine_stop": true,
+        "engine_crash_dns_recovered": true,
+        "ordinary_https_after_recovery": true,
+        "ok": true,
+        "system": "Darwin",
+        "windows_guardian_tested": false,
+        "dhcp_or_manual_mode_preserved": true,
+        "source_commit": "8007c5f4c8bc599188580cf8e17db6afd51cd8d1",
+        "packaged_guardian_verified": false
+      }
+    },
+    {
+      "architecture": "arm64",
+      "source_commit": "8007c5f4c8bc599188580cf8e17db6afd51cd8d1",
+      "sha256": "92e3621cfd50561635086bc5c72f41fbbf9610e59b93bc16f58749203b436498",
+      "signing": "adhoc",
+      "selective_network": {
+        "loopback_proxy_fixture": true,
+        "warp_live_tested": false,
+        "game_live_tested": false,
+        "real_ip_routes_bypass_tun": true,
+        "ordinary_os_dns_and_tls": true,
+        "os_client_path": {
+          "os_dns_synthetic": true,
+          "tls_verified": true,
+          "http_status": 404,
+          "via": "os_fakeip_tun_proxy_doh",
+          "client_process_traffic_verified": false,
+          "login_update_or_game_verified": false
+        },
+        "remote_dns_and_continuous_client_tcp": true,
+        "proxy_doh_real_ip_no_hostname_recursion": true,
+        "os_resolver_aaaa_address_class": "synthetic_v4_mapped",
+        "os_resolver_aaaa_synthetic": true,
+        "os_resolver_aaaa_boundary": "NONE_OBSERVED",
+        "synthetic_ipv6_remote_dns_tcp": true,
+        "game_service_tcp_proxied": true,
+        "original_dns_recovered_before_engine_stop": true,
+        "engine_crash_dns_recovered": true,
+        "ordinary_https_after_recovery": true,
+        "ok": true,
+        "system": "Darwin",
+        "windows_guardian_tested": false,
+        "dhcp_or_manual_mode_preserved": true,
+        "source_commit": "8007c5f4c8bc599188580cf8e17db6afd51cd8d1",
+        "packaged_guardian_verified": false
+      }
+    }
+  ],
+  "github_asset_digests_match": true,
+  "apple_silicon_download_sha256_verified": true,
+  "actual_user_update_request_identified": false,
+  "real_riot_update_login_friends_ready_check_verified": false,
+  "bundled_diagnostics": "2.0.4; use separate 2.0.5 for mapped IPv4 DNS classification",
+  "main_alpha_homebrew_unchanged": true
+}
